@@ -223,6 +223,16 @@ type ResellerClient struct {
 	AllTimeBase int64 `json:"allTimeBase" gorm:"default:0"`
 }
 
+// TelegramReminderState makes expiry reminders idempotent across bot restarts.
+type TelegramReminderState struct {
+	Id         int64  `json:"id" gorm:"primaryKey;autoIncrement"`
+	Email      string `json:"email" gorm:"index:idx_tg_reminder_unique,unique,priority:1"`
+	TgID       int64  `json:"tgId" gorm:"index"`
+	ExpiryTime int64  `json:"expiryTime" gorm:"index:idx_tg_reminder_unique,unique,priority:2"`
+	Event      string `json:"event" gorm:"index:idx_tg_reminder_unique,unique,priority:3"`
+	SentAt     int64  `json:"sentAt"`
+}
+
 // Inbound represents an Xray inbound configuration with traffic statistics and settings.
 type Inbound struct {
 	Id                   int    `json:"id" form:"id" gorm:"primaryKey;autoIncrement"`                                                    // Unique identifier

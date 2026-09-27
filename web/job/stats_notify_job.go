@@ -30,3 +30,10 @@ func (j *StatsNotifyJob) Run() {
 	}
 	j.tgbotService.SendReport()
 }
+
+// TelegramExpiryReminderJob sends customer expiry alerts independently from the admin report schedule.
+type TelegramExpiryReminderJob struct { tgbotService service.Tgbot }
+
+func NewTelegramExpiryReminderJob() *TelegramExpiryReminderJob { return new(TelegramExpiryReminderJob) }
+
+func (j *TelegramExpiryReminderJob) Run() { j.tgbotService.SendExpiryReminders() }

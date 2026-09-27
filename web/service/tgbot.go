@@ -38,6 +38,7 @@ import (
 	"github.com/skip2/go-qrcode"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttpproxy"
+	"gorm.io/gorm"
 )
 
 var (
@@ -355,6 +356,77 @@ func (t *Tgbot) NewBot(token string, proxyUrl string, apiServerUrl string) (*tel
 	}
 
 	return telego.NewBot(token, options...)
+}
+
+// SendExpiryReminders sends one Telegram alert for each account at 48h, 24h and expiry.
+// The account's TgID is the durable recipient identity, while expiry time is part of
+// the reminder key so renewal starts a fresh reminder cycle.
+func (t *Tgbot) SendExpiryReminders() {
+	if !t.IsRunning() {
+		return
+	}
+	var accounts []model.Account
+	if err := database.GetDB().Where("tg_id <> 0 AND expiry_time > 0").Find(&accounts).Error; err != nil {
+		logger.Warning("Telegram expiry reminders: failed to load accounts:", err)
+		return
+	}
+	now := time.Now()
+	for _, account := range accounts {
+		remaining := time.Until(time.UnixMilli(account.ExpiryTime))
+		event := ""
+		switch {
+		case remaining > 24*time.Hour && remaining <= 48*time.Hour:
+			event = "2d"
+		case remaining > 0 && remaining <= 24*time.Hour:
+			event = "1d"
+		case remaining <= 0:
+			event = "expired"
+		}
+		if event == "" {
+			continue
+		}
+		var state model.TelegramReminderState
+		err := database.GetDB().Where("email = ? AND tg_id = ? AND expiry_time = ? AND event = ?",
+			account.Email, account.TgID, account.ExpiryTime, event).First(&state).Error
+		if err == nil {
+			continue
+		}
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			logger.Warning("Telegram expiry reminders: failed to check state:", err)
+			continue
+		}
+		var traffic xray.ClientTraffic
+		database.GetDB().Where("email = ?", account.Email).First(&traffic)
+		used := traffic.Up + traffic.Down
+		remainingTraffic := account.TotalGB - used
+		if remainingTraffic < 0 {
+			remainingTraffic = 0
+		}
+		msg := fmt.Sprintf("Account: %s\nExpiry: %s\nUsed traffic: %s\nRemaining traffic: %s",
+			account.Email,
+			time.UnixMilli(account.ExpiryTime).Format("2006-01-02 15:04:05"),
+			fmt.Sprintf("%d bytes", used),
+			fmt.Sprintf("%d bytes", remainingTraffic))
+		switch event {
+		case "2d":
+			msg = "⏰ 2 days remaining\n" + msg
+		case "1d":
+			msg = "⚠️ 1 day remaining\n" + msg
+		case "expired":
+			msg = "❌ Account expired\n" + msg
+		}
+		if err := t.SendMsgToTgbot(account.TgID, msg); err != nil {
+			logger.Warning("Telegram expiry reminder send failed:", err)
+			continue
+		}
+		state = model.TelegramReminderState{
+			Email: account.Email, TgID: account.TgID,
+			ExpiryTime: account.ExpiryTime, Event: event, SentAt: now.Unix(),
+		}
+		if err := database.GetDB().Create(&state).Error; err != nil {
+			logger.Warning("Telegram expiry reminders: failed to persist state:", err)
+		}
+	}
 }
 
 // IsRunning checks if the Telegram bot is currently running.

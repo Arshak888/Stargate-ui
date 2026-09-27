@@ -529,6 +529,7 @@ func (s *Server) startTask() {
 			logger.Warningf("Add NewStatsNotifyJob: failed to schedule runtime %q: %v", runtime, err)
 			return
 		}
+		s.cron.AddJob("@every 10m", job.NewTelegramExpiryReminderJob())
 
 		// check for Telegram bot callback query hash storage reset
 		s.cron.AddJob("@every 2m", job.NewCheckHashStorageJob())
