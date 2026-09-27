@@ -92,7 +92,7 @@
 ## نصب پنل
 
 ```bash
-curl -Ls https://raw.githubusercontent.com/Sir-MmD/vpn-ui/refs/heads/main/deploy.sh | sudo bash
+curl -Ls https://raw.githubusercontent.com/Arshak888/vpn-ui-custom/refs/heads/main/deploy.sh | sudo bash
 ```
 
 ## حذف پنل
@@ -221,7 +221,7 @@ flowchart TB
 ## کامپایل از سورس
 
 ```bash
-git clone https://github.com/Sir-MmD/vpn-ui.git && cd vpn-ui
+git clone https://github.com/Arshak888/vpn-ui-custom.git && cd vpn-ui-custom
 ./build.sh
 ```
 
