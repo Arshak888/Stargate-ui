@@ -2628,6 +2628,13 @@ func (s *InboundService) UpdateInboundClient(data *model.Inbound, clientId strin
 	if err != nil {
 		return false, err
 	}
+	// Keep the credentials the operator explicitly posted before the shared-credential
+	// normalizer fills them from the account. The normalizer is intentionally
+	// authoritative for membership creation, but an UPDATE is also the web panel's
+	// credential-rotation path. If we discard the posted password here, every password
+	// change is immediately replaced by the old account password and the other
+	// memberships can never receive the new one.
+	requestedClients := append([]model.Client(nil), clients...)
 
 	oldInbound, err := s.GetInbound(data.Id)
 	if err != nil {
@@ -2635,6 +2642,21 @@ func (s *InboundService) UpdateInboundClient(data *model.Inbound, clientId strin
 	}
 	if err := normalizeSharedVPNCredentials(clients, oldInbound.Protocol); err != nil {
 		return false, err
+	}
+	if isVpnLoginProtocol(oldInbound.Protocol) {
+		for i := range clients {
+			if i >= len(requestedClients) {
+				break
+			}
+			if requestedClients[i].VpnUsername != "" {
+				clients[i].ID = requestedClients[i].VpnUsername
+			} else if requestedClients[i].ID != "" {
+				clients[i].ID = requestedClients[i].ID
+			}
+			if requestedClients[i].Password != "" {
+				clients[i].Password = requestedClients[i].Password
+			}
+		}
 	}
 	if err := replaceSharedVPNCredentialsInSettings(data, clients, oldInbound.Protocol); err != nil {
 		return false, err
