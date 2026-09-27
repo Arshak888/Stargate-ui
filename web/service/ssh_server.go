@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"sort"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -251,20 +252,170 @@ func (m *sshManager) handleConn(srv *sshServer, nConn net.Conn) {
 	}
 
 	// Reject every global request (WantReply -> false). This denies reverse
-	// forwarding (tcpip-forward) and everything else; only direct-tcpip channels below
-	// are served.
+	// forwarding (tcpip-forward) and everything else. The channel loop below
+	// additionally supports an interactive session channel for the optional post-auth
+	// status message while leaving direct-tcpip byte-for-byte untouched.
 	go ssh.DiscardRequests(reqs)
 
 	for nc := range chans {
-		if nc.ChannelType() != "direct-tcpip" {
-			nc.Reject(ssh.Prohibited, "only direct-tcpip is permitted")
-			continue
+		switch nc.ChannelType() {
+		case "direct-tcpip":
+			go m.handleDirectTCPIP(srv, sess, nc)
+		case "session":
+			go m.handleSession(srv, sess, nc)
+		default:
+			nc.Reject(ssh.Prohibited, "channel type is not permitted")
 		}
-		go m.handleDirectTCPIP(srv, sess, nc)
 	}
 
 	m.removeSession(sess)
 	sshConn.Close()
+}
+
+// handleSession supports interactive SSH clients without ever injecting application
+// bytes into direct-tcpip channels. Most normal `ssh user@host` clients send a
+// session/shell request; forwarding clients such as `ssh -D` use direct-tcpip and are
+// therefore intentionally unaffected.
+func (m *sshManager) handleSession(srv *sshServer, sess *sshSession, nc ssh.NewChannel) {
+	ch, requests, err := nc.Accept()
+	if err != nil {
+		return
+	}
+	defer ch.Close()
+
+	messageSent := false
+	sendMessage := func() {
+		if messageSent {
+			return
+		}
+		messageSent = true
+		msg := m.loginMessage(srv, sess)
+		if msg == "" {
+			return
+		}
+		_, _ = io.WriteString(ch, msg)
+		if !strings.HasSuffix(msg, "\n") {
+			_, _ = io.WriteString(ch, "\n")
+		}
+	}
+
+	for req := range requests {
+		switch req.Type {
+		case "pty-req", "env", "window-change":
+			if req.WantReply {
+				_ = req.Reply(true, nil)
+			}
+		case "shell", "exec":
+			if req.WantReply {
+				_ = req.Reply(true, nil)
+			}
+			sendMessage()
+			return
+		default:
+			if req.WantReply {
+				_ = req.Reply(false, nil)
+			}
+		}
+	}
+}
+
+func (m *sshManager) loginMessage(srv *sshServer, sess *sshSession) string {
+	settings, err := srv.svc.parseSettingsByInboundID(sess.inboundId)
+	if err != nil || settings == nil || !settings.LoginMessageEnabled {
+		return ""
+	}
+	template := strings.TrimSpace(settings.LoginMessageTemplate)
+	if template == "" {
+		template = "Welcome {username}\nLogin time: {login_time}\nStatus: {status}\nExpiry: {expiry_time}\nRemaining: {remaining_time}\nUsed traffic: {used_traffic}\nRemaining traffic: {remaining_traffic}\nClient IP: {client_ip}"
+	}
+
+	username := sess.email
+	for _, c := range settings.Clients {
+		if c.Email == sess.email {
+			username = c.ID
+			break
+		}
+	}
+
+	status := "Active"
+	expiry := "Unlimited"
+	remaining := "Unlimited"
+	used := "0 B"
+	trafficRemaining := "Unlimited"
+	if traffic, err := srv.svc.inboundService.GetClientTrafficByEmail(sess.email); err == nil && traffic != nil {
+		usedBytes := traffic.Up + traffic.Down
+		used = formatSSHBytes(usedBytes)
+		if traffic.Total > 0 {
+			left := traffic.Total - usedBytes
+			if left < 0 {
+				left = 0
+			}
+			trafficRemaining = formatSSHBytes(left)
+			if left == 0 {
+				status = "Traffic exhausted"
+			}
+		}
+		if traffic.ExpiryTime > 0 {
+			expiryTime := time.UnixMilli(traffic.ExpiryTime)
+			expiry = expiryTime.Format("2006-01-02 15:04:05")
+			d := time.Until(expiryTime)
+			if d <= 0 {
+				remaining = "Expired"
+				status = "Expired"
+			} else {
+				remaining = formatSSHDuration(d)
+			}
+		}
+		if !traffic.Enable {
+			status = "Disabled"
+		}
+	}
+
+	return strings.NewReplacer(
+		"{username}", username,
+		"{login_time}", sess.since.Format("2006-01-02 15:04:05"),
+		"{status}", status,
+		"{expiry_time}", expiry,
+		"{remaining_time}", remaining,
+		"{used_traffic}", used,
+		"{remaining_traffic}", trafficRemaining,
+		"{client_ip}", sess.srcIP,
+	).Replace(template)
+}
+
+func formatSSHDuration(d time.Duration) string {
+	if d < time.Minute {
+		return "<1m"
+	}
+	days := int(d / (24 * time.Hour))
+	hours := int(d/(time.Hour)) % 24
+	mins := int(d/time.Minute) % 60
+	if days > 0 {
+		return fmt.Sprintf("%dd %dh %dm", days, hours, mins)
+	}
+	if hours > 0 {
+		return fmt.Sprintf("%dh %dm", hours, mins)
+	}
+	return fmt.Sprintf("%dm", mins)
+}
+
+func formatSSHBytes(n int64) string {
+	if n < 0 {
+		n = 0
+	}
+	const unit = int64(1024)
+	if n < unit {
+		return fmt.Sprintf("%d B", n)
+	}
+	value := float64(n)
+	units := []string{"KB", "MB", "GB", "TB", "PB"}
+	for _, u := range units {
+		value /= float64(unit)
+		if value < float64(unit) || u == "PB" {
+			return fmt.Sprintf("%.2f %s", value, u)
+		}
+	}
+	return fmt.Sprintf("%.2f PB", value)
 }
 
 // directTCPIP is the parsed payload of a direct-tcpip channel-open (RFC 4254 7.2).

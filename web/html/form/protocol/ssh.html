@@ -28,6 +28,26 @@
     <a-form-item>
         <template slot="label">
             <a-tooltip>
+                <template slot="title">Show a status message after authentication for interactive SSH clients. Forward-only direct-tcpip clients are left untouched.</template>
+                Login Message
+                <a-icon type="question-circle"></a-icon>
+            </a-tooltip>
+        </template>
+        <a-switch v-model="inbound.settings.loginMessageEnabled"></a-switch>
+    </a-form-item>
+
+    <a-form-item v-if="inbound.settings.loginMessageEnabled">
+        <template slot="label">Message Template</template>
+        <a-textarea
+            v-model.trim="inbound.settings.loginMessageTemplate"
+            :rows="6"
+            placeholder="User: {username}\nLogin time: {login_time}\nExpiry: {expiry_time}\nRemaining: {remaining_time}\nUsed: {used_traffic}\nRemaining traffic: {remaining_traffic}\nIP: {client_ip}"
+        ></a-textarea>
+    </a-form-item>
+
+    <a-form-item>
+        <template slot="label">
+            <a-tooltip>
                 <template slot="title">
                     When an account is already at its IP limit and a new client IP
                     connects: reject the new one, or accept it and disconnect that

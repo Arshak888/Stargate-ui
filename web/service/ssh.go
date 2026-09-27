@@ -74,6 +74,11 @@ type sshSettings struct {
 	// the SSH server never reads it. Mirrors wg-c.
 	ExternalProxy []sshExternalProxy `json:"externalProxy"`
 
+	// Optional post-auth message for interactive SSH session clients. It is never
+	// written to direct-tcpip channels, because those channels carry raw VPN traffic.
+	LoginMessageEnabled  bool   `json:"loginMessageEnabled"`
+	LoginMessageTemplate string `json:"loginMessageTemplate"`
+
 	Clients []sshClient `json:"clients"`
 }
 
@@ -116,6 +121,17 @@ func (s *SshService) parseSettings(inbound *model.Inbound) (*sshSettings, error)
 		return nil, err
 	}
 	return settings, nil
+}
+
+func (s *SshService) parseSettingsByInboundID(inboundID int) (*sshSettings, error) {
+	inbound, err := s.inboundService.GetInbound(inboundID)
+	if err != nil || inbound == nil {
+		if err == nil {
+			err = fmt.Errorf("ssh inbound %d not found", inboundID)
+		}
+		return nil, err
+	}
+	return s.parseSettings(inbound)
 }
 
 // activeClients returns the accounts that are usable (non-empty username, password,
