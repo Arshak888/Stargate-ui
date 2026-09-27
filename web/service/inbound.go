@@ -1950,6 +1950,14 @@ func (s *InboundService) AddInboundClient(data *model.Inbound) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	if target, terr := s.GetInbound(data.Id); terr == nil && target != nil {
+		if err := normalizeSharedVPNCredentials(clients, target.Protocol); err != nil {
+			return false, err
+		}
+		if err := replaceSharedVPNCredentialsInSettings(data, clients, target.Protocol); err != nil {
+			return false, err
+		}
+	}
 
 	// Reject an unusable identity before it reaches the settings blob. The protocol
 	// comes from the STORED inbound: the request body carries only id and settings
@@ -2621,6 +2629,17 @@ func (s *InboundService) UpdateInboundClient(data *model.Inbound, clientId strin
 		return false, err
 	}
 
+	oldInbound, err := s.GetInbound(data.Id)
+	if err != nil {
+		return false, err
+	}
+	if err := normalizeSharedVPNCredentials(clients, oldInbound.Protocol); err != nil {
+		return false, err
+	}
+	if err := replaceSharedVPNCredentialsInSettings(data, clients, oldInbound.Protocol); err != nil {
+		return false, err
+	}
+
 	var settings map[string]any
 	err = json.Unmarshal([]byte(data.Settings), &settings)
 	if err != nil {
@@ -2628,11 +2647,6 @@ func (s *InboundService) UpdateInboundClient(data *model.Inbound, clientId strin
 	}
 
 	interfaceClients := settings["clients"].([]any)
-
-	oldInbound, err := s.GetInbound(data.Id)
-	if err != nil {
-		return false, err
-	}
 
 	oldClients, err := s.GetClients(oldInbound)
 	if err != nil {

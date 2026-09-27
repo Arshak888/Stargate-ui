@@ -1078,7 +1078,7 @@ func (t *Tgbot) sendResellerInboundKeyboard(chatID int64, userID int, forCreate 
 	kb := make([][]telego.InlineKeyboardButton, 0, len(grants)+1)
 	for _, g := range grants {
 		in, e := t.inboundService.GetInbound(g.InboundId)
-		if e == nil && in != nil && resellerXrayProtocol(in.Protocol) {
+		if e == nil && in != nil {
 			kb = append(kb, []telego.InlineKeyboardButton{tu.InlineKeyboardButton(fmt.Sprintf("🌐 #%d %s", in.Id, in.Remark)).WithCallbackData("rs:inbound:" + strconv.Itoa(in.Id))})
 		}
 	}
@@ -1225,7 +1225,7 @@ func (t *Tgbot) sendResellerInbounds(chatID int64, userID int) {
 	b.WriteString("🌐 Your inbounds:\n")
 	for _, grant := range grants {
 		inbound, err := t.inboundService.GetInbound(grant.InboundId)
-		if err != nil || inbound == nil || !resellerXrayProtocol(inbound.Protocol) {
+		if err != nil || inbound == nil {
 			continue
 		}
 		fmt.Fprintf(&b, "\n• #%d | %s | %s | port %d", inbound.Id, inbound.Remark, inbound.Protocol, inbound.Port)
@@ -1274,15 +1274,6 @@ func (t *Tgbot) sendResellerClients(chatID int64, userID int) {
 	t.SendMsgToTgbot(chatID, b.String())
 }
 
-func resellerXrayProtocol(protocol model.Protocol) bool {
-	switch protocol {
-	case model.VMESS, model.VLESS, model.Trojan, model.Shadowsocks, model.ANYTLS, model.TUIC, model.NAIVE, model.Hysteria, model.Hysteria2:
-		return true
-	default:
-		return false
-	}
-}
-
 func (t *Tgbot) resellerInboundAllowed(userID, inboundID int) bool {
 	var n int64
 	database.GetDB().Model(&model.InboundAccess{}).
@@ -1291,13 +1282,26 @@ func (t *Tgbot) resellerInboundAllowed(userID, inboundID int) bool {
 		return false
 	}
 	inbound, err := t.inboundService.GetInbound(inboundID)
-	return err == nil && inbound != nil && resellerXrayProtocol(inbound.Protocol)
+	return err == nil && inbound != nil
 }
 
 func (t *Tgbot) buildResellerClient(protocol model.Protocol, email string) model.Client {
 	c := model.Client{
 		Email: email, Security: "auto", Enable: true,
 		SubID: t.randomLowerAndNum(16), Comment: "",
+	}
+	sharedUser, sharedPass := "", ""
+	if isVpnLoginProtocol(protocol) {
+		var account model.Account
+		if err := database.GetDB().Where("LOWER(TRIM(email)) = ?", accountKey(email)).First(&account).Error; err == nil {
+			sharedUser, sharedPass = account.VpnUsername, account.Password
+		}
+		if sharedUser == "" {
+			sharedUser = strings.ReplaceAll(uuid.NewString(), "-", "")
+		}
+		if sharedPass == "" {
+			sharedPass = sharedVPNPassword()
+		}
 	}
 	switch protocol {
 	case model.VMESS, model.VLESS:
@@ -1308,10 +1312,10 @@ func (t *Tgbot) buildResellerClient(protocol model.Protocol, email string) model
 	case model.Hysteria, model.Hysteria2:
 		c.Auth = t.randomLowerAndNum(32)
 		c.ID = email
-	case model.L2TP, model.PPTP, model.OPENVPN, model.OPENCONNECT, model.SSTP, model.IKEV2:
-		c.ID = t.randomLowerAndNum(12)
-		c.Password = t.randomLowerAndNum(20)
-	case model.WGC, model.AWG, model.GRE, model.SSH:
+	case model.L2TP, model.PPTP, model.OPENVPN, model.OPENCONNECT, model.SSTP, model.IKEV2, model.SSH:
+		c.ID = sharedUser
+		c.Password = sharedPass
+	case model.WGC, model.AWG, model.GRE:
 		c.ID = email
 	case model.MTPROTO:
 		c.ID = email

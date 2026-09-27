@@ -1394,6 +1394,90 @@ func (s *AccountService) SetMemberships(tx *gorm.DB, accountId int, inboundIds [
 	return nil
 }
 
+// normalizeSharedVPNCredentials enforces one account-wide username/password
+// across every protocol that authenticates with a username and password.
+//
+// The account row is authoritative once it exists. For a brand-new account the
+// first protocol's supplied credentials become the shared pair. A later L2TP,
+// OpenVPN, IKEv2, SSTP, OpenConnect, PPTP or SSH membership therefore receives the
+// exact same pair instead of silently minting a second login.
+func normalizeSharedVPNCredentials(clients []model.Client, protocol model.Protocol) error {
+	if !isVpnLoginProtocol(protocol) {
+		return nil
+	}
+	for i := range clients {
+		if strings.TrimSpace(clients[i].Email) == "" {
+			continue
+		}
+		var account model.Account
+		err := database.GetDB().Where("LOWER(TRIM(email)) = ?", accountKey(clients[i].Email)).First(&account).Error
+		if err == nil {
+			if account.VpnUsername != "" {
+				clients[i].ID = account.VpnUsername
+			}
+			if account.Password != "" {
+				clients[i].Password = account.Password
+			}
+		}
+		if clients[i].ID == "" {
+			clients[i].ID = strings.ReplaceAll(uuid.NewString(), "-", "")
+		}
+		if clients[i].Password == "" {
+			clients[i].Password = sharedVPNPassword()
+		}
+	}
+	return nil
+}
+
+// replaceSharedVPNCredentialsInSettings mirrors the normalized model clients back
+// into the request JSON before the inbound is persisted. This keeps the protocol's
+// own settings and the account projection on the same credential pair immediately.
+func replaceSharedVPNCredentialsInSettings(data *model.Inbound, clients []model.Client, protocol model.Protocol) error {
+	if data == nil || len(clients) == 0 {
+		return nil
+	}
+	var settings map[string]any
+	if err := json.Unmarshal([]byte(data.Settings), &settings); err != nil {
+		return err
+	}
+	entries, ok := settings["clients"].([]any)
+	if !ok {
+		return nil
+	}
+	for i := range entries {
+		if i >= len(clients) {
+			break
+		}
+		entry, ok := entries[i].(map[string]any)
+		if !ok || !isVpnLoginProtocol(protocol) {
+			continue
+		}
+		entry["id"] = clients[i].ID
+		entry["password"] = clients[i].Password
+		entries[i] = entry
+	}
+	settings["clients"] = entries
+	blob, err := json.MarshalIndent(settings, "", "  ")
+	if err != nil {
+		return err
+	}
+	data.Settings = string(blob)
+	return nil
+}
+
+// sharedVPNPassword is valid as a legacy password and as a 2022-Blake3
+// Shadowsocks PSK when that same account password is used by a Shadowsocks
+// membership. 32 random bytes encoded as base64 are exactly 32 bytes after decode.
+func sharedVPNPassword() string {
+	buf := make([]byte, 32)
+	if _, err := rand.Read(buf); err != nil {
+		u1, u2 := uuid.New(), uuid.New()
+		copy(buf[:16], u1[:])
+		copy(buf[16:], u2[:])
+	}
+	return base64.StdEncoding.EncodeToString(buf)
+}
+
 // ensureCredentialsFor mints any credential field a protocol needs and the
 // account does not have yet, then persists it.
 //
