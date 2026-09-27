@@ -128,6 +128,8 @@ type InboundAccess struct {
 type ResellerProfile struct {
 	Id     int `json:"id" gorm:"primaryKey;autoIncrement"`
 	UserId int `json:"userId" gorm:"uniqueIndex"`
+	// TelegramID binds this reseller to one Telegram account for the reseller bot.
+	TelegramID int64 `json:"telegramId" gorm:"uniqueIndex:idx_reseller_telegram_id,where:telegram_id <> 0;default:0"`
 
 	// AllowanceBytes is the cumulative traffic an admin has granted. SpentBytes
 	// is what is currently committed to live accounts plus what past accounts

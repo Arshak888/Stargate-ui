@@ -30,6 +30,11 @@
       <a-input v-model.trim="resellerModal.reseller.nickname"></a-input>
     </a-form-item>
 
+    <a-form-item label="Telegram ID">
+      <a-input-number v-model.number="resellerModal.reseller.telegramId" :min="0" :style="{ width: '100%' }"
+        placeholder="0 = Telegram bot disabled for this reseller"></a-input-number>
+    </a-form-item>
+
     <a-form-item label='{{ i18n "pages.resellers.enable" }}'>
       <a-switch v-model="resellerModal.reseller.enable"></a-switch>
     </a-form-item>
@@ -190,7 +195,7 @@
     confirm: null,
     allInbounds: [],
     reseller: {
-      id: 0, username: '', password: '', nickname: '', enable: true,
+      id: 0, username: '', password: '', nickname: '', telegramId: 0, enable: true,
       unlimited: false, allowanceGb: 0, daysPerGb: 0, minCreateGb: 0, minAddGb: 0,
       allowExternalProxy: false, allowOverview: false, allowOverviewManage: false,
       inboundIds: [],
@@ -229,6 +234,7 @@
         this.reseller = {
           id: reseller.id,
           username: reseller.username,
+          telegramId: Number(reseller.telegramId) || 0,
           password: '', // blank means "keep the current one"
           nickname: reseller.nickname || '',
           enable: !!reseller.enable,
@@ -246,7 +252,7 @@
         };
       } else {
         this.reseller = {
-          id: 0, username: '', password: '', nickname: '', enable: true,
+          id: 0, username: '', password: '', nickname: '', telegramId: 0, enable: true,
           unlimited: false, allowanceGb: 0, daysPerGb: 0, minCreateGb: 0, minAddGb: 0,
           allowExternalProxy: false, allowOverview: false, allowOverviewManage: false,
           inboundIds: [],
@@ -261,6 +267,7 @@
     toPayload(reseller) {
       return {
         username: reseller.username,
+        telegramId: Number(reseller.telegramId) || 0,
         password: reseller.password,
         nickname: reseller.nickname,
         enable: reseller.enable,

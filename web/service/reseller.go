@@ -307,6 +307,29 @@ func (s *ResellerService) ProfileFor(userId int) (*model.ResellerProfile, error)
 	return p, nil
 }
 
+// ProfileForTelegram resolves the reseller bound to a Telegram account.
+// Zero is never a valid binding, so an unbound Telegram user cannot reach reseller operations.
+func (s *ResellerService) ProfileForTelegram(tgID int64) (*model.ResellerProfile, *model.User, error) {
+	if tgID == 0 {
+		return nil, nil, ErrNotAReseller
+	}
+	p := &model.ResellerProfile{}
+	if err := database.GetDB().Where("telegram_id = ? AND telegram_id <> 0", tgID).First(p).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil, ErrNotAReseller
+		}
+		return nil, nil, err
+	}
+	u := &model.User{}
+	if err := database.GetDB().First(u, p.UserId).Error; err != nil {
+		return nil, nil, err
+	}
+	if !u.IsReseller || !u.Enable {
+		return nil, nil, ErrNotAReseller
+	}
+	return p, u, nil
+}
+
 // --- client ownership -----------------------------------------------------------
 //
 // Every one of these fails CLOSED, matching AdminService's inbound access: an
@@ -989,6 +1012,7 @@ func jsonInt64(v any) int64 {
 // serialized.
 type ResellerView struct {
 	Id              int    `json:"id"`
+	TelegramID      int64  `json:"telegramId"`
 	Username        string `json:"username"`
 	Nickname        string `json:"nickname"`
 	Enable          bool   `json:"enable"`
@@ -1014,6 +1038,7 @@ type ResellerView struct {
 // ResellerSpec is the mutable shape of a reseller as the UI submits it.
 type ResellerSpec struct {
 	Username string
+	TelegramID int64
 	// Password empty on update means "keep the existing one".
 	Password string
 	Nickname string
@@ -1108,6 +1133,7 @@ func (s *ResellerService) GetResellers(caller *model.User) ([]ResellerView, erro
 		}
 		out = append(out, ResellerView{
 			Id:                  u.Id,
+			TelegramID:          p.TelegramID,
 			Username:            u.Username,
 			Nickname:            u.Nickname,
 			Enable:              u.Enable,
@@ -1240,6 +1266,7 @@ func (s *ResellerService) AddReseller(caller *model.User, spec ResellerSpec) (*m
 		}
 		return tx.Create(&model.ResellerProfile{
 			UserId:              user.Id,
+			TelegramID:          spec.TelegramID,
 			AllowanceBytes:      gbToBytes(spec.AllowanceGB),
 			Unlimited:           spec.Unlimited,
 			DaysPerGB:           spec.DaysPerGB,
@@ -1333,6 +1360,7 @@ func (s *ResellerService) UpdateReseller(caller *model.User, id int, spec Resell
 		}
 		return tx.Model(&model.ResellerProfile{}).Where("user_id = ?", user.Id).
 			Updates(map[string]any{
+				"telegram_id":            spec.TelegramID,
 				"unlimited":             spec.Unlimited,
 				"days_per_gb":           spec.DaysPerGB,
 				"min_create_gb":         spec.MinCreateGB,

@@ -513,6 +513,7 @@ func (s *Server) startTask() {
 
 	// Make a traffic condition every day, 8:30
 	var entry cron.EntryID
+	var reminderEntry cron.EntryID
 	isTgbotenabled, err := s.settingService.GetTgbotEnabled()
 	if (err == nil) && (isTgbotenabled) {
 		runtime, err := s.settingService.GetTgbotRuntime()
@@ -524,12 +525,15 @@ func (s *Server) startTask() {
 			runtime = "@daily"
 		}
 		logger.Infof("Tg notify enabled,run at %s", runtime)
-		_, err = s.cron.AddJob(runtime, job.NewStatsNotifyJob())
+		entry, err = s.cron.AddJob(runtime, job.NewStatsNotifyJob())
 		if err != nil {
 			logger.Warningf("Add NewStatsNotifyJob: failed to schedule runtime %q: %v", runtime, err)
 			return
 		}
-		s.cron.AddJob("@every 10m", job.NewTelegramExpiryReminderJob())
+		reminderEntry, err = s.cron.AddJob("@every 10m", job.NewTelegramExpiryReminderJob())
+		if err != nil {
+			logger.Warningf("Add TelegramExpiryReminderJob: failed to schedule: %v", err)
+		}
 
 		// check for Telegram bot callback query hash storage reset
 		s.cron.AddJob("@every 2m", job.NewCheckHashStorageJob())
@@ -541,6 +545,7 @@ func (s *Server) startTask() {
 		}
 	} else {
 		s.cron.Remove(entry)
+		s.cron.Remove(reminderEntry)
 	}
 }
 

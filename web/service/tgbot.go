@@ -109,6 +109,7 @@ const (
 // It handles bot commands, user interactions, and status reporting via Telegram.
 type Tgbot struct {
 	inboundService InboundService
+	resellerService ResellerService
 	settingService SettingService
 	serverService  ServerService
 	xrayService    XrayService
@@ -277,6 +278,16 @@ func (t *Tgbot) trySetBotCommands(bot *telego.Bot) {
 			{Command: "help", Description: t.I18nBot("tgbot.commands.helpDesc")},
 			{Command: "status", Description: t.I18nBot("tgbot.commands.statusDesc")},
 			{Command: "id", Description: t.I18nBot("tgbot.commands.idDesc")},
+			{Command: "reseller", Description: "Open reseller panel"},
+			{Command: "balance", Description: "Reseller balance"},
+			{Command: "clients", Description: "My reseller accounts"},
+			{Command: "inbounds", Description: "My reseller inbounds"},
+			{Command: "create", Description: "Create reseller account"},
+			{Command: "renew", Description: "Renew reseller account"},
+			{Command: "delete", Description: "Delete reseller account"},
+			{Command: "reset", Description: "Reset account traffic"},
+			{Command: "enable", Description: "Enable reseller account"},
+			{Command: "disable", Description: "Disable reseller account"},
 		},
 	})
 	if err != nil {
@@ -723,6 +734,18 @@ func (t *Tgbot) answerCommand(message *telego.Message, chatId int64, isAdmin boo
 
 	command, _, commandArgs := tu.ParseCommand(message.Text)
 
+	// Reseller commands are checked by Telegram ID, independently of panel admin
+	// authentication. A reseller never gets admin handlers or access to accounts they
+	// do not own.
+	if !isAdmin {
+		if _, _, err := t.resellerService.ProfileForTelegram(message.From.ID); err == nil {
+			onlyMessage = true
+			if t.answerResellerCommand(chatId, message.From.ID, command, commandArgs) {
+				return
+			}
+		}
+	}
+
 	// Helper function to handle unknown commands.
 	handleUnknownCommand := func() {
 		msg += t.I18nBot("tgbot.commands.unknown")
@@ -791,6 +814,414 @@ func (t *Tgbot) answerCommand(message *telego.Message, chatId int64, isAdmin boo
 	if msg != "" {
 		t.sendResponse(chatId, msg, onlyMessage, isAdmin)
 	}
+}
+
+// answerResellerCommand handles the small, deterministic reseller bot surface.
+// Syntax:
+//   /balance
+//   /clients
+//   /create <inbound-id> <email> <GB> [days]
+//   /renew <email> <GB> [days]
+//   /delete <email>
+//   /reseller
+// All mutations go through ResellerService's pricing/ownership ledger first.
+func (t *Tgbot) answerResellerCommand(chatID, tgID int64, command string, args []string) bool {
+	profile, user, err := t.resellerService.ProfileForTelegram(tgID)
+	if err != nil {
+		return false
+	}
+	switch command {
+	case "start", "reseller":
+		t.sendResellerMenu(chatID, user, profile)
+		return true
+	case "balance":
+		b := t.resellerService.BalanceFor(user)
+		if b.Unlimited {
+			t.SendMsgToTgbot(chatID, fmt.Sprintf("👤 %s\n♾️ Unlimited balance\nActive accounts: %d", user.Username, t.resellerClientCount(user.Id)))
+		} else {
+			t.SendMsgToTgbot(chatID, fmt.Sprintf("👤 %s\n💰 Balance: %s\n📦 Committed: %s\n🟢 Available: %s\n👥 Accounts: %d",
+				user.Username, formatResellerBytes(b.AllowanceBytes), formatResellerBytes(b.SpentBytes),
+				formatResellerBytes(b.AvailableBytes), t.resellerClientCount(user.Id)))
+		}
+		return true
+	case "inbounds":
+		t.sendResellerInbounds(chatID, user.Id)
+		return true
+	case "clients":
+		t.sendResellerClients(chatID, user.Id)
+		return true
+	case "create":
+		if len(args) < 3 {
+			t.SendMsgToTgbot(chatID, "Usage: /create <inbound-id> <email> <GB> [days]")
+			return true
+		}
+		inboundID, e1 := strconv.Atoi(args[0])
+		gb, e2 := strconv.Atoi(args[2])
+		days := 0
+		if len(args) >= 4 {
+			days, _ = strconv.Atoi(args[3])
+		}
+		if e1 != nil || e2 != nil || inboundID <= 0 || gb <= 0 || gb > int(maxRechargeGB) || days < 0 || days > 36500 {
+			t.SendMsgToTgbot(chatID, "Invalid arguments.")
+			return true
+		}
+		msg, _ := t.createResellerClient(user, inboundID, strings.TrimSpace(args[1]), gb, days)
+		t.SendMsgToTgbot(chatID, msg)
+		return true
+	case "renew":
+		if len(args) < 2 {
+			t.SendMsgToTgbot(chatID, "Usage: /renew <email> <GB> [days]")
+			return true
+		}
+		gb, e := strconv.Atoi(args[1])
+		days := 0
+		if len(args) >= 3 {
+			days, _ = strconv.Atoi(args[2])
+		}
+		if e != nil || gb <= 0 || gb > int(maxRechargeGB) || days < 0 || days > 36500 {
+			t.SendMsgToTgbot(chatID, "Invalid arguments.")
+			return true
+		}
+		msg, _ := t.renewResellerClient(user, strings.TrimSpace(args[0]), gb, days)
+		t.SendMsgToTgbot(chatID, msg)
+		return true
+	case "reset":
+		if len(args) != 1 {
+			t.SendMsgToTgbot(chatID, "Usage: /reset <email>")
+			return true
+		}
+		msg := t.resetResellerClient(user, strings.TrimSpace(args[0]))
+		t.SendMsgToTgbot(chatID, msg)
+		return true
+	case "enable", "disable":
+		if len(args) != 1 {
+			t.SendMsgToTgbot(chatID, "Usage: /enable <email> or /disable <email>")
+			return true
+		}
+		msg := t.toggleResellerClient(user, strings.TrimSpace(args[0]), command == "enable")
+		t.SendMsgToTgbot(chatID, msg)
+		return true
+	case "delete":
+		if len(args) != 1 {
+			t.SendMsgToTgbot(chatID, "Usage: /delete <email>")
+			return true
+		}
+		msg := t.deleteResellerClient(user, strings.TrimSpace(args[0]))
+		t.SendMsgToTgbot(chatID, msg)
+		return true
+	default:
+		return false
+	}
+}
+
+func (t *Tgbot) sendResellerMenu(chatID int64, user *model.User, profile *model.ResellerProfile) {
+	b := t.resellerService.BalanceFor(user)
+	balance := formatResellerBytes(b.AvailableBytes)
+	if b.Unlimited {
+		balance = "Unlimited"
+	}
+	t.SendMsgToTgbot(chatID, fmt.Sprintf(
+		"🏪 Reseller panel\nUser: %s\nBalance: %s\n\nCommands:\n/balance\n/inbounds\n/clients\n/create <inbound-id> <email> <GB> [days]\n/renew <email> <GB> [days]\n/reset <email>\n/enable <email>\n/disable <email>\n/delete <email>",
+		user.Username, balance))
+}
+
+func (t *Tgbot) resellerClientCount(userID int) int64 {
+	var n int64
+	database.GetDB().Model(&model.ResellerClient{}).Where("user_id = ?", userID).Count(&n)
+	return n
+}
+
+func formatResellerBytes(v int64) string {
+	if v < 0 {
+		v = 0
+	}
+	const gb = int64(1024 * 1024 * 1024)
+	if v >= gb {
+		return fmt.Sprintf("%.2f GB", float64(v)/float64(gb))
+	}
+	const mb = int64(1024 * 1024)
+	if v >= mb {
+		return fmt.Sprintf("%.2f MB", float64(v)/float64(mb))
+	}
+	return fmt.Sprintf("%d B", v)
+}
+
+func (t *Tgbot) sendResellerInbounds(chatID int64, userID int) {
+	var grants []model.InboundAccess
+	if err := database.GetDB().Where("user_id = ?", userID).Find(&grants).Error; err != nil {
+		t.SendMsgToTgbot(chatID, "Failed to load inbounds.")
+		return
+	}
+	if len(grants) == 0 {
+		t.SendMsgToTgbot(chatID, "No inbounds are assigned to you.")
+		return
+	}
+	var b strings.Builder
+	b.WriteString("🌐 Your inbounds:\n")
+	for _, grant := range grants {
+		inbound, err := t.inboundService.GetInbound(grant.InboundId)
+		if err != nil || inbound == nil {
+			continue
+		}
+		fmt.Fprintf(&b, "\n• #%d | %s | %s | port %d", inbound.Id, inbound.Remark, inbound.Protocol, inbound.Port)
+	}
+	t.SendMsgToTgbot(chatID, b.String())
+}
+
+func (t *Tgbot) sendResellerClients(chatID int64, userID int) {
+	var rows []model.ResellerClient
+	if err := database.GetDB().Where("user_id = ?", userID).Order("id asc").Find(&rows).Error; err != nil {
+		t.SendMsgToTgbot(chatID, "Failed to load accounts.")
+		return
+	}
+	if len(rows) == 0 {
+		t.SendMsgToTgbot(chatID, "No accounts yet.")
+		return
+	}
+	var b strings.Builder
+	b.WriteString("👥 Your accounts:\n")
+	for _, row := range rows {
+		traffic, _ := t.inboundService.GetClientTrafficByEmail(row.Email)
+		if traffic == nil {
+			fmt.Fprintf(&b, "\n• %s | traffic unavailable", row.Email)
+			continue
+		}
+		remaining := traffic.Total - traffic.Up - traffic.Down
+		if remaining < 0 {
+			remaining = 0
+		}
+		status := "active"
+		if !traffic.Enable {
+			status = "disabled"
+		} else if traffic.ExpiryTime > 0 && traffic.ExpiryTime <= time.Now().UnixMilli() {
+			status = "expired"
+		} else if traffic.Total > 0 && traffic.Up+traffic.Down >= traffic.Total {
+			status = "depleted"
+		}
+		fmt.Fprintf(&b, "\n• %s | %s | %s | used %s / left %s",
+			row.Email, status, time.UnixMilli(traffic.ExpiryTime).Format("2006-01-02 15:04"),
+			formatResellerBytes(traffic.Up+traffic.Down), formatResellerBytes(remaining))
+	}
+	t.SendMsgToTgbot(chatID, b.String())
+}
+
+func (t *Tgbot) resellerInboundAllowed(userID, inboundID int) bool {
+	var n int64
+	database.GetDB().Model(&model.InboundAccess{}).
+		Where("user_id = ? AND inbound_id = ?", userID, inboundID).Count(&n)
+	return n > 0
+}
+
+func (t *Tgbot) buildResellerClient(protocol model.Protocol, email string) model.Client {
+	c := model.Client{
+		Email: email, Security: "auto", Enable: true,
+		SubID: t.randomLowerAndNum(16), Comment: "",
+	}
+	switch protocol {
+	case model.VMESS, model.VLESS:
+		c.ID = uuid.NewString()
+	case model.Trojan, model.Shadowsocks, model.ANYTLS, model.NAIVE:
+		c.Password = t.randomLowerAndNum(32)
+		c.ID = email
+	case model.Hysteria, model.Hysteria2:
+		c.Auth = t.randomLowerAndNum(32)
+		c.ID = email
+	case model.L2TP, model.PPTP, model.OPENVPN, model.OPENCONNECT, model.SSTP, model.IKEV2:
+		c.ID = t.randomLowerAndNum(12)
+		c.Password = t.randomLowerAndNum(20)
+	case model.WGC, model.AWG, model.GRE, model.SSH:
+		c.ID = email
+	case model.MTPROTO:
+		c.ID = email
+		c.Secret = t.randomLowerAndNum(32)
+	case model.TUIC:
+		c.ID = uuid.NewString()
+		c.Password = t.randomLowerAndNum(32)
+	default:
+		c.ID = uuid.NewString()
+	}
+	return c
+}
+
+func (t *Tgbot) createResellerClient(user *model.User, inboundID int, email string, gb int, days int) (string, error) {
+	if email == "" {
+		return "Email is required.", errors.New("email required")
+	}
+	if !t.resellerInboundAllowed(user.Id, inboundID) {
+		return "You do not have access to this inbound.", errors.New("inbound not assigned")
+	}
+	inbound, err := t.inboundService.GetInbound(inboundID)
+	if err != nil || inbound == nil {
+		return "Inbound not found.", err
+	}
+	client := t.buildResellerClient(inbound.Protocol, email)
+	client.TotalGB = int64(gb) * oneGB
+	if days > 0 {
+		client.ExpiryTime = time.Now().Add(time.Duration(days) * 24 * time.Hour).UnixMilli()
+	}
+	payload, err := json.Marshal(map[string]any{"clients": []model.Client{client}})
+	if err != nil {
+		return "Failed to build client.", err
+	}
+	data := &model.Inbound{Id: inboundID, Settings: string(payload)}
+	ticket, err := t.resellerService.PrepareClientCreate(user, data)
+	if err != nil {
+		return err.Error(), err
+	}
+	needRestart, err := t.inboundService.AddInboundClient(data)
+	if err != nil {
+		_ = t.resellerService.Rollback(ticket)
+		return err.Error(), err
+	}
+	if needRestart {
+		t.xrayService.SetToNeedRestart()
+	}
+	return fmt.Sprintf("✅ Account created\nEmail: %s\nTraffic: %d GB\nExpiry: %s\nCredential: %s",
+		email, gb, formatResellerExpiry(client.ExpiryTime), resellerCredential(client, inbound.Protocol)), nil
+}
+
+func formatResellerExpiry(ms int64) string {
+	if ms <= 0 {
+		return "unlimited"
+	}
+	return time.UnixMilli(ms).Format("2006-01-02 15:04")
+}
+
+func resellerCredential(c model.Client, p model.Protocol) string {
+	switch p {
+	case model.VMESS, model.VLESS, model.WGC, model.AWG, model.GRE, model.SSH, model.MTPROTO:
+		return c.ID
+	case model.Hysteria, model.Hysteria2:
+		return c.Auth
+	default:
+		return c.Password
+	}
+}
+
+func (t *Tgbot) renewResellerClient(user *model.User, email string, gb int, days int) (string, error) {
+	owner, err := t.resellerService.ClientOwner(email)
+	if err != nil || owner == nil || owner.UserId != user.Id {
+		return "Account not found.", ErrClientNotOwned
+	}
+	traffic, inbound, err := t.inboundService.GetClientInboundByEmail(email)
+	if err != nil || traffic == nil || inbound == nil {
+		return "Account data not found.", err
+	}
+	clients, err := t.inboundService.GetClients(inbound)
+	if err != nil {
+		return "Account data not found.", err
+	}
+	var current *model.Client
+	for i := range clients {
+		if clients[i].Email == email {
+			current = &clients[i]
+			break
+		}
+	}
+	if current == nil {
+		return "Account not found on its home inbound.", errors.New("client not found")
+	}
+	current.TotalGB = traffic.Total + int64(gb)*oneGB
+	if days > 0 {
+		base := time.Now()
+		if traffic.ExpiryTime > base.UnixMilli() {
+			base = time.UnixMilli(traffic.ExpiryTime)
+		}
+		current.ExpiryTime = base.Add(time.Duration(days) * 24 * time.Hour).UnixMilli()
+	}
+	payload, err := json.Marshal(map[string]any{"clients": []model.Client{*current}})
+	if err != nil {
+		return "Failed to build update.", err
+	}
+	data := &model.Inbound{Id: inbound.Id, Settings: string(payload)}
+	clientID := clientIdentity(inbound.Protocol, *current)
+	ticket, err := t.resellerService.PrepareClientUpdate(user, data, clientID)
+	if err != nil {
+		return err.Error(), err
+	}
+	needRestart, err := t.inboundService.UpdateInboundClient(data, clientID)
+	if err != nil {
+		_ = t.resellerService.Rollback(ticket)
+		return err.Error(), err
+	}
+	if needRestart {
+		t.xrayService.SetToNeedRestart()
+	}
+	return fmt.Sprintf("✅ Account renewed\nEmail: %s\nTraffic: %s\nExpiry: %s",
+		email, formatResellerBytes(current.TotalGB), formatResellerExpiry(current.ExpiryTime)), nil
+}
+
+func (t *Tgbot) resetResellerClient(user *model.User, email string) string {
+	owner, err := t.resellerService.ClientOwner(email)
+	if err != nil || owner == nil || owner.UserId != user.Id {
+		return "Account not found."
+	}
+	ticket, err := t.resellerService.PrepareClientReset(user, email)
+	if err != nil {
+		return err.Error()
+	}
+	if err := t.inboundService.ResetClientTrafficByEmail(email); err != nil {
+		_ = t.resellerService.Rollback(ticket)
+		return err.Error()
+	}
+	return "✅ Traffic reset. The reset was charged from your balance."
+}
+
+func (t *Tgbot) toggleResellerClient(user *model.User, email string, enable bool) string {
+	owner, err := t.resellerService.ClientOwner(email)
+	if err != nil || owner == nil || owner.UserId != user.Id {
+		return "Account not found."
+	}
+	if enable {
+		traffic, err := t.inboundService.GetClientTrafficByEmail(email)
+		if err != nil || traffic == nil {
+			return "Account data not found."
+		}
+		if traffic.Total > 0 && traffic.Up+traffic.Down >= traffic.Total {
+			return "Cannot enable a depleted account. Add traffic with /renew first."
+		}
+	}
+	_, needRestart, err := t.inboundService.SetClientEnableByEmail(email, enable)
+	if err != nil {
+		return err.Error()
+	}
+	if needRestart {
+		t.xrayService.SetToNeedRestart()
+	}
+	if enable {
+		return "✅ Account enabled."
+	}
+	return "✅ Account disabled."
+}
+
+func (t *Tgbot) deleteResellerClient(user *model.User, email string) string {
+	owner, err := t.resellerService.ClientOwner(email)
+	if err != nil || owner == nil || owner.UserId != user.Id {
+		return "Account not found."
+	}
+	used, known, err := t.resellerService.UsageOf(email)
+	if err != nil {
+		return "Could not read usage."
+	}
+	ids, err := servingInboundIds(database.GetDB(), email)
+	if err != nil {
+		return "Could not resolve account memberships."
+	}
+	needRestart := false
+	for _, id := range ids {
+		restart, err := t.inboundService.DelInboundClientByEmail(id, email)
+		if err != nil {
+			return fmt.Sprintf("Delete stopped: %v", err)
+		}
+		needRestart = needRestart || restart
+	}
+	if needRestart {
+		t.xrayService.SetToNeedRestart()
+	}
+	if err := t.resellerService.RefundDeleted(email, used, known); err != nil {
+		return fmt.Sprintf("Account removed, but balance settlement failed: %v", err)
+	}
+	return "✅ Account deleted and unused balance refunded."
 }
 
 // sendResponse sends the response message based on the onlyMessage flag.

@@ -26,6 +26,7 @@ const maxRechargeGB = int64(1) << 30
 // ever arrives as JSON.
 type resellerForm struct {
 	Username string `json:"username" form:"username"`
+	TelegramID int64 `json:"telegramId" form:"telegramId"`
 	// Password empty on update means "keep the existing one", which is what lets the
 	// edit modal open without the panel ever shipping a hash to the browser.
 	Password string `json:"password" form:"password"`
@@ -74,6 +75,7 @@ func (f *resellerForm) inboundIds() []int {
 func (f *resellerForm) spec() service.ResellerSpec {
 	return service.ResellerSpec{
 		Username:            f.Username,
+		TelegramID:          f.TelegramID,
 		Password:            f.Password,
 		Nickname:            f.Nickname,
 		Enable:              f.Enable,
