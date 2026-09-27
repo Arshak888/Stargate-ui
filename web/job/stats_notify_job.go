@@ -32,7 +32,7 @@ func (j *StatsNotifyJob) Run() {
 }
 
 // TelegramExpiryReminderJob sends customer expiry alerts independently from the admin report schedule.
-type TelegramExpiryReminderJob struct { tgbotService service.Tgbot }
+type TelegramExpiryReminderJob struct{ tgbotService service.Tgbot }
 
 func NewTelegramExpiryReminderJob() *TelegramExpiryReminderJob { return new(TelegramExpiryReminderJob) }
 

@@ -37,20 +37,20 @@ type AllSetting struct {
 	Datepicker  string `json:"datepicker" form:"datepicker"`   // Date picker format
 
 	// Telegram bot settings
-	TgBotEnable      bool   `json:"tgBotEnable" form:"tgBotEnable"`           // Enable Telegram bot notifications
-	TgBotToken       string `json:"tgBotToken" form:"tgBotToken"`             // Telegram bot token
-	TgBotProxy       string `json:"tgBotProxy" form:"tgBotProxy"`             // Proxy URL for Telegram bot
-	TgBotAPIServer   string `json:"tgBotAPIServer" form:"tgBotAPIServer"`     // Custom API server for Telegram bot
-	TgBotChatId      string `json:"tgBotChatId" form:"tgBotChatId"`           // Telegram chat ID for notifications
-	TgRunTime        string `json:"tgRunTime" form:"tgRunTime"`               // Cron schedule for Telegram notifications
-	TgBotBackup      bool   `json:"tgBotBackup" form:"tgBotBackup"`           // Enable database backup via Telegram
-	TgBotLoginNotify bool   `json:"tgBotLoginNotify" form:"tgBotLoginNotify"` // Send login notifications
-	TgCpu                     int    `json:"tgCpu" form:"tgCpu"`                     // CPU usage threshold for alerts
-	TgLang                    string `json:"tgLang" form:"tgLang"`                   // Telegram bot language
-	TgExpiryReminderRuntime   string `json:"tgExpiryReminderRuntime" form:"tgExpiryReminderRuntime"`
-	TgExpiryReminder2Days     int    `json:"tgExpiryReminder2Days" form:"tgExpiryReminder2Days"`
-	TgExpiryReminder1Day      int    `json:"tgExpiryReminder1Day" form:"tgExpiryReminder1Day"`
-	TgExpiryReminderOnExpire  bool   `json:"tgExpiryReminderOnExpire" form:"tgExpiryReminderOnExpire"`
+	TgBotEnable              bool   `json:"tgBotEnable" form:"tgBotEnable"`           // Enable Telegram bot notifications
+	TgBotToken               string `json:"tgBotToken" form:"tgBotToken"`             // Telegram bot token
+	TgBotProxy               string `json:"tgBotProxy" form:"tgBotProxy"`             // Proxy URL for Telegram bot
+	TgBotAPIServer           string `json:"tgBotAPIServer" form:"tgBotAPIServer"`     // Custom API server for Telegram bot
+	TgBotChatId              string `json:"tgBotChatId" form:"tgBotChatId"`           // Telegram chat ID for notifications
+	TgRunTime                string `json:"tgRunTime" form:"tgRunTime"`               // Cron schedule for Telegram notifications
+	TgBotBackup              bool   `json:"tgBotBackup" form:"tgBotBackup"`           // Enable database backup via Telegram
+	TgBotLoginNotify         bool   `json:"tgBotLoginNotify" form:"tgBotLoginNotify"` // Send login notifications
+	TgCpu                    int    `json:"tgCpu" form:"tgCpu"`                       // CPU usage threshold for alerts
+	TgLang                   string `json:"tgLang" form:"tgLang"`                     // Telegram bot language
+	TgExpiryReminderRuntime  string `json:"tgExpiryReminderRuntime" form:"tgExpiryReminderRuntime"`
+	TgExpiryReminder2Days    int    `json:"tgExpiryReminder2Days" form:"tgExpiryReminder2Days"`
+	TgExpiryReminder1Day     int    `json:"tgExpiryReminder1Day" form:"tgExpiryReminder1Day"`
+	TgExpiryReminderOnExpire bool   `json:"tgExpiryReminderOnExpire" form:"tgExpiryReminderOnExpire"`
 
 	// Security settings
 	TimeLocation    string `json:"timeLocation" form:"timeLocation"`       // Time zone location

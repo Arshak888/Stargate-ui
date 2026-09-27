@@ -95,7 +95,14 @@ var (
 
 var userStates = make(map[int64]string)
 
-type resellerFlow struct { Stage string; InboundID int; Email string; GB int; Days int }
+type resellerFlow struct {
+	Stage     string
+	InboundID int
+	Email     string
+	GB        int
+	Days      int
+}
+
 var resellerFlows sync.Map
 
 // LoginStatus represents the result of a login attempt.
@@ -111,12 +118,12 @@ const (
 // Tgbot provides business logic for Telegram bot integration.
 // It handles bot commands, user interactions, and status reporting via Telegram.
 type Tgbot struct {
-	inboundService InboundService
+	inboundService  InboundService
 	resellerService ResellerService
-	settingService SettingService
-	serverService  ServerService
-	xrayService    XrayService
-	lastStatus     *Status
+	settingService  SettingService
+	serverService   ServerService
+	xrayService     XrayService
+	lastStatus      *Status
 }
 
 // NewTgbot creates a new Tgbot instance.
@@ -385,14 +392,20 @@ func (t *Tgbot) SendExpiryReminders() {
 		return
 	}
 	now := time.Now()
-		settings, _ := t.settingService.GetAllSetting()
-		firstDays, secondDays, notifyExpired := 2, 1, true
-		if settings != nil {
-			if settings.TgExpiryReminder2Days > 0 { firstDays = settings.TgExpiryReminder2Days }
-			if settings.TgExpiryReminder1Day > 0 { secondDays = settings.TgExpiryReminder1Day }
-			notifyExpired = settings.TgExpiryReminderOnExpire
+	settings, _ := t.settingService.GetAllSetting()
+	firstDays, secondDays, notifyExpired := 2, 1, true
+	if settings != nil {
+		if settings.TgExpiryReminder2Days > 0 {
+			firstDays = settings.TgExpiryReminder2Days
 		}
-		if firstDays < secondDays { firstDays, secondDays = secondDays, firstDays }
+		if settings.TgExpiryReminder1Day > 0 {
+			secondDays = settings.TgExpiryReminder1Day
+		}
+		notifyExpired = settings.TgExpiryReminderOnExpire
+	}
+	if firstDays < secondDays {
+		firstDays, secondDays = secondDays, firstDays
+	}
 	for _, account := range accounts {
 		remaining := time.Until(time.UnixMilli(account.ExpiryTime))
 		event := ""
@@ -433,9 +446,9 @@ func (t *Tgbot) SendExpiryReminders() {
 			fmt.Sprintf("%d bytes", remainingTraffic))
 		switch event {
 		case "2d":
-			msg = "⏰ 2 days remaining\n" + msg
+			msg = fmt.Sprintf("⏰ %d days remaining\n%s", firstDays, msg)
 		case "1d":
-			msg = "⚠️ 1 day remaining\n" + msg
+			msg = fmt.Sprintf("⚠️ %d days remaining\n%s", secondDays, msg)
 		case "expired":
 			msg = "❌ Account expired\n" + msg
 		}
@@ -592,7 +605,9 @@ func (t *Tgbot) OnReceive() {
 		}, th.AnyCallbackQueryWithMessage())
 
 		h.HandleMessage(func(ctx *th.Context, message telego.Message) error {
-			if t.handleResellerText(&message) { return nil }
+			if t.handleResellerText(&message) {
+				return nil
+			}
 			if userState, exists := userStates[message.Chat.ID]; exists {
 				switch userState {
 				case "awaiting_id":
@@ -832,12 +847,14 @@ func (t *Tgbot) answerCommand(message *telego.Message, chatId int64, isAdmin boo
 
 // answerResellerCommand handles the small, deterministic reseller bot surface.
 // Syntax:
-//   /balance
-//   /clients
-//   /create <inbound-id> <email> <GB> [days]
-//   /renew <email> <GB> [days]
-//   /delete <email>
-//   /reseller
+//
+//	/balance
+//	/clients
+//	/create <inbound-id> <email> <GB> [days]
+//	/renew <email> <GB> [days]
+//	/delete <email>
+//	/reseller
+//
 // All mutations go through ResellerService's pricing/ownership ledger first.
 func (t *Tgbot) answerResellerCommand(chatID, tgID int64, command string, args []string) bool {
 	profile, user, err := t.resellerService.ProfileForTelegram(tgID)
@@ -947,65 +964,233 @@ func (t *Tgbot) resellerKeyboard() *telego.InlineKeyboardMarkup {
 
 func (t *Tgbot) handleResellerCallback(q *telego.CallbackQuery) bool {
 	_, user, err := t.resellerService.ProfileForTelegram(q.From.ID)
-	if err != nil || user == nil || !user.Enable { return false }
+	if err != nil || user == nil || !user.Enable {
+		return false
+	}
 	chatID := q.Message.GetChat().ID
 	data := q.Data
 	if data == "rs:menu" || data == "rs:balance" {
 		t.sendCallbackAnswerTgBot(q.ID, "Updated")
-		b := t.resellerService.BalanceFor(user); bal := formatResellerBytes(b.AvailableBytes); if b.Unlimited { bal = "Unlimited" }
+		b := t.resellerService.BalanceFor(user)
+		bal := formatResellerBytes(b.AvailableBytes)
+		if b.Unlimited {
+			bal = "Unlimited"
+		}
 		t.SendMsgToTgbot(chatID, fmt.Sprintf("🏪 <b>Reseller Panel</b>\nUser: %s\nBalance: %s", user.Username, bal), t.resellerKeyboard())
 		return true
 	}
 	if data == "rs:create" {
-		t.sendResellerInboundKeyboard(chatID, user.Id, true); t.sendCallbackAnswerTgBot(q.ID, "Choose inbound"); return true
+		t.sendResellerInboundKeyboard(chatID, user.Id, true)
+		t.sendCallbackAnswerTgBot(q.ID, "Choose inbound")
+		return true
 	}
-	if data == "rs:inbounds" { t.sendResellerInboundKeyboard(chatID, user.Id, false); return true }
-	if data == "rs:clients" || data == "rs:renew" { t.sendResellerClientsKeyboard(chatID, user.Id, data == "rs:renew"); return true }
+	if data == "rs:inbounds" {
+		t.sendResellerInboundKeyboard(chatID, user.Id, false)
+		return true
+	}
+	if data == "rs:clients" || data == "rs:renew" {
+		t.sendResellerClientsKeyboard(chatID, user.Id, data == "rs:renew")
+		return true
+	}
 	if strings.HasPrefix(data, "rs:inbound:") {
-		id, e := strconv.Atoi(strings.TrimPrefix(data, "rs:inbound:")); if e != nil || !t.resellerInboundAllowed(user.Id, id) { return true }
-		resellerFlows.Store(chatID, &resellerFlow{Stage:"create_email", InboundID:id}); t.sendCallbackAnswerTgBot(q.ID, "Inbound selected"); t.SendMsgToTgbot(chatID, "✏️ Enter customer email:"); return true
+		id, e := strconv.Atoi(strings.TrimPrefix(data, "rs:inbound:"))
+		if e != nil || !t.resellerInboundAllowed(user.Id, id) {
+			return true
+		}
+		resellerFlows.Store(chatID, &resellerFlow{Stage: "create_email", InboundID: id})
+		t.sendCallbackAnswerTgBot(q.ID, "Inbound selected")
+		t.SendMsgToTgbot(chatID, "✏️ Enter customer email:")
+		return true
 	}
 	if strings.HasPrefix(data, "rs:manage:") {
-		id, e := strconv.ParseInt(strings.TrimPrefix(data, "rs:manage:"), 10, 64); if e != nil { return true }
-		var row model.ResellerClient; if database.GetDB().Where("id = ? AND user_id = ?", id, user.Id).First(&row).Error != nil { return true }
-		kb := tu.InlineKeyboard(tu.InlineKeyboardRow(tu.InlineKeyboardButton("🔄 Renew").WithCallbackData("rs:renew:"+strconv.FormatInt(id,10)), tu.InlineKeyboardButton("♻️ Reset").WithCallbackData("rs:reset:"+strconv.FormatInt(id,10))), tu.InlineKeyboardRow(tu.InlineKeyboardButton("✅ Enable").WithCallbackData("rs:enable:"+strconv.FormatInt(id,10)), tu.InlineKeyboardButton("⛔ Disable").WithCallbackData("rs:disable:"+strconv.FormatInt(id,10))), tu.InlineKeyboardRow(tu.InlineKeyboardButton("🗑 Delete").WithCallbackData("rs:delete:"+strconv.FormatInt(id,10))), tu.InlineKeyboardRow(tu.InlineKeyboardButton("◀️ Menu").WithCallbackData("rs:menu")))
-		t.editMessageTgBot(chatID, q.Message.GetMessageID(), fmt.Sprintf("⚙️ <b>%s</b>", html.EscapeString(row.Email)), kb); return true
+		id, e := strconv.ParseInt(strings.TrimPrefix(data, "rs:manage:"), 10, 64)
+		if e != nil {
+			return true
+		}
+		var row model.ResellerClient
+		if database.GetDB().Where("id = ? AND user_id = ?", id, user.Id).First(&row).Error != nil {
+			return true
+		}
+		kb := tu.InlineKeyboard(tu.InlineKeyboardRow(tu.InlineKeyboardButton("✏️ Edit").WithCallbackData("rs:edit:"+strconv.FormatInt(id, 10)), tu.InlineKeyboardButton("🔄 Renew").WithCallbackData("rs:renew:"+strconv.FormatInt(id, 10))), tu.InlineKeyboardRow(tu.InlineKeyboardButton("♻️ Reset").WithCallbackData("rs:reset:"+strconv.FormatInt(id, 10))), tu.InlineKeyboardRow(tu.InlineKeyboardButton("✅ Enable").WithCallbackData("rs:enable:"+strconv.FormatInt(id, 10)), tu.InlineKeyboardButton("⛔ Disable").WithCallbackData("rs:disable:"+strconv.FormatInt(id, 10))), tu.InlineKeyboardRow(tu.InlineKeyboardButton("🗑 Delete").WithCallbackData("rs:delete:"+strconv.FormatInt(id, 10))), tu.InlineKeyboardRow(tu.InlineKeyboardButton("◀️ Menu").WithCallbackData("rs:menu")))
+		t.editMessageTgBot(chatID, q.Message.GetMessageID(), fmt.Sprintf("⚙️ <b>%s</b>", html.EscapeString(row.Email)), kb)
+		return true
+	}
+	if strings.HasPrefix(data, "rs:edit:") {
+		id, e := strconv.ParseInt(strings.TrimPrefix(data, "rs:edit:"), 10, 64)
+		if e != nil {
+			return true
+		}
+		var row model.ResellerClient
+		if database.GetDB().Where("id = ? AND user_id = ?", id, user.Id).First(&row).Error != nil {
+			return true
+		}
+		resellerFlows.Store(chatID, &resellerFlow{Stage: "edit_gb", Email: row.Email})
+		t.SendMsgToTgbot(chatID, fmt.Sprintf("✏️ Edit <b>%s</b>\nEnter total traffic in GB (0 = unlimited):", html.EscapeString(row.Email)))
+		return true
 	}
 	if strings.HasPrefix(data, "rs:renew:") {
-		id, e := strconv.ParseInt(strings.TrimPrefix(data, "rs:renew:"),10,64); if e != nil { return true }; var row model.ResellerClient
-		if database.GetDB().Where("id = ? AND user_id = ?", id, user.Id).First(&row).Error != nil { return true }
-		resellerFlows.Store(chatID, &resellerFlow{Stage:"renew_gb", Email:row.Email}); t.SendMsgToTgbot(chatID, fmt.Sprintf("🔄 Renew <b>%s</b>\nEnter additional GB:", html.EscapeString(row.Email))); return true
+		id, e := strconv.ParseInt(strings.TrimPrefix(data, "rs:renew:"), 10, 64)
+		if e != nil {
+			return true
+		}
+		var row model.ResellerClient
+		if database.GetDB().Where("id = ? AND user_id = ?", id, user.Id).First(&row).Error != nil {
+			return true
+		}
+		resellerFlows.Store(chatID, &resellerFlow{Stage: "renew_gb", Email: row.Email})
+		t.SendMsgToTgbot(chatID, fmt.Sprintf("🔄 Renew <b>%s</b>\nEnter additional GB:", html.EscapeString(row.Email)))
+		return true
 	}
 	if strings.HasPrefix(data, "rs:reset:") || strings.HasPrefix(data, "rs:delete:") || strings.HasPrefix(data, "rs:enable:") || strings.HasPrefix(data, "rs:disable:") {
-		prefixes := []string{"rs:reset:","rs:delete:","rs:enable:","rs:disable:"}; raw := data; for _,p := range prefixes { raw = strings.TrimPrefix(raw,p) }; id,e:=strconv.ParseInt(raw,10,64); if e!=nil{return true}; var row model.ResellerClient
-		if database.GetDB().Where("id = ? AND user_id = ?",id,user.Id).First(&row).Error!=nil{return true}
-		var msg string; switch { case strings.HasPrefix(data,"rs:reset:"): msg=t.resetResellerClient(user,row.Email); case strings.HasPrefix(data,"rs:delete:"): msg=t.deleteResellerClient(user,row.Email); case strings.HasPrefix(data,"rs:enable:"): msg=t.toggleResellerClient(user,row.Email,true); default: msg=t.toggleResellerClient(user,row.Email,false) }
-		t.sendCallbackAnswerTgBot(q.ID,msg); t.sendResellerClientsKeyboard(chatID,user.Id,false); return true
+		prefixes := []string{"rs:reset:", "rs:delete:", "rs:enable:", "rs:disable:"}
+		raw := data
+		for _, p := range prefixes {
+			raw = strings.TrimPrefix(raw, p)
+		}
+		id, e := strconv.ParseInt(raw, 10, 64)
+		if e != nil {
+			return true
+		}
+		var row model.ResellerClient
+		if database.GetDB().Where("id = ? AND user_id = ?", id, user.Id).First(&row).Error != nil {
+			return true
+		}
+		var msg string
+		switch {
+		case strings.HasPrefix(data, "rs:reset:"):
+			msg = t.resetResellerClient(user, row.Email)
+		case strings.HasPrefix(data, "rs:delete:"):
+			msg = t.deleteResellerClient(user, row.Email)
+		case strings.HasPrefix(data, "rs:enable:"):
+			msg = t.toggleResellerClient(user, row.Email, true)
+		default:
+			msg = t.toggleResellerClient(user, row.Email, false)
+		}
+		t.sendCallbackAnswerTgBot(q.ID, msg)
+		t.sendResellerClientsKeyboard(chatID, user.Id, false)
+		return true
 	}
 	return false
 }
 
 func (t *Tgbot) sendResellerInboundKeyboard(chatID int64, userID int, forCreate bool) {
-	var grants []model.InboundAccess; if database.GetDB().Where("user_id = ?",userID).Find(&grants).Error != nil { return }
-	kb := make([][]telego.InlineKeyboardButton,0,len(grants)+1); for _,g := range grants { in,e:=t.inboundService.GetInbound(g.InboundId); if e==nil && in!=nil { kb=append(kb,[]telego.InlineKeyboardButton{tu.InlineKeyboardButton(fmt.Sprintf("🌐 #%d %s",in.Id,in.Remark)).WithCallbackData("rs:inbound:"+strconv.Itoa(in.Id))}) } }
-	if !forCreate { kb=append(kb,[]telego.InlineKeyboardButton{tu.InlineKeyboardButton("◀️ Menu").WithCallbackData("rs:menu")}) }
-	t.SendMsgToTgbot(chatID,"🌐 Choose an inbound:",&telego.InlineKeyboardMarkup{InlineKeyboard:kb})
+	var grants []model.InboundAccess
+	if database.GetDB().Where("user_id = ?", userID).Find(&grants).Error != nil {
+		return
+	}
+	kb := make([][]telego.InlineKeyboardButton, 0, len(grants)+1)
+	for _, g := range grants {
+		in, e := t.inboundService.GetInbound(g.InboundId)
+		if e == nil && in != nil {
+			kb = append(kb, []telego.InlineKeyboardButton{tu.InlineKeyboardButton(fmt.Sprintf("🌐 #%d %s", in.Id, in.Remark)).WithCallbackData("rs:inbound:" + strconv.Itoa(in.Id))})
+		}
+	}
+	if !forCreate {
+		kb = append(kb, []telego.InlineKeyboardButton{tu.InlineKeyboardButton("◀️ Menu").WithCallbackData("rs:menu")})
+	}
+	t.SendMsgToTgbot(chatID, "🌐 Choose an inbound:", &telego.InlineKeyboardMarkup{InlineKeyboard: kb})
 }
 
 func (t *Tgbot) sendResellerClientsKeyboard(chatID int64, userID int, renew bool) {
-	var rows []model.ResellerClient; if database.GetDB().Where("user_id = ?",userID).Order("id asc").Find(&rows).Error != nil { return }; if len(rows)==0 { t.SendMsgToTgbot(chatID,"No accounts yet.",t.resellerKeyboard()); return }
-	kb:=make([][]telego.InlineKeyboardButton,0,len(rows)+1); for _,r:=range rows { action:="rs:manage:"; if renew { action="rs:renew:" }; kb=append(kb,[]telego.InlineKeyboardButton{tu.InlineKeyboardButton("👤 "+r.Email).WithCallbackData(action+strconv.FormatInt(int64(r.Id),10))}) }; kb=append(kb,[]telego.InlineKeyboardButton{tu.InlineKeyboardButton("◀️ Menu").WithCallbackData("rs:menu")}); t.SendMsgToTgbot(chatID,"👥 Choose an account:",&telego.InlineKeyboardMarkup{InlineKeyboard:kb})
+	var rows []model.ResellerClient
+	if database.GetDB().Where("user_id = ?", userID).Order("id asc").Find(&rows).Error != nil {
+		return
+	}
+	if len(rows) == 0 {
+		t.SendMsgToTgbot(chatID, "No accounts yet.", t.resellerKeyboard())
+		return
+	}
+	kb := make([][]telego.InlineKeyboardButton, 0, len(rows)+1)
+	for _, r := range rows {
+		action := "rs:manage:"
+		if renew {
+			action = "rs:renew:"
+		}
+		kb = append(kb, []telego.InlineKeyboardButton{tu.InlineKeyboardButton("👤 " + r.Email).WithCallbackData(action + strconv.FormatInt(int64(r.Id), 10))})
+	}
+	kb = append(kb, []telego.InlineKeyboardButton{tu.InlineKeyboardButton("◀️ Menu").WithCallbackData("rs:menu")})
+	t.SendMsgToTgbot(chatID, "👥 Choose an account:", &telego.InlineKeyboardMarkup{InlineKeyboard: kb})
 }
 
 func (t *Tgbot) handleResellerText(message *telego.Message) bool {
-	_, user, err:=t.resellerService.ProfileForTelegram(message.From.ID); if err!=nil || user==nil || !user.Enable{return false}; v,ok:=resellerFlows.Load(message.Chat.ID); if !ok{return false}; f:=v.(*resellerFlow); s:=strings.TrimSpace(message.Text); if s==""{return true}
+	_, user, err := t.resellerService.ProfileForTelegram(message.From.ID)
+	if err != nil || user == nil || !user.Enable {
+		return false
+	}
+	v, ok := resellerFlows.Load(message.Chat.ID)
+	if !ok {
+		return false
+	}
+	f := v.(*resellerFlow)
+	s := strings.TrimSpace(message.Text)
+	if s == "" {
+		return true
+	}
 	switch f.Stage {
-	case "create_email": if !t.isSingleWord(s) && strings.Contains(s,"@"){f.Email=s;f.Stage="create_gb";t.SendMsgToTgbot(message.Chat.ID,"📦 Enter traffic in GB:")}else{t.SendMsgToTgbot(message.Chat.ID,"Invalid email. Try again:")}
-	case "create_gb": n,e:=strconv.Atoi(s);if e!=nil||n<=0||n>1000000{t.SendMsgToTgbot(message.Chat.ID,"Enter a valid positive GB number:")}else{f.GB=n;f.Stage="create_days";t.SendMsgToTgbot(message.Chat.ID,"⏳ Enter validity in days, 0 for no expiry:")}
-	case "create_days": n,e:=strconv.Atoi(s);if e!=nil||n<0||n>36500{t.SendMsgToTgbot(message.Chat.ID,"Enter days from 0 to 36500:")}else{m,_:=t.createResellerClient(user,f.InboundID,f.Email,f.GB,n);resellerFlows.Delete(message.Chat.ID);t.SendMsgToTgbot(message.Chat.ID,m,t.resellerKeyboard())}
-	case "renew_gb": n,e:=strconv.Atoi(s);if e!=nil||n<=0||n>1000000{t.SendMsgToTgbot(message.Chat.ID,"Enter a valid positive GB number:")}else{f.GB=n;f.Stage="renew_days";t.SendMsgToTgbot(message.Chat.ID,"⏳ Enter additional days, 0 to keep expiry:")}
-	case "renew_days": n,e:=strconv.Atoi(s);if e!=nil||n<0||n>36500{t.SendMsgToTgbot(message.Chat.ID,"Enter days from 0 to 36500:")}else{m,_:=t.renewResellerClient(user,f.Email,f.GB,n);resellerFlows.Delete(message.Chat.ID);t.SendMsgToTgbot(message.Chat.ID,m,t.resellerKeyboard())}
-	}; return true
+	case "create_email":
+		if !t.isSingleWord(s) && strings.Contains(s, "@") {
+			f.Email = s
+			f.Stage = "create_gb"
+			t.SendMsgToTgbot(message.Chat.ID, "📦 Enter traffic in GB:")
+		} else {
+			t.SendMsgToTgbot(message.Chat.ID, "Invalid email. Try again:")
+		}
+	case "create_gb":
+		n, e := strconv.Atoi(s)
+		if e != nil || n <= 0 || n > 1000000 {
+			t.SendMsgToTgbot(message.Chat.ID, "Enter a valid positive GB number:")
+		} else {
+			f.GB = n
+			f.Stage = "create_days"
+			t.SendMsgToTgbot(message.Chat.ID, "⏳ Enter validity in days, 0 for no expiry:")
+		}
+	case "create_days":
+		n, e := strconv.Atoi(s)
+		if e != nil || n < 0 || n > 36500 {
+			t.SendMsgToTgbot(message.Chat.ID, "Enter days from 0 to 36500:")
+		} else {
+			m, _ := t.createResellerClient(user, f.InboundID, f.Email, f.GB, n)
+			resellerFlows.Delete(message.Chat.ID)
+			t.SendMsgToTgbot(message.Chat.ID, m, t.resellerKeyboard())
+		}
+	case "edit_gb":
+		n, e := strconv.Atoi(s)
+		if e != nil || n < 0 || n > 1000000 {
+			t.SendMsgToTgbot(message.Chat.ID, "Enter a valid GB number from 0 to 1000000:")
+		} else {
+			f.GB = n
+			f.Stage = "edit_days"
+			t.SendMsgToTgbot(message.Chat.ID, "Enter validity in days, 0 for unlimited:")
+		}
+	case "edit_days":
+		n, e := strconv.Atoi(s)
+		if e != nil || n < 0 || n > 36500 {
+			t.SendMsgToTgbot(message.Chat.ID, "Enter days from 0 to 36500:")
+		} else {
+			m, _ := t.editResellerClient(user, f.Email, f.GB, n)
+			resellerFlows.Delete(message.Chat.ID)
+			t.SendMsgToTgbot(message.Chat.ID, m, t.resellerKeyboard())
+		}
+	case "renew_gb":
+		n, e := strconv.Atoi(s)
+		if e != nil || n <= 0 || n > 1000000 {
+			t.SendMsgToTgbot(message.Chat.ID, "Enter a valid positive GB number:")
+		} else {
+			f.GB = n
+			f.Stage = "renew_days"
+			t.SendMsgToTgbot(message.Chat.ID, "⏳ Enter additional days, 0 to keep expiry:")
+		}
+	case "renew_days":
+		n, e := strconv.Atoi(s)
+		if e != nil || n < 0 || n > 36500 {
+			t.SendMsgToTgbot(message.Chat.ID, "Enter days from 0 to 36500:")
+		} else {
+			m, _ := t.renewResellerClient(user, f.Email, f.GB, n)
+			resellerFlows.Delete(message.Chat.ID)
+			t.SendMsgToTgbot(message.Chat.ID, m, t.resellerKeyboard())
+		}
+	}
+	return true
 }
 
 func (t *Tgbot) resellerClientCount(userID int) int64 {
@@ -1159,8 +1344,113 @@ func (t *Tgbot) createResellerClient(user *model.User, inboundID int, email stri
 	if needRestart {
 		t.xrayService.SetToNeedRestart()
 	}
-	return fmt.Sprintf("✅ Account created\nEmail: %s\nTraffic: %d GB\nExpiry: %s\nCredential: %s",
-		email, gb, formatResellerExpiry(client.ExpiryTime), resellerCredential(client, inbound.Protocol)), nil
+	message := fmt.Sprintf("✅ Account created\nEmail: %s\nTraffic: %d GB\nExpiry: %s\nCredential: %s",
+		email, gb, formatResellerExpiry(client.ExpiryTime), resellerCredential(client, inbound.Protocol))
+	if links := t.resellerSubscriptionLinks(client.SubID); links != "" {
+		message += "\n\nSubscription:\n" + links
+	}
+	return message, nil
+}
+
+func (t *Tgbot) resellerSubscriptionLinks(subID string) string {
+	if strings.TrimSpace(subID) == "" {
+		return ""
+	}
+	settings, err := t.settingService.GetAllSetting()
+	if err != nil || settings == nil || !settings.SubEnable {
+		return ""
+	}
+	id := url.PathEscape(strings.TrimSpace(subID))
+	build := func(configured, scheme, host, path string) string {
+		if strings.TrimSpace(configured) != "" {
+			base := strings.TrimRight(strings.TrimSpace(configured), "/")
+			return base + "/" + id
+		}
+		if host == "" || path == "" {
+			return ""
+		}
+		return strings.TrimRight(scheme+"://"+host+path, "/") + "/" + id
+	}
+	scheme := "http"
+	if settings.SubCertFile != "" && settings.SubKeyFile != "" {
+		scheme = "https"
+	}
+	host := settings.SubDomain
+	if host == "" {
+		if settings.WebDomain != "" {
+			host = settings.WebDomain
+		} else {
+			host = hostname
+		}
+	}
+	if settings.SubPort > 0 && !strings.Contains(host, ":") {
+		host = fmt.Sprintf("%s:%d", host, settings.SubPort)
+	}
+	var links []string
+	if link := build(settings.SubURI, scheme, host, settings.SubPath); link != "" {
+		links = append(links, "Base: "+link)
+	}
+	if settings.SubJsonEnable {
+		if link := build(settings.SubJsonURI, scheme, host, settings.SubJsonPath); link != "" {
+			links = append(links, "JSON: "+link)
+		}
+	}
+	if settings.SubClashEnable {
+		if link := build(settings.SubClashURI, scheme, host, settings.SubClashPath); link != "" {
+			links = append(links, "Clash: "+link)
+		}
+	}
+	return strings.Join(links, "\n")
+}
+
+func (t *Tgbot) editResellerClient(user *model.User, email string, gb int, days int) (string, error) {
+	owner, err := t.resellerService.ClientOwner(email)
+	if err != nil || owner == nil || owner.UserId != user.Id {
+		return "Account not found.", ErrClientNotOwned
+	}
+	traffic, inbound, err := t.inboundService.GetClientInboundByEmail(email)
+	if err != nil || traffic == nil || inbound == nil {
+		return "Account data not found.", err
+	}
+	clients, err := t.inboundService.GetClients(inbound)
+	if err != nil {
+		return "Account data not found.", err
+	}
+	var current *model.Client
+	for i := range clients {
+		if clients[i].Email == email {
+			current = &clients[i]
+			break
+		}
+	}
+	if current == nil {
+		return "Account not found on its home inbound.", errors.New("client not found")
+	}
+	current.TotalGB = int64(gb) * oneGB
+	if days <= 0 {
+		current.ExpiryTime = 0
+	} else {
+		current.ExpiryTime = time.Now().Add(time.Duration(days) * 24 * time.Hour).UnixMilli()
+	}
+	payload, err := json.Marshal(map[string]any{"clients": []model.Client{*current}})
+	if err != nil {
+		return "Failed to build update.", err
+	}
+	data := &model.Inbound{Id: inbound.Id, Settings: string(payload)}
+	clientID := clientIdentity(inbound.Protocol, *current)
+	ticket, err := t.resellerService.PrepareClientUpdate(user, data, clientID)
+	if err != nil {
+		return err.Error(), err
+	}
+	needRestart, err := t.inboundService.UpdateInboundClient(data, clientID)
+	if err != nil {
+		_ = t.resellerService.Rollback(ticket)
+		return err.Error(), err
+	}
+	if needRestart {
+		t.xrayService.SetToNeedRestart()
+	}
+	return fmt.Sprintf("✏️ Account updated\nEmail: %s\nTraffic: %s\nExpiry: %s", email, formatResellerBytes(current.TotalGB), formatResellerExpiry(current.ExpiryTime)), nil
 }
 
 func formatResellerExpiry(ms int64) string {
@@ -1340,7 +1630,9 @@ func (t *Tgbot) randomShadowSocksPassword() string {
 // answerCallback processes callback queries from inline keyboards.
 func (t *Tgbot) answerCallback(callbackQuery *telego.CallbackQuery, isAdmin bool) {
 	chatId := callbackQuery.Message.GetChat().ID
-	if !isAdmin && t.handleResellerCallback(callbackQuery) { return }
+	if !isAdmin && t.handleResellerCallback(callbackQuery) {
+		return
+	}
 
 	if isAdmin {
 		// get query from hash storage

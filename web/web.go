@@ -531,7 +531,9 @@ func (s *Server) startTask() {
 			return
 		}
 		reminderRuntime := "@every 10m"
-		if tgSettings, settingsErr := s.settingService.GetAllSetting(); settingsErr == nil && tgSettings != nil && strings.TrimSpace(tgSettings.TgExpiryReminderRuntime) != "" { reminderRuntime = tgSettings.TgExpiryReminderRuntime }
+		if tgSettings, settingsErr := s.settingService.GetAllSetting(); settingsErr == nil && tgSettings != nil && strings.TrimSpace(tgSettings.TgExpiryReminderRuntime) != "" {
+			reminderRuntime = tgSettings.TgExpiryReminderRuntime
+		}
 		reminderEntry, err = s.cron.AddJob(reminderRuntime, job.NewTelegramExpiryReminderJob())
 		if err != nil {
 			logger.Warningf("Add TelegramExpiryReminderJob: failed to schedule: %v", err)

@@ -1037,7 +1037,7 @@ type ResellerView struct {
 
 // ResellerSpec is the mutable shape of a reseller as the UI submits it.
 type ResellerSpec struct {
-	Username string
+	Username   string
 	TelegramID int64
 	// Password empty on update means "keep the existing one".
 	Password string
@@ -1360,7 +1360,7 @@ func (s *ResellerService) UpdateReseller(caller *model.User, id int, spec Resell
 		}
 		return tx.Model(&model.ResellerProfile{}).Where("user_id = ?", user.Id).
 			Updates(map[string]any{
-				"telegram_id":            spec.TelegramID,
+				"telegram_id":           spec.TelegramID,
 				"unlimited":             spec.Unlimited,
 				"days_per_gb":           spec.DaysPerGB,
 				"min_create_gb":         spec.MinCreateGB,

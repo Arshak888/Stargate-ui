@@ -25,8 +25,8 @@ const maxRechargeGB = int64(1) << 30
 // the same reason adminForm is: axios Qs.stringify's every body, so none of this
 // ever arrives as JSON.
 type resellerForm struct {
-	Username string `json:"username" form:"username"`
-	TelegramID int64 `json:"telegramId" form:"telegramId"`
+	Username   string `json:"username" form:"username"`
+	TelegramID int64  `json:"telegramId" form:"telegramId"`
 	// Password empty on update means "keep the existing one", which is what lets the
 	// edit modal open without the panel ever shipping a hash to the browser.
 	Password string `json:"password" form:"password"`
