@@ -95,6 +95,9 @@ var (
 
 var userStates = make(map[int64]string)
 
+type resellerFlow struct { Stage string; InboundID int; Email string; GB int; Days int }
+var resellerFlows sync.Map
+
 // LoginStatus represents the result of a login attempt.
 type LoginStatus byte
 
@@ -382,15 +385,25 @@ func (t *Tgbot) SendExpiryReminders() {
 		return
 	}
 	now := time.Now()
+		settings, _ := t.settingService.GetAllSetting()
+		firstDays, secondDays, notifyExpired := 2, 1, true
+		if settings != nil {
+			if settings.TgExpiryReminder2Days > 0 { firstDays = settings.TgExpiryReminder2Days }
+			if settings.TgExpiryReminder1Day > 0 { secondDays = settings.TgExpiryReminder1Day }
+			notifyExpired = settings.TgExpiryReminderOnExpire
+		}
+		if firstDays < secondDays { firstDays, secondDays = secondDays, firstDays }
 	for _, account := range accounts {
 		remaining := time.Until(time.UnixMilli(account.ExpiryTime))
 		event := ""
+		firstWindow := time.Duration(firstDays) * 24 * time.Hour
+		secondWindow := time.Duration(secondDays) * 24 * time.Hour
 		switch {
-		case remaining > 24*time.Hour && remaining <= 48*time.Hour:
+		case remaining > secondWindow && remaining <= firstWindow:
 			event = "2d"
-		case remaining > 0 && remaining <= 24*time.Hour:
+		case remaining > 0 && remaining <= secondWindow:
 			event = "1d"
-		case remaining <= 0:
+		case remaining <= 0 && notifyExpired:
 			event = "expired"
 		}
 		if event == "" {
@@ -579,6 +592,7 @@ func (t *Tgbot) OnReceive() {
 		}, th.AnyCallbackQueryWithMessage())
 
 		h.HandleMessage(func(ctx *th.Context, message telego.Message) error {
+			if t.handleResellerText(&message) { return nil }
 			if userState, exists := userStates[message.Chat.ID]; exists {
 				switch userState {
 				case "awaiting_id":
@@ -920,9 +934,78 @@ func (t *Tgbot) sendResellerMenu(chatID int64, user *model.User, profile *model.
 	if b.Unlimited {
 		balance = "Unlimited"
 	}
-	t.SendMsgToTgbot(chatID, fmt.Sprintf(
-		"🏪 Reseller panel\nUser: %s\nBalance: %s\n\nCommands:\n/balance\n/inbounds\n/clients\n/create <inbound-id> <email> <GB> [days]\n/renew <email> <GB> [days]\n/reset <email>\n/enable <email>\n/disable <email>\n/delete <email>",
-		user.Username, balance))
+	t.SendMsgToTgbot(chatID, fmt.Sprintf("🏪 <b>Reseller Panel</b>\nUser: %s\nBalance: %s\n\nSelect an action:", user.Username, balance), t.resellerKeyboard())
+}
+
+func (t *Tgbot) resellerKeyboard() *telego.InlineKeyboardMarkup {
+	return tu.InlineKeyboard(
+		tu.InlineKeyboardRow(tu.InlineKeyboardButton("💰 Balance").WithCallbackData("rs:balance"), tu.InlineKeyboardButton("👥 Accounts").WithCallbackData("rs:clients")),
+		tu.InlineKeyboardRow(tu.InlineKeyboardButton("➕ Create").WithCallbackData("rs:create"), tu.InlineKeyboardButton("🔄 Renew").WithCallbackData("rs:renew")),
+		tu.InlineKeyboardRow(tu.InlineKeyboardButton("🌐 Inbounds").WithCallbackData("rs:inbounds")),
+	)
+}
+
+func (t *Tgbot) handleResellerCallback(q *telego.CallbackQuery) bool {
+	_, user, err := t.resellerService.ProfileForTelegram(q.From.ID)
+	if err != nil || user == nil || !user.Enable { return false }
+	chatID := q.Message.GetChat().ID
+	data := q.Data
+	if data == "rs:menu" || data == "rs:balance" {
+		t.sendCallbackAnswerTgBot(q.ID, "Updated")
+		b := t.resellerService.BalanceFor(user); bal := formatResellerBytes(b.AvailableBytes); if b.Unlimited { bal = "Unlimited" }
+		t.SendMsgToTgbot(chatID, fmt.Sprintf("🏪 <b>Reseller Panel</b>\nUser: %s\nBalance: %s", user.Username, bal), t.resellerKeyboard())
+		return true
+	}
+	if data == "rs:create" {
+		t.sendResellerInboundKeyboard(chatID, user.Id, true); t.sendCallbackAnswerTgBot(q.ID, "Choose inbound"); return true
+	}
+	if data == "rs:inbounds" { t.sendResellerInboundKeyboard(chatID, user.Id, false); return true }
+	if data == "rs:clients" || data == "rs:renew" { t.sendResellerClientsKeyboard(chatID, user.Id, data == "rs:renew"); return true }
+	if strings.HasPrefix(data, "rs:inbound:") {
+		id, e := strconv.Atoi(strings.TrimPrefix(data, "rs:inbound:")); if e != nil || !t.resellerInboundAllowed(user.Id, id) { return true }
+		resellerFlows.Store(chatID, &resellerFlow{Stage:"create_email", InboundID:id}); t.sendCallbackAnswerTgBot(q.ID, "Inbound selected"); t.SendMsgToTgbot(chatID, "✏️ Enter customer email:"); return true
+	}
+	if strings.HasPrefix(data, "rs:manage:") {
+		id, e := strconv.ParseInt(strings.TrimPrefix(data, "rs:manage:"), 10, 64); if e != nil { return true }
+		var row model.ResellerClient; if database.GetDB().Where("id = ? AND user_id = ?", id, user.Id).First(&row).Error != nil { return true }
+		kb := tu.InlineKeyboard(tu.InlineKeyboardRow(tu.InlineKeyboardButton("🔄 Renew").WithCallbackData("rs:renew:"+strconv.FormatInt(id,10)), tu.InlineKeyboardButton("♻️ Reset").WithCallbackData("rs:reset:"+strconv.FormatInt(id,10))), tu.InlineKeyboardRow(tu.InlineKeyboardButton("✅ Enable").WithCallbackData("rs:enable:"+strconv.FormatInt(id,10)), tu.InlineKeyboardButton("⛔ Disable").WithCallbackData("rs:disable:"+strconv.FormatInt(id,10))), tu.InlineKeyboardRow(tu.InlineKeyboardButton("🗑 Delete").WithCallbackData("rs:delete:"+strconv.FormatInt(id,10))), tu.InlineKeyboardRow(tu.InlineKeyboardButton("◀️ Menu").WithCallbackData("rs:menu")))
+		t.editMessageTgBot(chatID, q.Message.GetMessageID(), fmt.Sprintf("⚙️ <b>%s</b>", html.EscapeString(row.Email)), kb); return true
+	}
+	if strings.HasPrefix(data, "rs:renew:") {
+		id, e := strconv.ParseInt(strings.TrimPrefix(data, "rs:renew:"),10,64); if e != nil { return true }; var row model.ResellerClient
+		if database.GetDB().Where("id = ? AND user_id = ?", id, user.Id).First(&row).Error != nil { return true }
+		resellerFlows.Store(chatID, &resellerFlow{Stage:"renew_gb", Email:row.Email}); t.SendMsgToTgbot(chatID, fmt.Sprintf("🔄 Renew <b>%s</b>\nEnter additional GB:", html.EscapeString(row.Email))); return true
+	}
+	if strings.HasPrefix(data, "rs:reset:") || strings.HasPrefix(data, "rs:delete:") || strings.HasPrefix(data, "rs:enable:") || strings.HasPrefix(data, "rs:disable:") {
+		prefixes := []string{"rs:reset:","rs:delete:","rs:enable:","rs:disable:"}; raw := data; for _,p := range prefixes { raw = strings.TrimPrefix(raw,p) }; id,e:=strconv.ParseInt(raw,10,64); if e!=nil{return true}; var row model.ResellerClient
+		if database.GetDB().Where("id = ? AND user_id = ?",id,user.Id).First(&row).Error!=nil{return true}
+		var msg string; switch { case strings.HasPrefix(data,"rs:reset:"): msg=t.resetResellerClient(user,row.Email); case strings.HasPrefix(data,"rs:delete:"): msg=t.deleteResellerClient(user,row.Email); case strings.HasPrefix(data,"rs:enable:"): msg=t.toggleResellerClient(user,row.Email,true); default: msg=t.toggleResellerClient(user,row.Email,false) }
+		t.sendCallbackAnswerTgBot(q.ID,msg); t.sendResellerClientsKeyboard(chatID,user.Id,false); return true
+	}
+	return false
+}
+
+func (t *Tgbot) sendResellerInboundKeyboard(chatID int64, userID int, forCreate bool) {
+	var grants []model.InboundAccess; if database.GetDB().Where("user_id = ?",userID).Find(&grants).Error != nil { return }
+	kb := make([][]telego.InlineKeyboardButton,0,len(grants)+1); for _,g := range grants { in,e:=t.inboundService.GetInbound(g.InboundId); if e==nil && in!=nil { kb=append(kb,[]telego.InlineKeyboardButton{tu.InlineKeyboardButton(fmt.Sprintf("🌐 #%d %s",in.Id,in.Remark)).WithCallbackData("rs:inbound:"+strconv.Itoa(in.Id))}) } }
+	if !forCreate { kb=append(kb,[]telego.InlineKeyboardButton{tu.InlineKeyboardButton("◀️ Menu").WithCallbackData("rs:menu")}) }
+	t.SendMsgToTgbot(chatID,"🌐 Choose an inbound:",&telego.InlineKeyboardMarkup{InlineKeyboard:kb})
+}
+
+func (t *Tgbot) sendResellerClientsKeyboard(chatID int64, userID int, renew bool) {
+	var rows []model.ResellerClient; if database.GetDB().Where("user_id = ?",userID).Order("id asc").Find(&rows).Error != nil { return }; if len(rows)==0 { t.SendMsgToTgbot(chatID,"No accounts yet.",t.resellerKeyboard()); return }
+	kb:=make([][]telego.InlineKeyboardButton,0,len(rows)+1); for _,r:=range rows { action:="rs:manage:"; if renew { action="rs:renew:" }; kb=append(kb,[]telego.InlineKeyboardButton{tu.InlineKeyboardButton("👤 "+r.Email).WithCallbackData(action+strconv.FormatInt(int64(r.Id),10))}) }; kb=append(kb,[]telego.InlineKeyboardButton{tu.InlineKeyboardButton("◀️ Menu").WithCallbackData("rs:menu")}); t.SendMsgToTgbot(chatID,"👥 Choose an account:",&telego.InlineKeyboardMarkup{InlineKeyboard:kb})
+}
+
+func (t *Tgbot) handleResellerText(message *telego.Message) bool {
+	_, user, err:=t.resellerService.ProfileForTelegram(message.From.ID); if err!=nil || user==nil || !user.Enable{return false}; v,ok:=resellerFlows.Load(message.Chat.ID); if !ok{return false}; f:=v.(*resellerFlow); s:=strings.TrimSpace(message.Text); if s==""{return true}
+	switch f.Stage {
+	case "create_email": if !t.isSingleWord(s) && strings.Contains(s,"@"){f.Email=s;f.Stage="create_gb";t.SendMsgToTgbot(message.Chat.ID,"📦 Enter traffic in GB:")}else{t.SendMsgToTgbot(message.Chat.ID,"Invalid email. Try again:")}
+	case "create_gb": n,e:=strconv.Atoi(s);if e!=nil||n<=0||n>1000000{t.SendMsgToTgbot(message.Chat.ID,"Enter a valid positive GB number:")}else{f.GB=n;f.Stage="create_days";t.SendMsgToTgbot(message.Chat.ID,"⏳ Enter validity in days, 0 for no expiry:")}
+	case "create_days": n,e:=strconv.Atoi(s);if e!=nil||n<0||n>36500{t.SendMsgToTgbot(message.Chat.ID,"Enter days from 0 to 36500:")}else{m,_:=t.createResellerClient(user,f.InboundID,f.Email,f.GB,n);resellerFlows.Delete(message.Chat.ID);t.SendMsgToTgbot(message.Chat.ID,m,t.resellerKeyboard())}
+	case "renew_gb": n,e:=strconv.Atoi(s);if e!=nil||n<=0||n>1000000{t.SendMsgToTgbot(message.Chat.ID,"Enter a valid positive GB number:")}else{f.GB=n;f.Stage="renew_days";t.SendMsgToTgbot(message.Chat.ID,"⏳ Enter additional days, 0 to keep expiry:")}
+	case "renew_days": n,e:=strconv.Atoi(s);if e!=nil||n<0||n>36500{t.SendMsgToTgbot(message.Chat.ID,"Enter days from 0 to 36500:")}else{m,_:=t.renewResellerClient(user,f.Email,f.GB,n);resellerFlows.Delete(message.Chat.ID);t.SendMsgToTgbot(message.Chat.ID,m,t.resellerKeyboard())}
+	}; return true
 }
 
 func (t *Tgbot) resellerClientCount(userID int) int64 {
@@ -1257,6 +1340,7 @@ func (t *Tgbot) randomShadowSocksPassword() string {
 // answerCallback processes callback queries from inline keyboards.
 func (t *Tgbot) answerCallback(callbackQuery *telego.CallbackQuery, isAdmin bool) {
 	chatId := callbackQuery.Message.GetChat().ID
+	if !isAdmin && t.handleResellerCallback(callbackQuery) { return }
 
 	if isAdmin {
 		// get query from hash storage

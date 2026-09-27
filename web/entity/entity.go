@@ -45,8 +45,12 @@ type AllSetting struct {
 	TgRunTime        string `json:"tgRunTime" form:"tgRunTime"`               // Cron schedule for Telegram notifications
 	TgBotBackup      bool   `json:"tgBotBackup" form:"tgBotBackup"`           // Enable database backup via Telegram
 	TgBotLoginNotify bool   `json:"tgBotLoginNotify" form:"tgBotLoginNotify"` // Send login notifications
-	TgCpu            int    `json:"tgCpu" form:"tgCpu"`                       // CPU usage threshold for alerts
-	TgLang           string `json:"tgLang" form:"tgLang"`                     // Telegram bot language
+	TgCpu                     int    `json:"tgCpu" form:"tgCpu"`                     // CPU usage threshold for alerts
+	TgLang                    string `json:"tgLang" form:"tgLang"`                   // Telegram bot language
+	TgExpiryReminderRuntime   string `json:"tgExpiryReminderRuntime" form:"tgExpiryReminderRuntime"`
+	TgExpiryReminder2Days     int    `json:"tgExpiryReminder2Days" form:"tgExpiryReminder2Days"`
+	TgExpiryReminder1Day      int    `json:"tgExpiryReminder1Day" form:"tgExpiryReminder1Day"`
+	TgExpiryReminderOnExpire  bool   `json:"tgExpiryReminderOnExpire" form:"tgExpiryReminderOnExpire"`
 
 	// Security settings
 	TimeLocation    string `json:"timeLocation" form:"timeLocation"`       // Time zone location

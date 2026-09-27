@@ -530,7 +530,9 @@ func (s *Server) startTask() {
 			logger.Warningf("Add NewStatsNotifyJob: failed to schedule runtime %q: %v", runtime, err)
 			return
 		}
-		reminderEntry, err = s.cron.AddJob("@every 10m", job.NewTelegramExpiryReminderJob())
+		reminderRuntime := "@every 10m"
+		if tgSettings, settingsErr := s.settingService.GetAllSetting(); settingsErr == nil && tgSettings != nil && strings.TrimSpace(tgSettings.TgExpiryReminderRuntime) != "" { reminderRuntime = tgSettings.TgExpiryReminderRuntime }
+		reminderEntry, err = s.cron.AddJob(reminderRuntime, job.NewTelegramExpiryReminderJob())
 		if err != nil {
 			logger.Warningf("Add TelegramExpiryReminderJob: failed to schedule: %v", err)
 		}

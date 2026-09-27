@@ -23,6 +23,10 @@ class AllSetting {
         this.tgBotLoginNotify = true;
         this.tgCpu = 80;
         this.tgLang = "en-US";
+        this.tgExpiryReminderRuntime = "@every 10m";
+        this.tgExpiryReminder2Days = 2;
+        this.tgExpiryReminder1Day = 1;
+        this.tgExpiryReminderOnExpire = true;
         this.twoFactorEnable = false;
         this.twoFactorToken = "";
         this.xrayTemplateConfig = "";

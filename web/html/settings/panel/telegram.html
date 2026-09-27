@@ -58,6 +58,23 @@
             </template>
         </a-setting-list-item>
         <a-setting-list-item paddings="small">
+            <template #title>Expiry reminder schedule</template>
+            <template #description>How often the panel checks customer expiry reminders. Example: @every 10m</template>
+            <template #control><a-input v-model="allSetting.tgExpiryReminderRuntime"></a-input></template>
+        </a-setting-list-item>
+        <a-setting-list-item paddings="small">
+            <template #title>Reminder before expiry (days)</template>
+            <template #description>Two-stage reminders: the first and final warning windows.</template>
+            <template #control>
+                <a-input-number :min="1" v-model="allSetting.tgExpiryReminder2Days" :style="{ width: '48%', marginRight: '4%' }"></a-input-number>
+                <a-input-number :min="1" v-model="allSetting.tgExpiryReminder1Day" :style="{ width: '48%' }"></a-input-number>
+            </template>
+        </a-setting-list-item>
+        <a-setting-list-item paddings="small">
+            <template #title>Notify when expired</template>
+            <template #control><a-switch v-model="allSetting.tgExpiryReminderOnExpire"></a-switch></template>
+        </a-setting-list-item>
+        <a-setting-list-item paddings="small">
             <template #title>{{ i18n "pages.settings.tgNotifyCpu" }}</template>
             <template #description>{{ i18n "pages.settings.tgNotifyCpuDesc" }}</template>
             <template #control>
