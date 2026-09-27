@@ -91,7 +91,7 @@
 ## 安装面板
 
 ```bash
-curl -Ls https://raw.githubusercontent.com/Sir-MmD/vpn-ui/refs/heads/main/deploy.sh | sudo bash
+curl -Ls https://raw.githubusercontent.com/Arshak888/vpn-ui-custom/refs/heads/main/deploy.sh | sudo bash
 ```
 
 ## 卸载面板
@@ -222,7 +222,7 @@ flowchart TB
 ## 从源码编译
 
 ```bash
-git clone https://github.com/Sir-MmD/vpn-ui.git && cd vpn-ui
+git clone https://github.com/Arshak888/vpn-ui-custom.git && cd vpn-ui-custom
 ./build.sh
 ```
 
