@@ -861,7 +861,7 @@ func (t *Tgbot) answerResellerCommand(chatID, tgID int64, command string, args [
 		if len(args) >= 4 {
 			days, _ = strconv.Atoi(args[3])
 		}
-		if e1 != nil || e2 != nil || inboundID <= 0 || gb <= 0 || gb > int(maxRechargeGB) || days < 0 || days > 36500 {
+		if e1 != nil || e2 != nil || inboundID <= 0 || gb <= 0 || gb > 1000000 || days < 0 || days > 36500 {
 			t.SendMsgToTgbot(chatID, "Invalid arguments.")
 			return true
 		}
@@ -878,7 +878,7 @@ func (t *Tgbot) answerResellerCommand(chatID, tgID int64, command string, args [
 		if len(args) >= 3 {
 			days, _ = strconv.Atoi(args[2])
 		}
-		if e != nil || gb <= 0 || gb > int(maxRechargeGB) || days < 0 || days > 36500 {
+		if e != nil || gb <= 0 || gb > 1000000 || days < 0 || days > 36500 {
 			t.SendMsgToTgbot(chatID, "Invalid arguments.")
 			return true
 		}
