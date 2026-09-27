@@ -1078,7 +1078,7 @@ func (t *Tgbot) sendResellerInboundKeyboard(chatID int64, userID int, forCreate 
 	kb := make([][]telego.InlineKeyboardButton, 0, len(grants)+1)
 	for _, g := range grants {
 		in, e := t.inboundService.GetInbound(g.InboundId)
-		if e == nil && in != nil {
+		if e == nil && in != nil && resellerXrayProtocol(in.Protocol) {
 			kb = append(kb, []telego.InlineKeyboardButton{tu.InlineKeyboardButton(fmt.Sprintf("🌐 #%d %s", in.Id, in.Remark)).WithCallbackData("rs:inbound:" + strconv.Itoa(in.Id))})
 		}
 	}
@@ -1225,7 +1225,7 @@ func (t *Tgbot) sendResellerInbounds(chatID int64, userID int) {
 	b.WriteString("🌐 Your inbounds:\n")
 	for _, grant := range grants {
 		inbound, err := t.inboundService.GetInbound(grant.InboundId)
-		if err != nil || inbound == nil {
+		if err != nil || inbound == nil || !resellerXrayProtocol(inbound.Protocol) {
 			continue
 		}
 		fmt.Fprintf(&b, "\n• #%d | %s | %s | port %d", inbound.Id, inbound.Remark, inbound.Protocol, inbound.Port)
@@ -1274,11 +1274,24 @@ func (t *Tgbot) sendResellerClients(chatID int64, userID int) {
 	t.SendMsgToTgbot(chatID, b.String())
 }
 
+func resellerXrayProtocol(protocol model.Protocol) bool {
+	switch protocol {
+	case model.VMESS, model.VLESS, model.Trojan, model.Shadowsocks, model.ANYTLS, model.TUIC, model.NAIVE, model.Hysteria, model.Hysteria2:
+		return true
+	default:
+		return false
+	}
+}
+
 func (t *Tgbot) resellerInboundAllowed(userID, inboundID int) bool {
 	var n int64
 	database.GetDB().Model(&model.InboundAccess{}).
 		Where("user_id = ? AND inbound_id = ?", userID, inboundID).Count(&n)
-	return n > 0
+	if n == 0 {
+		return false
+	}
+	inbound, err := t.inboundService.GetInbound(inboundID)
+	return err == nil && inbound != nil && resellerXrayProtocol(inbound.Protocol)
 }
 
 func (t *Tgbot) buildResellerClient(protocol model.Protocol, email string) model.Client {
