@@ -44,6 +44,28 @@ Este proyecto es una versión mejorada del panel **[3X-UI](https://github.com/MH
     * Eliminación grupal de Inbounds
     * **Congelar/Descongelar** cuentas de forma grupal
 
+
+## Funciones adicionales de este fork
+
+Además de las funciones del VPN-UI original, este fork añade capacidades de gestión de cuentas, credenciales compartidas, Telegram y SSH:
+
+- **Credenciales VPN compartidas entre protocolos con usuario/contraseña**: SSH, OpenVPN, L2TP, PPTP, IKEv2, SSTP y OpenConnect pueden utilizar el **mismo nombre de usuario y contraseña** para una cuenta, compartidos entre todas sus Memberships.
+- **Gestión centralizada de credenciales**: al cambiar el usuario o la contraseña compartidos desde el panel web, las nuevas credenciales se propagan a las demás Memberships de la cuenta y se mantienen sincronizadas con la configuración de los protocolos.
+- **Automatización ampliada del Telegram Bot** con menús Inline y flujos de gestión de cuentas para revendedores.
+- **Bot de Telegram para revendedores**: permite consultar saldo e Inbounds asignados, crear cuentas, renovarlas, editar tráfico/expiración, restablecer tráfico, activar/desactivar cuentas y eliminarlas directamente desde Telegram.
+- **Control de acceso y propiedad para revendedores**: las operaciones quedan limitadas a los Inbounds y cuentas asignados al revendedor.
+- **Vinculación del revendedor con Telegram**: el Telegram ID del revendedor puede registrarse y gestionarse desde el panel web.
+- **Enlaces de Subscription en Telegram**: las respuestas de creación y renovación pueden incluir los enlaces de Subscription configurados para la cuenta.
+- **Recordatorios de expiración por Telegram**: recordatorios configurables antes de la expiración y, opcionalmente, una notificación al expirar; el estado de cada evento se guarda para evitar duplicados.
+- **Configuración de recordatorios desde el panel web**: la programación, los umbrales de aviso y la notificación de expiración se pueden modificar desde los ajustes de Telegram.
+- **Mensaje SSH posterior al inicio de sesión configurable**: después de la autenticación SSH interactiva puede mostrarse un mensaje opcional con usuario, estado, expiración, tiempo restante, tráfico usado, tráfico restante e IP del cliente.
+- **Control del mensaje SSH desde el panel web**: se puede activar/desactivar la función y editar su plantilla desde los ajustes de SSH.
+- **Mejoras en la sincronización Account/Inbound**: los datos de nivel de cuenta se mantienen sincronizados con las Memberships de los protocolos después de operaciones del revendedor y cambios de credenciales.
+- **Persistencia del estado de los recordatorios de Telegram** en la base de datos para evitar mensajes duplicados en ejecuciones periódicas.
+- **Corrección de la interfaz de control de CPU de Telegram** en el panel web.
+
+> Los protocolos que utilizan claves, certificados, UUID, Secret u otros métodos de autenticación propios continúan utilizando sus credenciales nativas y no se fuerzan a un modelo de usuario/contraseña.
+
 ## Sistemas operativos probados
 
 
