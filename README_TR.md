@@ -44,6 +44,28 @@ Bu proje, **[3X-UI](https://github.com/MHSanaei/3x-ui)** panelinin (2.9.3 sürü
     * Inbound'ları toplu silme
     * Hesapları toplu **dondurma/çözme (Freeze/Un-Freeze)**
 
+
+## Bu Fork'a Özel Ek Özellikler
+
+Bu fork, orijinal VPN-UI özelliklerine ek olarak hesap yönetimi, ortak kimlik bilgileri, Telegram ve SSH için ek yetenekler sunar:
+
+- **Kullanıcı adı/parola kullanan protokoller arasında ortak VPN kimlik bilgileri**: SSH, OpenVPN, L2TP, PPTP, IKEv2, SSTP ve OpenConnect aynı hesap için **aynı kullanıcı adı ve parolayı** kullanabilir; bu bilgiler hesabın tüm Membership kayıtları arasında paylaşılır.
+- **Merkezi kimlik bilgisi yönetimi**: Web Panel üzerinden ortak kullanıcı adı veya parola değiştirildiğinde yeni bilgiler hesabın diğer Membership kayıtlarına aktarılır ve protokol yapılandırmaları senkronize tutulur.
+- **Gelişmiş Telegram Bot otomasyonu**: Inline menüler ve bayiler için hesap yönetimi akışları eklendi.
+- **Telegram Bayi Botu**: Bayiler bakiyelerini ve kendilerine atanmış Inbound'ları görüntüleyebilir; Telegram üzerinden hesap oluşturabilir, yenileyebilir, trafik/süre düzenleyebilir, trafiği sıfırlayabilir, hesapları etkinleştirebilir/devre dışı bırakabilir ve silebilir.
+- **Bayi erişim ve sahiplik kontrolü**: Bayi işlemleri yalnızca kendisine atanmış Inbound'lar ve hesaplarla sınırlandırılır.
+- **Bayi Telegram bağlantısı**: Bayinin Telegram ID'si Web Panel üzerinden tanımlanıp yönetilebilir.
+- **Telegram üzerinden Subscription bağlantıları**: Bayinin oluşturduğu veya yenilediği hesapların yapılandırılmış Subscription bağlantıları yanıtlara eklenebilir.
+- **Telegram süre sonu hatırlatmaları**: Süre bitiminden önce yapılandırılabilir hatırlatmalar ve isteğe bağlı süre doldu bildirimi; tekrar gönderimleri önlemek için her olayın durumu saklanır.
+- **Web Panel'de Telegram hatırlatma ayarları**: görev zamanlaması, uyarı eşikleri ve süre doldu bildirimi Telegram ayarlarından değiştirilebilir.
+- **Yapılandırılabilir SSH giriş sonrası mesajı**: Etkileşimli SSH kimlik doğrulamasından sonra kullanıcı adı, durum, bitiş zamanı, kalan süre, kullanılan trafik, kalan trafik ve istemci IP'sini gösterebilen isteğe bağlı bir mesaj sunulur.
+- **SSH mesajının Web Panel'den kontrolü**: özellik etkinleştirilebilir/devre dışı bırakılabilir ve mesaj şablonu SSH ayarlarından düzenlenebilir.
+- **Account/Inbound senkronizasyon iyileştirmeleri**: bayi işlemleri ve kimlik bilgisi değişikliklerinden sonra hesap düzeyindeki veriler protokol Membership kayıtlarıyla senkron kalır.
+- **Telegram hatırlatma durumunun veritabanında saklanması**: zamanlanmış görevlerin tekrar çalıştırılmasında aynı bildirimin tekrar gönderilmesini önler.
+- **Telegram CPU ayar arayüzü düzeltildi**.
+
+> Anahtar, sertifika, UUID, Secret veya protokole özel başka kimlik doğrulama yöntemleri kullanan protokoller kendi yerel kimlik bilgilerini kullanmaya devam eder ve zorunlu olarak kullanıcı adı/parola modeline dönüştürülmez.
+
 ## Test Edilen İşletim Sistemleri
 
 
