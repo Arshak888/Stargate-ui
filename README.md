@@ -53,6 +53,28 @@ the core rather than by a daemon, and they work as **inbounds and outbounds**:
     * Bulk delete of Inbounds
     * Bulk **Freeze/Un-Freeze** of accounts
 
+
+## Custom Fork Features
+
+This fork extends the upstream VPN-UI with additional account automation, shared credentials, Telegram management, and SSH features:
+
+- **Shared VPN credentials across login-based protocols**: SSH, OpenVPN, L2TP, PPTP, IKEv2, SSTP, and OpenConnect can use the same **username and password** for a single account. The account-level credentials are shared across all memberships of that account.
+- **Centralized credential management**: changing a shared VPN username or password from the Web Panel propagates the new credentials to the account's other memberships and keeps the native protocol configuration synchronized.
+- **Expanded Telegram Bot automation** with inline menus and account management workflows for resellers.
+- **Telegram Reseller Bot**: resellers can view their balance and assigned Inbounds, create accounts, renew accounts, edit traffic/expiry, reset traffic, enable/disable accounts, and delete accounts directly from Telegram.
+- **Reseller ownership and access control**: reseller operations are limited to the Inbounds and client accounts assigned to that reseller.
+- **Telegram reseller binding**: a reseller can be linked to a Telegram account from the Web Panel.
+- **Subscription links in Telegram**: reseller account creation and renewal responses can include the account's configured subscription links.
+- **Telegram expiry reminders**: configurable reminders before expiry and an optional notification when an account expires, with per-event state tracking to prevent duplicate reminders.
+- **Web Panel controls for Telegram reminders**: reminder schedule, warning thresholds, and expiry notification behavior are configurable from the Telegram settings panel.
+- **Configurable SSH post-login message**: an optional message is shown after interactive SSH authentication and can display account information such as username, status, expiry, remaining time, traffic usage, remaining traffic, and client IP.
+- **Web Panel controls for SSH login messages**: the feature can be enabled/disabled and its message template can be edited from the SSH settings.
+- **Account/inbound synchronization improvements**: account-level data remains synchronized with protocol memberships after reseller operations and credential changes.
+- **Database-backed Telegram reminder state**: reminder delivery state is persisted so scheduled jobs remain idempotent across repeated runs.
+- **Telegram settings UI fix**: corrected the Telegram CPU control markup in the Web Panel.
+
+> These custom features are maintained in this fork on top of the upstream VPN-UI project. Protocols that use native key, certificate, UUID, secret, or other authentication schemes continue to use their protocol-specific credentials rather than forcing a username/password model.
+
 ## Tested Operating Systems
 
 
