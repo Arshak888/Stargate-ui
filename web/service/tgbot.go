@@ -1362,8 +1362,15 @@ func (t *Tgbot) createResellerClient(user *model.User, inboundID int, email stri
 	if needRestart {
 		t.xrayService.SetToNeedRestart()
 	}
-	message := fmt.Sprintf("✅ Account created\nEmail: %s\nTraffic: %d GB\nExpiry: %s\nCredential: %s",
-		email, gb, formatResellerExpiry(client.ExpiryTime), resellerCredential(client, inbound.Protocol))
+	// The legacy client write is the data-plane operation; immediately mirror it into
+	// the account layer so this newly sold identity becomes the source of truth for
+	// every later protocol membership. Without this call a Telegram-created account
+	// existed only in settings.clients until the next reconciliation, so the shared
+	// VPN username/password was not durable across protocols.
+	if err := t.syncResellerAccount(inboundID); err != nil {
+		logger.Warning("reseller create: account projection sync failed:", err)
+	}
+	message := t.resellerCredentialMessage(client, inbound.Protocol, email, gb, client.ExpiryTime)
 	if subURL, subJSON, err := t.buildSubscriptionURLs(email); err == nil && subURL != "" {
 		message += "\n\nSubscription:\nBase: " + subURL
 		if subJSON != "" {
@@ -1471,6 +1478,9 @@ func (t *Tgbot) editResellerClient(user *model.User, email string, gb int, days 
 	if needRestart {
 		t.xrayService.SetToNeedRestart()
 	}
+	if err := t.syncResellerAccount(inbound.Id); err != nil {
+		logger.Warning("reseller edit: account projection sync failed:", err)
+	}
 	message := fmt.Sprintf("✏️ Account updated\nEmail: %s\nTraffic: %s\nExpiry: %s", email, formatResellerBytes(current.TotalGB), formatResellerExpiry(current.ExpiryTime))
 	if subURL, subJSON, err := t.buildSubscriptionURLs(email); err == nil && subURL != "" {
 		message += "\n\nSubscription:\nBase: " + subURL
@@ -1497,6 +1507,52 @@ func resellerCredential(c model.Client, p model.Protocol) string {
 	default:
 		return c.Password
 	}
+}
+
+// syncResellerAccount immediately reconciles the legacy client write into the
+// account layer. Telegram does not pass through the HTTP controller, so without
+// this explicit bridge a reseller-created account would wait for a later global
+// reconciliation before its cross-protocol identity became durable.
+func (t *Tgbot) syncResellerAccount(inboundID int) error {
+	var accounts AccountService
+	return accounts.SyncInboundAccounts(database.GetDB(), inboundID)
+}
+
+// resellerCredentialMessage reports the credential that is actually stored after
+// normalization. Credential VPNs and SSH deliberately expose BOTH fields because
+// the shared username/password pair is the account's cross-protocol login. Other
+// protocols keep their native single or multi-field credential model.
+func (t *Tgbot) resellerCredentialMessage(client model.Client, protocol model.Protocol, email string, gb int, expiry int64) string {
+	// Prefer the account row because it is the durable cross-protocol source of truth.
+	var account model.Account
+	if err := database.GetDB().Where("LOWER(TRIM(email)) = ?", accountKey(email)).First(&account).Error; err == nil {
+		client.ID = account.UUID
+		client.Password = account.Password
+		client.Auth = account.Auth
+		client.Secret = account.Secret
+		client.Username = account.NaiveUser
+		if isVpnLoginProtocol(protocol) || protocol == model.SSH {
+			client.ID = account.VpnUsername
+		}
+	}
+
+	message := fmt.Sprintf("✅ Account created\nEmail: %s\nTraffic: %d GB\nExpiry: %s", email, gb, formatResellerExpiry(expiry))
+	if isVpnLoginProtocol(protocol) || protocol == model.SSH {
+		return message + fmt.Sprintf("\nUsername: %s\nPassword: %s", client.ID, client.Password)
+	}
+	if protocol == model.TUIC {
+		return message + fmt.Sprintf("\nUUID: %s\nPassword: %s", client.ID, client.Password)
+	}
+	if protocol == model.VMESS || protocol == model.VLESS {
+		return message + "\nUUID: " + client.ID
+	}
+	if protocol == model.Hysteria || protocol == model.Hysteria2 {
+		return message + "\nAuth: " + client.Auth
+	}
+	if protocol == model.MTPROTO {
+		return message + "\nSecret: " + client.Secret
+	}
+	return message + "\nCredential: " + resellerCredential(client, protocol)
 }
 
 func (t *Tgbot) renewResellerClient(user *model.User, email string, gb int, days int) (string, error) {
@@ -1548,6 +1604,9 @@ func (t *Tgbot) renewResellerClient(user *model.User, email string, gb int, days
 	if needRestart {
 		t.xrayService.SetToNeedRestart()
 	}
+	if err := t.syncResellerAccount(inbound.Id); err != nil {
+		logger.Warning("reseller renew: account projection sync failed:", err)
+	}
 	message := fmt.Sprintf("✅ Account renewed\nEmail: %s\nTraffic: %s\nExpiry: %s",
 		email, formatResellerBytes(current.TotalGB), formatResellerExpiry(current.ExpiryTime))
 	if subURL, subJSON, err := t.buildSubscriptionURLs(email); err == nil && subURL != "" {
@@ -1572,6 +1631,11 @@ func (t *Tgbot) resetResellerClient(user *model.User, email string) string {
 		_ = t.resellerService.Rollback(ticket)
 		return err.Error()
 	}
+	if _, inbound, err := t.inboundService.GetClientInboundByEmail(email); err == nil && inbound != nil {
+		if syncErr := t.syncResellerAccount(inbound.Id); syncErr != nil {
+			logger.Warning("reseller reset: account projection sync failed:", syncErr)
+		}
+	}
 	return "✅ Traffic reset. The reset was charged from your balance."
 }
 
@@ -1595,6 +1659,11 @@ func (t *Tgbot) toggleResellerClient(user *model.User, email string, enable bool
 	}
 	if needRestart {
 		t.xrayService.SetToNeedRestart()
+	}
+	if _, inbound, lookupErr := t.inboundService.GetClientInboundByEmail(email); lookupErr == nil && inbound != nil {
+		if syncErr := t.syncResellerAccount(inbound.Id); syncErr != nil {
+			logger.Warning("reseller toggle: account projection sync failed:", syncErr)
+		}
 	}
 	if enable {
 		return "✅ Account enabled."
