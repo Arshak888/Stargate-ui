@@ -452,10 +452,7 @@ func (t *Tgbot) SendExpiryReminders() {
 		case "expired":
 			msg = "❌ Account expired\n" + msg
 		}
-		if err := t.SendMsgToTgbot(account.TgID, msg); err != nil {
-			logger.Warning("Telegram expiry reminder send failed:", err)
-			continue
-		}
+		t.SendMsgToTgbot(account.TgID, msg)
 		state = model.TelegramReminderState{
 			Email: account.Email, TgID: account.TgID,
 			ExpiryTime: account.ExpiryTime, Event: event, SentAt: now.Unix(),
@@ -1266,8 +1263,12 @@ func (t *Tgbot) sendResellerClients(chatID int64, userID int) {
 		} else if traffic.Total > 0 && traffic.Up+traffic.Down >= traffic.Total {
 			status = "depleted"
 		}
+		expiry := "unlimited"
+		if traffic.ExpiryTime > 0 {
+			expiry = time.UnixMilli(traffic.ExpiryTime).Format("2006-01-02 15:04")
+		}
 		fmt.Fprintf(&b, "\n• %s | %s | %s | used %s / left %s",
-			row.Email, status, time.UnixMilli(traffic.ExpiryTime).Format("2006-01-02 15:04"),
+			row.Email, status, expiry,
 			formatResellerBytes(traffic.Up+traffic.Down), formatResellerBytes(remaining))
 	}
 	t.SendMsgToTgbot(chatID, b.String())
@@ -1346,8 +1347,11 @@ func (t *Tgbot) createResellerClient(user *model.User, inboundID int, email stri
 	}
 	message := fmt.Sprintf("✅ Account created\nEmail: %s\nTraffic: %d GB\nExpiry: %s\nCredential: %s",
 		email, gb, formatResellerExpiry(client.ExpiryTime), resellerCredential(client, inbound.Protocol))
-	if links := t.resellerSubscriptionLinks(client.SubID); links != "" {
-		message += "\n\nSubscription:\n" + links
+	if subURL, subJSON, err := t.buildSubscriptionURLs(email); err == nil && subURL != "" {
+		message += "\n\nSubscription:\nBase: " + subURL
+		if subJSON != "" {
+			message += "\nJSON: " + subJSON
+		}
 	}
 	return message, nil
 }
@@ -1450,7 +1454,14 @@ func (t *Tgbot) editResellerClient(user *model.User, email string, gb int, days 
 	if needRestart {
 		t.xrayService.SetToNeedRestart()
 	}
-	return fmt.Sprintf("✏️ Account updated\nEmail: %s\nTraffic: %s\nExpiry: %s", email, formatResellerBytes(current.TotalGB), formatResellerExpiry(current.ExpiryTime)), nil
+	message := fmt.Sprintf("✏️ Account updated\nEmail: %s\nTraffic: %s\nExpiry: %s", email, formatResellerBytes(current.TotalGB), formatResellerExpiry(current.ExpiryTime))
+	if subURL, subJSON, err := t.buildSubscriptionURLs(email); err == nil && subURL != "" {
+		message += "\n\nSubscription:\nBase: " + subURL
+		if subJSON != "" {
+			message += "\nJSON: " + subJSON
+		}
+	}
+	return message, nil
 }
 
 func formatResellerExpiry(ms int64) string {
@@ -1520,8 +1531,15 @@ func (t *Tgbot) renewResellerClient(user *model.User, email string, gb int, days
 	if needRestart {
 		t.xrayService.SetToNeedRestart()
 	}
-	return fmt.Sprintf("✅ Account renewed\nEmail: %s\nTraffic: %s\nExpiry: %s",
-		email, formatResellerBytes(current.TotalGB), formatResellerExpiry(current.ExpiryTime)), nil
+	message := fmt.Sprintf("✅ Account renewed\nEmail: %s\nTraffic: %s\nExpiry: %s",
+		email, formatResellerBytes(current.TotalGB), formatResellerExpiry(current.ExpiryTime))
+	if subURL, subJSON, err := t.buildSubscriptionURLs(email); err == nil && subURL != "" {
+		message += "\n\nSubscription:\nBase: " + subURL
+		if subJSON != "" {
+			message += "\nJSON: " + subJSON
+		}
+	}
+	return message, nil
 }
 
 func (t *Tgbot) resetResellerClient(user *model.User, email string) string {
