@@ -96,11 +96,12 @@ var (
 var userStates = make(map[int64]string)
 
 type resellerFlow struct {
-	Stage     string
-	InboundID int
-	Email     string
-	GB        int
-	Days      int
+	Stage      string
+	InboundID  int
+	InboundIDs []int
+	Email      string
+	GB         int
+	Days       int
 }
 
 var resellerFlows sync.Map
@@ -387,7 +388,7 @@ func (t *Tgbot) SendExpiryReminders() {
 		return
 	}
 	var accounts []model.Account
-	if err := database.GetDB().Where("tg_id <> 0 AND expiry_time > 0").Find(&accounts).Error; err != nil {
+	if err := database.GetDB().Where("expiry_time > 0").Find(&accounts).Error; err != nil {
 		logger.Warning("Telegram expiry reminders: failed to load accounts:", err)
 		return
 	}
@@ -413,9 +414,9 @@ func (t *Tgbot) SendExpiryReminders() {
 		secondWindow := time.Duration(secondDays) * 24 * time.Hour
 		switch {
 		case remaining > secondWindow && remaining <= firstWindow:
-			event = "2d"
+			event = fmt.Sprintf("warn-%dd", firstDays)
 		case remaining > 0 && remaining <= secondWindow:
-			event = "1d"
+			event = fmt.Sprintf("warn-%dd", secondDays)
 		case remaining <= 0 && notifyExpired:
 			event = "expired"
 		}
@@ -442,17 +443,45 @@ func (t *Tgbot) SendExpiryReminders() {
 		msg := fmt.Sprintf("Account: %s\nExpiry: %s\nUsed traffic: %s\nRemaining traffic: %s",
 			account.Email,
 			time.UnixMilli(account.ExpiryTime).Format("2006-01-02 15:04:05"),
-			fmt.Sprintf("%d bytes", used),
-			fmt.Sprintf("%d bytes", remainingTraffic))
-		switch event {
-		case "2d":
-			msg = fmt.Sprintf("⏰ %d days remaining\n%s", firstDays, msg)
-		case "1d":
-			msg = fmt.Sprintf("⚠️ %d days remaining\n%s", secondDays, msg)
-		case "expired":
+			formatResellerBytes(used),
+			formatResellerBytes(remainingTraffic))
+		switch {
+		case strings.HasPrefix(event, "warn-"):
+			days := secondDays
+			if event == fmt.Sprintf("warn-%dd", firstDays) && firstDays != secondDays {
+				days = firstDays
+			}
+			msg = fmt.Sprintf("⏰ %d days remaining\n%s", days, msg)
+		case event == "expired":
 			msg = "❌ Account expired\n" + msg
 		}
-		t.SendMsgToTgbot(account.TgID, msg)
+		// A reminder is not useful if the account has no linked customer chat. The
+		// important change here is that admins and the reseller owner still receive it,
+		// so a reseller-created account no longer disappears silently just because
+		// its customer Telegram ID was never attached.
+		recipients := make(map[int64]bool)
+		addRecipient := func(id int64) {
+			if id != 0 {
+				recipients[id] = true
+			}
+		}
+		addRecipient(account.TgID)
+		for _, id := range adminIds {
+			addRecipient(id)
+		}
+		var owned model.ResellerClient
+		if database.GetDB().Where("email = ?", account.Email).First(&owned).Error == nil {
+			var profile model.ResellerProfile
+			if database.GetDB().Where("user_id = ?", owned.UserId).First(&profile).Error == nil {
+				addRecipient(profile.TelegramID)
+			}
+		}
+		if len(recipients) == 0 {
+			continue
+		}
+		for recipient := range recipients {
+			t.SendMsgToTgbot(recipient, msg)
+		}
 		state = model.TelegramReminderState{
 			Email: account.Email, TgID: account.TgID,
 			ExpiryTime: account.ExpiryTime, Event: event, SentAt: now.Unix(),
@@ -462,7 +491,6 @@ func (t *Tgbot) SendExpiryReminders() {
 		}
 	}
 }
-
 // IsRunning checks if the Telegram bot is currently running.
 func (t *Tgbot) IsRunning() bool {
 	tgBotMutex.Lock()
@@ -994,8 +1022,32 @@ func (t *Tgbot) handleResellerCallback(q *telego.CallbackQuery) bool {
 		if e != nil || !t.resellerInboundAllowed(user.Id, id) {
 			return true
 		}
-		resellerFlows.Store(chatID, &resellerFlow{Stage: "create_email", InboundID: id})
+		v, _ := resellerFlows.Load(chatID)
+		flow := &resellerFlow{Stage: "create_inbounds", InboundIDs: []int{id}}
+		if existing, ok := v.(*resellerFlow); ok && existing.Stage == "create_inbounds" {
+			flow = existing
+			found := false
+			for _, selected := range flow.InboundIDs {
+				if selected == id { found = true; break }
+			}
+			if !found { flow.InboundIDs = append(flow.InboundIDs, id) }
+		}
+		resellerFlows.Store(chatID, flow)
 		t.sendCallbackAnswerTgBot(q.ID, "Inbound selected")
+		t.sendResellerInboundKeyboard(chatID, user.Id, true)
+		return true
+	}
+	if data == "rs:inbound_done" {
+		v, ok := resellerFlows.Load(chatID)
+		if !ok { return true }
+		flow := v.(*resellerFlow)
+		if flow.Stage != "create_inbounds" || len(flow.InboundIDs) == 0 {
+			t.sendCallbackAnswerTgBot(q.ID, "Select at least one inbound")
+			return true
+		}
+		flow.Stage = "create_email"
+		resellerFlows.Store(chatID, flow)
+		t.sendCallbackAnswerTgBot(q.ID, "Inbounds selected")
 		t.SendMsgToTgbot(chatID, "✏️ Enter customer email:")
 		return true
 	}
@@ -1075,19 +1127,38 @@ func (t *Tgbot) sendResellerInboundKeyboard(chatID int64, userID int, forCreate 
 	if database.GetDB().Where("user_id = ?", userID).Find(&grants).Error != nil {
 		return
 	}
-	kb := make([][]telego.InlineKeyboardButton, 0, len(grants)+1)
+	selected := map[int]bool{}
+	if forCreate {
+		if v, ok := resellerFlows.Load(chatID); ok {
+			if flow, ok := v.(*resellerFlow); ok {
+				for _, id := range flow.InboundIDs { selected[id] = true }
+			}
+		}
+	}
+	kb := make([][]telego.InlineKeyboardButton, 0, len(grants)+2)
 	for _, g := range grants {
 		in, e := t.inboundService.GetInbound(g.InboundId)
 		if e == nil && in != nil {
-			kb = append(kb, []telego.InlineKeyboardButton{tu.InlineKeyboardButton(fmt.Sprintf("🌐 #%d %s", in.Id, in.Remark)).WithCallbackData("rs:inbound:" + strconv.Itoa(in.Id))})
+			label := "🌐"
+			if selected[in.Id] { label = "✅" }
+			kb = append(kb, []telego.InlineKeyboardButton{
+				tu.InlineKeyboardButton(fmt.Sprintf("%s #%d %s", label, in.Id, in.Remark)).
+					WithCallbackData("rs:inbound:" + strconv.Itoa(in.Id)),
+			})
 		}
 	}
-	if !forCreate {
-		kb = append(kb, []telego.InlineKeyboardButton{tu.InlineKeyboardButton("◀️ Menu").WithCallbackData("rs:menu")})
+	if forCreate {
+		kb = append(kb, []telego.InlineKeyboardButton{
+			tu.InlineKeyboardButton("✅ Done").WithCallbackData("rs:inbound_done"),
+		})
 	}
-	t.SendMsgToTgbot(chatID, "🌐 Choose an inbound:", &telego.InlineKeyboardMarkup{InlineKeyboard: kb})
+	kb = append(kb, []telego.InlineKeyboardButton{
+		tu.InlineKeyboardButton("◀️ Menu").WithCallbackData("rs:menu"),
+	})
+	prompt := "🌐 Choose one or more inbounds:"
+	if !forCreate { prompt = "🌐 Your inbounds:" }
+	t.SendMsgToTgbot(chatID, prompt, &telego.InlineKeyboardMarkup{InlineKeyboard: kb})
 }
-
 func (t *Tgbot) sendResellerClientsKeyboard(chatID int64, userID int, renew bool) {
 	var rows []model.ResellerClient
 	if database.GetDB().Where("user_id = ?", userID).Order("id asc").Find(&rows).Error != nil {
