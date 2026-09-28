@@ -1594,6 +1594,21 @@ func resellerCredential(c model.Client, p model.Protocol) string {
 	}
 }
 
+// notifyResellerAction sends an audit event to every configured Telegram admin.
+// It deliberately runs only after the paid mutation has succeeded.
+func (t *Tgbot) notifyResellerAction(user *model.User, action, email string, inboundIDs []int, gb int, expiry int64) {
+	if user == nil || !user.IsReseller { return }
+	var names []string
+	for _, id := range inboundIDs {
+		inbound, err := t.inboundService.GetInbound(id)
+		if err == nil && inbound != nil { names = append(names, fmt.Sprintf("#%d %s", inbound.Id, inbound.Remark)) }
+	}
+	inbounds := strings.Join(names, ", ")
+	if inbounds == "" { inbounds = "n/a" }
+	msg := fmt.Sprintf("🔔 <b>Reseller activity</b>\nReseller: <b>%s</b>\nAction: <b>%s</b>\nUser: <code>%s</code>\nTraffic: <b>%d GB</b>\nExpiry: <b>%s</b>\nInbounds: %s", html.EscapeString(user.Username), html.EscapeString(action), html.EscapeString(email), gb, formatResellerExpiry(expiry), html.EscapeString(inbounds))
+	for _, adminID := range adminIds { if adminID != 0 { t.SendMsgToTgbot(adminID, msg) } }
+}
+
 // syncResellerAccount immediately reconciles the legacy client write into the
 // account layer. Telegram does not pass through the HTTP controller, so without
 // this explicit bridge a reseller-created account would wait for a later global
