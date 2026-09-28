@@ -491,6 +491,7 @@ func (t *Tgbot) SendExpiryReminders() {
 		}
 	}
 }
+
 // IsRunning checks if the Telegram bot is currently running.
 func (t *Tgbot) IsRunning() bool {
 	tgBotMutex.Lock()
@@ -628,6 +629,13 @@ func (t *Tgbot) OnReceive() {
 			}()
 			return nil
 		}, th.AnyCallbackQueryWithMessage())
+
+		h.HandleMessage(func(ctx *th.Context, message telego.Message) error {
+			if t.handleRenewalMedia(&message) {
+				return nil
+			}
+			return nil
+		}, th.AnyMessageWithMedia())
 
 		h.HandleMessage(func(ctx *th.Context, message telego.Message) error {
 			if t.handleResellerText(&message) {
@@ -822,6 +830,10 @@ func (t *Tgbot) answerCommand(message *telego.Message, chatId int64, isAdmin boo
 	case "id":
 		onlyMessage = true
 		msg += t.I18nBot("tgbot.commands.getID", "ID=="+strconv.FormatInt(message.From.ID, 10))
+	case "renew":
+		onlyMessage = true
+		t.handleRenewalCommand(chatId, int64(message.From.ID))
+		return
 	case "usage":
 		onlyMessage = true
 		if len(commandArgs) > 0 {
@@ -1047,7 +1059,9 @@ func (t *Tgbot) handleResellerCallback(q *telego.CallbackQuery) bool {
 	}
 	if data == "rs:inbound_done" {
 		v, ok := resellerFlows.Load(chatID)
-		if !ok { return true }
+		if !ok {
+			return true
+		}
 		flow := v.(*resellerFlow)
 		if flow.Stage != "create_inbounds" || len(flow.InboundIDs) == 0 {
 			t.sendCallbackAnswerTgBot(q.ID, "Select at least one inbound")
@@ -1139,7 +1153,9 @@ func (t *Tgbot) sendResellerInboundKeyboard(chatID int64, userID int, forCreate 
 	if forCreate {
 		if v, ok := resellerFlows.Load(chatID); ok {
 			if flow, ok := v.(*resellerFlow); ok {
-				for _, id := range flow.InboundIDs { selected[id] = true }
+				for _, id := range flow.InboundIDs {
+					selected[id] = true
+				}
 			}
 		}
 	}
@@ -1148,7 +1164,9 @@ func (t *Tgbot) sendResellerInboundKeyboard(chatID int64, userID int, forCreate 
 		in, e := t.inboundService.GetInbound(g.InboundId)
 		if e == nil && in != nil {
 			label := "🌐"
-			if selected[in.Id] { label = "✅" }
+			if selected[in.Id] {
+				label = "✅"
+			}
 			kb = append(kb, []telego.InlineKeyboardButton{
 				tu.InlineKeyboardButton(fmt.Sprintf("%s #%d %s", label, in.Id, in.Remark)).
 					WithCallbackData("rs:inbound:" + strconv.Itoa(in.Id)),
@@ -1164,7 +1182,9 @@ func (t *Tgbot) sendResellerInboundKeyboard(chatID int64, userID int, forCreate 
 		tu.InlineKeyboardButton("◀️ Menu").WithCallbackData("rs:menu"),
 	})
 	prompt := "🌐 Choose one or more inbounds:"
-	if !forCreate { prompt = "🌐 Your inbounds:" }
+	if !forCreate {
+		prompt = "🌐 Your inbounds:"
+	}
 	t.SendMsgToTgbot(chatID, prompt, &telego.InlineKeyboardMarkup{InlineKeyboard: kb})
 }
 func (t *Tgbot) sendResellerClientsKeyboard(chatID int64, userID int, renew bool) {
@@ -1606,16 +1626,26 @@ func resellerCredential(c model.Client, p model.Protocol) string {
 // notifyResellerAction sends an audit event to every configured Telegram admin.
 // It deliberately runs only after the paid mutation has succeeded.
 func (t *Tgbot) notifyResellerAction(user *model.User, action, email string, inboundIDs []int, gb int, expiry int64) {
-	if user == nil || !user.IsReseller { return }
+	if user == nil || !user.IsReseller {
+		return
+	}
 	var names []string
 	for _, id := range inboundIDs {
 		inbound, err := t.inboundService.GetInbound(id)
-		if err == nil && inbound != nil { names = append(names, fmt.Sprintf("#%d %s", inbound.Id, inbound.Remark)) }
+		if err == nil && inbound != nil {
+			names = append(names, fmt.Sprintf("#%d %s", inbound.Id, inbound.Remark))
+		}
 	}
 	inbounds := strings.Join(names, ", ")
-	if inbounds == "" { inbounds = "n/a" }
+	if inbounds == "" {
+		inbounds = "n/a"
+	}
 	msg := fmt.Sprintf("🔔 <b>Reseller activity</b>\nReseller: <b>%s</b>\nAction: <b>%s</b>\nUser: <code>%s</code>\nTraffic: <b>%d GB</b>\nExpiry: <b>%s</b>\nInbounds: %s", html.EscapeString(user.Username), html.EscapeString(action), html.EscapeString(email), gb, formatResellerExpiry(expiry), html.EscapeString(inbounds))
-	for _, adminID := range adminIds { if adminID != 0 { t.SendMsgToTgbot(adminID, msg) } }
+	for _, adminID := range adminIds {
+		if adminID != 0 {
+			t.SendMsgToTgbot(adminID, msg)
+		}
+	}
 }
 
 // syncResellerAccount immediately reconciles the legacy client write into the
@@ -1847,6 +1877,9 @@ func (t *Tgbot) randomShadowSocksPassword() string {
 // answerCallback processes callback queries from inline keyboards.
 func (t *Tgbot) answerCallback(callbackQuery *telego.CallbackQuery, isAdmin bool) {
 	chatId := callbackQuery.Message.GetChat().ID
+	if t.handleRenewalCallback(callbackQuery, isAdmin) {
+		return
+	}
 	if !isAdmin && t.handleResellerCallback(callbackQuery) {
 		return
 	}

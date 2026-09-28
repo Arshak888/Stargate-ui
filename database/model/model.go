@@ -235,6 +235,25 @@ type TelegramReminderState struct {
 	SentAt     int64  `json:"sentAt"`
 }
 
+type TelegramRenewalRequest struct {
+	Id               int64  `json:"id" gorm:"primaryKey;autoIncrement"`
+	Email            string `json:"email" gorm:"index"`
+	TgID             int64  `json:"tgId" gorm:"index"`
+	PlanID           string `json:"planId"`
+	PlanName         string `json:"planName"`
+	TotalGB          int64  `json:"totalGB"`
+	Days             int    `json:"days"`
+	Status           string `json:"status" gorm:"index"`
+	ReceiptChatID    int64  `json:"receiptChatId"`
+	ReceiptMessageID int    `json:"receiptMessageId"`
+	ReceiptFileID    string `json:"receiptFileId"`
+	ReceiptType      string `json:"receiptType"`
+	CreatedAt        int64  `json:"createdAt"`
+	ReviewedAt       int64  `json:"reviewedAt"`
+	ReviewedBy       int64  `json:"reviewedBy"`
+	AdminNote        string `json:"adminNote"`
+}
+
 // Inbound represents an Xray inbound configuration with traffic statistics and settings.
 type Inbound struct {
 	Id                   int    `json:"id" form:"id" gorm:"primaryKey;autoIncrement"`                                                    // Unique identifier

@@ -51,6 +51,9 @@ type AllSetting struct {
 	TgExpiryReminder2Days    int    `json:"tgExpiryReminder2Days" form:"tgExpiryReminder2Days"`
 	TgExpiryReminder1Day     int    `json:"tgExpiryReminder1Day" form:"tgExpiryReminder1Day"`
 	TgExpiryReminderOnExpire bool   `json:"tgExpiryReminderOnExpire" form:"tgExpiryReminderOnExpire"`
+	TgRenewalEnable          bool   `json:"tgRenewalEnable" form:"tgRenewalEnable"`
+	TgRenewalPaymentInfo     string `json:"tgRenewalPaymentInfo" form:"tgRenewalPaymentInfo"`
+	TgRenewalPlans           string `json:"tgRenewalPlans" form:"tgRenewalPlans"`
 
 	// Security settings
 	TimeLocation    string `json:"timeLocation" form:"timeLocation"`       // Time zone location
