@@ -1573,6 +1573,7 @@ func (t *Tgbot) editResellerClient(user *model.User, email string, gb int, days 
 			message += "\nJSON: " + subJSON
 		}
 	}
+	t.notifyResellerAction(user, "updated", email, []int{inbound.Id}, gb, current.ExpiryTime)
 	return message, nil
 }
 
@@ -1715,6 +1716,7 @@ func (t *Tgbot) renewResellerClient(user *model.User, email string, gb int, days
 			message += "\nJSON: " + subJSON
 		}
 	}
+	t.notifyResellerAction(user, "renewed", email, []int{inbound.Id}, gb, current.ExpiryTime)
 	return message, nil
 }
 
@@ -1736,6 +1738,7 @@ func (t *Tgbot) resetResellerClient(user *model.User, email string) string {
 			logger.Warning("reseller reset: account projection sync failed:", syncErr)
 		}
 	}
+	t.notifyResellerAction(user, "reset traffic", email, nil, 0, 0)
 	return "✅ Traffic reset. The reset was charged from your balance."
 }
 
@@ -1765,6 +1768,7 @@ func (t *Tgbot) toggleResellerClient(user *model.User, email string, enable bool
 			logger.Warning("reseller toggle: account projection sync failed:", syncErr)
 		}
 	}
+	t.notifyResellerAction(user, map[bool]string{true: "enabled", false: "disabled"}[enable], email, nil, 0, 0)
 	if enable {
 		return "✅ Account enabled."
 	}
@@ -1798,6 +1802,7 @@ func (t *Tgbot) deleteResellerClient(user *model.User, email string) string {
 	if err := t.resellerService.RefundDeleted(email, used, known); err != nil {
 		return fmt.Sprintf("Account removed, but balance settlement failed: %v", err)
 	}
+	t.notifyResellerAction(user, "deleted", email, ids, 0, 0)
 	return "✅ Account deleted and unused balance refunded."
 }
 
