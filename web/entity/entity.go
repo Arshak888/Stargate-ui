@@ -21,13 +21,17 @@ type Msg struct {
 // AllSetting contains all configuration settings for the vpn-ui panel including web server, Telegram bot, and subscription settings.
 type AllSetting struct {
 	// Web server settings
-	WebListen     string `json:"webListen" form:"webListen"`         // Web server listen IP address
-	WebDomain     string `json:"webDomain" form:"webDomain"`         // Web server domain for domain validation
-	WebPort       int    `json:"webPort" form:"webPort"`             // Web server port number
-	WebCertFile   string `json:"webCertFile" form:"webCertFile"`     // Path to SSL certificate file for web server
-	WebKeyFile    string `json:"webKeyFile" form:"webKeyFile"`       // Path to SSL private key file for web server
-	WebBasePath   string `json:"webBasePath" form:"webBasePath"`     // Base path for web panel URLs
-	SessionMaxAge int    `json:"sessionMaxAge" form:"sessionMaxAge"` // Session maximum age in minutes
+	WebListen      string `json:"webListen" form:"webListen"`           // Web server listen IP address
+	WebDomain      string `json:"webDomain" form:"webDomain"`           // Web server domain for domain validation
+	WebPort        int    `json:"webPort" form:"webPort"`               // Web server port number
+	WebCertFile    string `json:"webCertFile" form:"webCertFile"`       // Path to SSL certificate file for web server
+	WebKeyFile     string `json:"webKeyFile" form:"webKeyFile"`         // Path to SSL private key file for web server
+	WebBasePath    string `json:"webBasePath" form:"webBasePath"`       // Base path for web panel URLs
+	PanelBrandName string `json:"panelBrandName" form:"panelBrandName"` // Panel/login brand name
+	LoginLogoURL   string `json:"loginLogoURL" form:"loginLogoURL"`     // Login page logo URL
+	LoginTitle     string `json:"loginTitle" form:"loginTitle"`         // Login page heading
+	LoginSubtitle  string `json:"loginSubtitle" form:"loginSubtitle"`   // Login page subtitle
+	SessionMaxAge  int    `json:"sessionMaxAge" form:"sessionMaxAge"`   // Session maximum age in minutes
 
 	// UI settings
 	PageSize    int    `json:"pageSize" form:"pageSize"`       // Number of items per page in lists

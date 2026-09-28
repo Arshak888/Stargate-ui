@@ -96,6 +96,8 @@ body { background:var(--bg); }
 
 /* ===== card head ===== */
 #app.login-app .lgt-head { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+#app.login-app .lgt-brand-wrap { display:flex; align-items:center; gap:10px; min-width:0; }
+#app.login-app .lgt-logo { width:34px; height:34px; object-fit:contain; border-radius:var(--radius-sm); flex:0 0 auto; }
 #app.login-app .lgt-brand {
   font-size:var(--fs-lg); font-weight:var(--fw-bold); letter-spacing:.14em; color:var(--accent);
   white-space:nowrap; direction:ltr; unicode-bidi:isolate;
@@ -149,6 +151,7 @@ body { background:var(--bg); }
   text-transform:uppercase; letter-spacing:.08em;
 }
 #app.login-app .lgt-title { font-size:var(--fs-xl); font-weight:var(--fw-bold); letter-spacing:-.01em; text-wrap:balance; }
+#app.login-app .lgt-subtitle { margin-top:2px; font-size:var(--fs-sm); color:var(--text-3); line-height:1.45; }
 
 /* The fetch that gates the form is one round trip and usually lands
    before the first paint is even visible, but reserving its height keeps
@@ -276,7 +279,10 @@ body { background:var(--bg); }
       <div class="lgt-card lgt-rise" ref="card">
 
         <div class="lgt-head">
-          <p class="lgt-brand">[VPN-UI]</p>
+          <div class="lgt-brand-wrap">
+            {{ if .login_logo_url }}<img class="lgt-logo" src="{{ .login_logo_url }}" alt="">{{ end }}
+            <span class="lgt-brand">{{ .panel_brand_name }}</span>
+          </div>
           <div class="lgt-pop-wrap">
             <button type="button" class="lgt-gear" ref="gear" @click.stop="settingsOpen = !settingsOpen"
               :aria-expanded="settingsOpen ? 'true' : 'false'" aria-controls="lgt-pop"
@@ -308,7 +314,8 @@ body { background:var(--bg); }
 
           <div class="lgt-greet">
             <p class="lgt-eyebrow">{{ i18n "pages.login.hello" }}</p>
-            <h1 class="lgt-title">{{ i18n "pages.login.title" }}</h1>
+            <h1 class="lgt-title">{{ .login_title }}</h1>
+            <p class="lgt-subtitle">{{ .login_subtitle }}</p>
           </div>
 
           {{/*

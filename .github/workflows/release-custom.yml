@@ -27,10 +27,11 @@ jobs:
           go-version: '1.27.0'
           cache: true
 
-      - name: Build vpn-ui
+      - name: Build stargate-ui
         run: |
           chmod +x build.sh
           ./build.sh --arch amd64
+          mv build/out/vpn-ui-amd64 build/out/stargate-ui-amd64
 
       - name: Create GitHub release
         env:
@@ -38,7 +39,7 @@ jobs:
         run: |
           VERSION="v1.9.4-custom.${GITHUB_RUN_NUMBER}"
           gh release create "$VERSION" \
-            "build/out/vpn-ui-amd64" \
+            "build/out/stargate-ui-amd64" \
             --title "$VERSION" \
-            --notes "Custom vpn-ui build from commit $GITHUB_SHA." \
+            --notes "Custom Stargate UI build from commit $GITHUB_SHA." \
             --latest

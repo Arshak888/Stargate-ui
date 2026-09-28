@@ -54,7 +54,17 @@ func (a *IndexController) index(c *gin.Context) {
 		c.Redirect(http.StatusTemporaryRedirect, "panel/")
 		return
 	}
-	html(c, "login.html", "pages.login.title", nil)
+	settings, err := a.settingService.GetAllSetting()
+	if err != nil {
+		logger.Warning("Unable to load login branding settings: ", err)
+		settings = &entity.AllSetting{}
+	}
+	html(c, "login.html", "pages.login.title", gin.H{
+		"panel_brand_name": settings.PanelBrandName,
+		"login_logo_url":   settings.LoginLogoURL,
+		"login_title":      settings.LoginTitle,
+		"login_subtitle":   settings.LoginSubtitle,
+	})
 }
 
 // login handles user authentication and session creation.

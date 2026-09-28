@@ -43,6 +43,32 @@
             </template>
         </a-setting-list-item>
         <a-setting-list-item paddings="small">
+            <template #title>Panel brand name</template>
+            <template #description>Name shown on the login page.</template>
+            <template #control>
+                <a-input type="text" v-model="allSetting.panelBrandName"></a-input>
+            </template>
+        </a-setting-list-item>
+        <a-setting-list-item paddings="small">
+            <template #title>Login logo URL</template>
+            <template #description>Direct URL to an image. Leave empty to hide the logo.</template>
+            <template #control>
+                <a-input type="text" v-model="allSetting.loginLogoURL"></a-input>
+            </template>
+        </a-setting-list-item>
+        <a-setting-list-item paddings="small">
+            <template #title>Login title</template>
+            <template #control>
+                <a-input type="text" v-model="allSetting.loginTitle"></a-input>
+            </template>
+        </a-setting-list-item>
+        <a-setting-list-item paddings="small">
+            <template #title>Login subtitle</template>
+            <template #control>
+                <a-input type="text" v-model="allSetting.loginSubtitle"></a-input>
+            </template>
+        </a-setting-list-item>
+        <a-setting-list-item paddings="small">
             <template #title>{{ i18n "pages.settings.panelUrlPath"}}</template>
             <template #description>{{ i18n "pages.settings.panelUrlPathDesc"}}</template>
             <template #control>

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# MmD
+# Stargate UI
 set -euo pipefail
 
 REPO="Arshak888/vpn-ui-custom"
-ASSET="vpn-ui-amd64"
+ASSET="stargate-ui-amd64"
 DEST_DIR="/opt/vpn-ui"
 DEST="$DEST_DIR/$ASSET"
 # The DEFAULT systemd unit name, and ONLY a fallback. The operator can rename the
@@ -13,7 +13,7 @@ DEST="$DEST_DIR/$ASSET"
 # through unit_name() instead; this is what it answers with when there is no binary
 # to ask yet.
 UNIT_FALLBACK="vpn-ui"
-# The management menu (`vpn-ui`). Installed from INSIDE the binary we just placed
+# The management menu (`vpn-ui`, legacy command path). Installed from INSIDE the binary we just placed
 # ($DEST install-menu), never curled from the repo's default branch: that would pin
 # a menu from a different release than the binary it drives.
 MENU="/usr/bin/vpn-ui"
@@ -93,7 +93,7 @@ fi
 
 # Preflight
 hr
-printf '%s[%sVPN-UI%s]%s deploy\n' "$B$TEAL" "$GREEN" "$TEAL" "$R"
+printf '%s[%sSTARGATE-UI%s]%s deploy\n' "$B$TEAL" "$GREEN" "$TEAL" "$R"
 hr
 
 command -v systemctl >/dev/null 2>&1 || die "systemctl not found — this host isn't running systemd."
