@@ -1,4 +1,4 @@
-// Package config provides configuration management utilities for the vpn-ui panel,
+// Package config provides configuration management utilities for the stargate-ui panel,
 // including version information, logging levels, database paths, and environment variable handling.
 package config
 
@@ -28,12 +28,12 @@ const (
 	Error   LogLevel = "error"
 )
 
-// GetVersion returns the version string of the vpn-ui application.
+// GetVersion returns the version string of the stargate-ui application.
 func GetVersion() string {
 	return strings.TrimSpace(version)
 }
 
-// GetName returns the name of the vpn-ui application.
+// GetName returns the name of the stargate-ui application.
 func GetName() string {
 	return strings.TrimSpace(name)
 }
@@ -112,7 +112,7 @@ func getBaseDir() string {
 // GetDBFolderPath returns the folder that holds the database file. It defaults to
 // the directory of the binary (overridable with VPNUI_DB_FOLDER) so a copied or
 // moved install carries its data with it, rather than silently sharing a fixed
-// /etc/vpn-ui. Legacy installs are migrated from LegacyDBPath on first init.
+// /etc/stargate-ui. Legacy installs are migrated from LegacyDBPath on first init.
 func GetDBFolderPath() string {
 	dbFolderPath := os.Getenv("VPNUI_DB_FOLDER")
 	if dbFolderPath != "" {
@@ -122,8 +122,8 @@ func GetDBFolderPath() string {
 }
 
 // dbBaseName is the database file's base name (without extension). It is fixed
-// rather than derived from GetName() so the on-disk DB is always "vpn-ui.db".
-const dbBaseName = "vpn-ui"
+// rather than derived from GetName() so the on-disk DB is always "stargate-ui.db".
+const dbBaseName = "stargate-ui"
 
 // GetDBPath returns the full path to the database file (next to the binary).
 func GetDBPath() string {
@@ -132,9 +132,9 @@ func GetDBPath() string {
 
 // LegacyDBPaths lists previous database names next to the binary to migrate from
 // on first init when the current DB doesn't exist yet:
-//   - <bindir>/x-ui.db — the prior next-to-binary name (before the vpn-ui rename)
+//   - <bindir>/x-ui.db — the prior next-to-binary name (before the stargate-ui rename)
 //
-// It deliberately does NOT reach into /etc/vpn-ui — a DB left there is not adopted.
+// It deliberately does NOT reach into /etc/stargate-ui — a DB left there is not adopted.
 // The current GetDBPath is never included. Empty on a custom VPNUI_DB_FOLDER.
 func LegacyDBPaths() []string {
 	if os.Getenv("VPNUI_DB_FOLDER") != "" {
@@ -158,7 +158,7 @@ func GetLogFolder() string {
 	if logFolderPath != "" {
 		return logFolderPath
 	}
-	return "/var/log/vpn-ui"
+	return "/var/log/stargate-ui"
 }
 
 // DB migration (moving/renaming a legacy database to GetDBPath) is handled

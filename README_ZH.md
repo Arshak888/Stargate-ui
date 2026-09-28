@@ -1,12 +1,12 @@
 [English](/README.md) | [فارسی](/README_FA.md) | [العربية](/README_AR.md) | [中文](/README_ZH.md) | [Español](/README_ES.md) | [Русский](/README_RU.md) | [Türkçe](/README_TR.md)
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Sir-MmD/vpn-ui/refs/heads/main/media/logo.png" alt="VPN-UI Logo" width="260">
+  <img src="https://raw.githubusercontent.com/Sir-MmD/stargate-ui/refs/heads/main/media/logo.png" alt="STARGATE-UI Logo" width="260">
 </p>
 
 本项目是 **[3X-UI](https://github.com/MHSanaei/3x-ui)** 面板（2.9.3 版本）的增强版。本项目旨在添加多种协议，并将其打造成一个支持 **Xray-core** 各项功能的综合性面板。
 
-![总览](https://raw.githubusercontent.com/Sir-MmD/vpn-ui/refs/heads/main/media/overview.png)
+![总览](https://raw.githubusercontent.com/Sir-MmD/stargate-ui/refs/heads/main/media/overview.png)
 
 ## 新增协议
 
@@ -47,7 +47,7 @@
 
 ## 本 Fork 的新增功能
 
-在上游 VPN-UI 的基础上，本 Fork 增加了更多账户管理、共享凭据、Telegram 和 SSH 功能：
+在上游 STARGATE-UI 的基础上，本 Fork 增加了更多账户管理、共享凭据、Telegram 和 SSH 功能：
 
 - **基于用户名/密码的协议共享 VPN 凭据**：SSH、OpenVPN、L2TP、PPTP、IKEv2、SSTP 和 OpenConnect 可以为同一个账户使用**统一的用户名和密码**，并在该账户的所有 Membership 之间共享。
 - **集中式凭据管理**：在 Web 面板中修改共享用户名或密码后，新凭据会同步到该账户的其他 Membership，并保持各协议配置一致。
@@ -91,13 +91,13 @@
 ## 安装面板
 
 ```bash
-curl -Ls https://raw.githubusercontent.com/Arshak888/vpn-ui-custom/refs/heads/main/deploy.sh | sudo bash
+curl -Ls https://raw.githubusercontent.com/Arshak888/stargate-ui-custom/refs/heads/main/deploy.sh | sudo bash
 ```
 
 ## 卸载面板
 
 ```bash
-sudo /opt/vpn-ui/vpn-ui-amd64 --uninstall
+sudo /opt/stargate-ui/stargate-ui-amd64 --uninstall
 ```
 
 > [!NOTE]
@@ -112,7 +112,7 @@ flowchart TB
   SSHC["SSH Client<br/>(ssh -D dynamic SOCKS · badvpn-udpgw for UDP)"]
   GREC["Customer Router<br/>(GRE · IP protocol 47 · optional IPsec / FOU)"]
 
-  subgraph PANEL["vpn-ui panel — root process"]
+  subgraph PANEL["stargate-ui panel — root process"]
     PROC["procmgr<br/>supervises the daemons"]
     RAD["in-binary RADIUS<br/>127.0.0.1:1812 auth · :1813 acct"]
     HOOK["OpenVPN hooks<br/>auth / connect / disconnect / evict"]
@@ -222,13 +222,13 @@ flowchart TB
 ## 从源码编译
 
 ```bash
-git clone https://github.com/Arshak888/vpn-ui-custom.git && cd vpn-ui-custom
+git clone https://github.com/Arshak888/stargate-ui-custom.git && cd stargate-ui-custom
 ./build.sh
 ```
 
 ## E2E 测试
 
-![E2E 测试](https://raw.githubusercontent.com/Sir-MmD/vpn-ui/refs/heads/main/media/test_unit.png)
+![E2E 测试](https://raw.githubusercontent.com/Sir-MmD/stargate-ui/refs/heads/main/media/test_unit.png)
 
 本项目在 `test_unit` 文件夹中设计了一套完整的、使用 Python 编写的 **E2E** 测试，您可以直接使用它。步骤如下：
 

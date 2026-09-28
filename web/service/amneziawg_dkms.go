@@ -12,7 +12,7 @@ import (
 )
 
 // awgBuildDir is where the embedded module source is extracted for the DKMS build.
-const awgBuildDir = "/usr/src/vpn-ui-amneziawg"
+const awgBuildDir = "/usr/src/stargate-ui-amneziawg"
 
 // ensureAmneziawg builds + loads the out-of-tree `amneziawg` kernel module from the vendored
 // source via DKMS, installing the toolchain + kernel headers first. This is the ONLY on-host

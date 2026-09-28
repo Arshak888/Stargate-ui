@@ -31,8 +31,6 @@ jobs:
         run: |
           chmod +x build.sh
           ./build.sh --arch amd64
-          mv build/out/vpn-ui-amd64 build/out/stargate-ui-amd64
-
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}

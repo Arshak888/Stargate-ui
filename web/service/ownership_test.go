@@ -9,7 +9,7 @@ import (
 
 // useTempOwnership points the manifest and its backup directory at a temp dir and
 // drops the in-memory cache, so a test never reads or writes the real
-// /etc/vpn-ui/ownership.json.
+// /etc/stargate-ui/ownership.json.
 func useTempOwnership(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
@@ -38,7 +38,7 @@ func parseIP4(t *testing.T, s string) net.IP {
 func TestOwnershipRoundTrip(t *testing.T) {
 	useTempOwnership(t)
 
-	ownClaim(ownFile, "/etc/vpn-ui-sstp/server-3/accel-ppp.conf", "sstp")
+	ownClaim(ownFile, "/etc/stargate-ui-sstp/server-3/accel-ppp.conf", "sstp")
 	ownNote(ownFile, "/etc/pptpd.conf", "pptp", "already present")
 	ownClaimPrev(ownSysctl, "net.ipv4.conf.all.rp_filter", "", "1", "relaxed for TPROXY")
 	ownRecordUnit("xl2tpd.service", "l2tp", true, true)
@@ -46,7 +46,7 @@ func TestOwnershipRoundTrip(t *testing.T) {
 	// Forget everything in memory: the next read comes off disk.
 	ownReset()
 
-	if state, found := ownStateOf(ownFile, "/etc/vpn-ui-sstp/server-3/accel-ppp.conf"); !found || state != ownStateNo {
+	if state, found := ownStateOf(ownFile, "/etc/stargate-ui-sstp/server-3/accel-ppp.conf"); !found || state != ownStateNo {
 		t.Errorf("claimed file came back as (%v, %v)", state, found)
 	}
 	if state, found := ownStateOf(ownFile, "/etc/pptpd.conf"); !found || state != ownStateYes {
@@ -67,7 +67,7 @@ func TestOwnershipRoundTrip(t *testing.T) {
 }
 
 // The rule the whole file exists for. An artifact the manifest says was here
-// before vpn-ui is never deleted, whichever core is being removed.
+// before stargate-ui is never deleted, whichever core is being removed.
 func TestPreExistingIsNeverDeleted(t *testing.T) {
 	dir := useTempOwnership(t)
 
@@ -269,7 +269,7 @@ func TestDirectoryOwnership(t *testing.T) {
 	}
 	ownPrepareDir(theirs, "openconnect")
 
-	ours := filepath.Join(dir, "vpn-ui-sstp")
+	ours := filepath.Join(dir, "stargate-ui-sstp")
 	ownPrepareDir(ours, "sstp")
 	if err := os.MkdirAll(ours, 0755); err != nil {
 		t.Fatal(err)
@@ -290,8 +290,8 @@ func TestDirectoryOwnership(t *testing.T) {
 // instead of leaving every host stuck reporting them forever.
 func TestPanelPrivatePathClassification(t *testing.T) {
 	private := []string{
-		"/etc/vpn-ui-sstp",
-		"/etc/vpn-ui-mtproto/server-2",
+		"/etc/stargate-ui-sstp",
+		"/etc/stargate-ui-mtproto/server-2",
 		"/etc/ocserv/server-7",
 		"/etc/openvpn/server-1",
 		"/etc/swanctl/conf.d/l2tp.conf",
@@ -311,7 +311,7 @@ func TestPanelPrivatePathClassification(t *testing.T) {
 	}
 	for _, p := range private {
 		if !ownPanelPrivatePath(p) {
-			t.Errorf("%q should be recognised as a path only vpn-ui creates", p)
+			t.Errorf("%q should be recognised as a path only stargate-ui creates", p)
 		}
 	}
 	for _, p := range shared {

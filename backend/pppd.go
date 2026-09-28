@@ -16,7 +16,7 @@ import (
 // musl loader — patchelf'd to a FIXED path so its ELF interpreter/rpath resolve
 // regardless of the host distro. That fixed path must match the build.
 const (
-	PppdBundleRoot = "/usr/libexec/vpn-ui"
+	PppdBundleRoot = "/usr/libexec/stargate-ui"
 	PppdBundled    = PppdBundleRoot + "/sbin/pppd"
 	PppdSystem     = "/usr/sbin/pppd"
 	OpenSSLModules = PppdBundleRoot + "/lib/ossl-modules"
@@ -51,7 +51,7 @@ func UsingBundledPppd() bool {
 }
 
 // ExtractPppdBundle untars the embedded pppd bundle to the filesystem root
-// (its entries are rooted at usr/libexec/vpn-ui). Idempotent; no-op if absent.
+// (its entries are rooted at usr/libexec/stargate-ui). Idempotent; no-op if absent.
 func ExtractPppdBundle() error {
 	if !HasPppdBundle() {
 		return nil

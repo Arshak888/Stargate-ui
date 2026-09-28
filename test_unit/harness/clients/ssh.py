@@ -45,7 +45,7 @@ from .base import Client
 # Bundled static badvpn-tun2socks the harness pushes to each client. The `badvpn` apt
 # package was dropped from recent Ubuntu (not in 26.04 universe), so it cannot be
 # apt-installed; instead a static-musl build (via alpine docker/incus) lives beside the
-# vpn-ui binary in test_subject/ and is pushed to /usr/local/bin on first connect.
+# stargate-ui binary in test_subject/ and is pushed to /usr/local/bin on first connect.
 _BADVPN_LOCAL = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
     "test_subject", "badvpn-tun2socks")

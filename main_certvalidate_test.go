@@ -122,7 +122,7 @@ func TestUpdateCertRefusesUnusablePairs(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			// A DB folder that must stay untouched: reaching InitDB would create
-			// vpn-ui.db here, so an empty directory afterwards proves the refusal
+			// stargate-ui.db here, so an empty directory afterwards proves the refusal
 			// happened before anything was opened or written.
 			dbDir := t.TempDir()
 			t.Setenv("VPNUI_DB_FOLDER", dbDir)
@@ -231,7 +231,7 @@ func TestCertCommandsRefuseHalfAPair(t *testing.T) {
 //
 // subCertFile is "" on a fresh install, and an empty subCertFile used to count as
 // "the subscription server follows the panel". Both installers run this command as
-// part of one (vpn-ui.sh with -webCert after acme.sh, deploy.sh with -selfsign), so
+// part of one (stargate-ui.sh with -webCert after acme.sh, deploy.sh with -selfsign), so
 // every install put the panel's certificate on a subscription listener nobody had
 // asked to serve TLS. Empty means never configured, and this command has to leave it
 // that way.
@@ -389,7 +389,7 @@ func TestCertCommandTargets(t *testing.T) {
 		panel bool
 		sub   bool
 	}{
-		{"a bare `vpn-ui cert` still clears the panel", nil, true, false},
+		{"a bare `stargate-ui cert` still clears the panel", nil, true, false},
 		{"-webCert moves the panel only", []string{"webCert", "webCertKey"}, true, false},
 		{"-subCert moves the subscription server only", []string{"subCert", "subCertKey"}, false, true},
 		{"both pairs move both listeners", []string{"webCert", "webCertKey", "subCert", "subCertKey"}, true, true},

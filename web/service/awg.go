@@ -521,7 +521,7 @@ func (s *AwgService) ensureLink(iface string, mtu int, blockNet net.IP, prefix i
 			return err
 		}
 	} else if ownForbidsDelete(ownIface, iface) {
-		return fmt.Errorf("%s already exists and was not created by vpn-ui; not touching it", iface)
+		return fmt.Errorf("%s already exists and was not created by stargate-ui; not touching it", iface)
 	}
 	if blockNet != nil {
 		v4 := blockNet.To4()

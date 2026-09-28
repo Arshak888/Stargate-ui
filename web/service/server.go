@@ -999,12 +999,12 @@ func (s *ServerService) GetLogs(count string, level string, syslog string) []str
 		}
 
 		// Use hardcoded command with validated parameters
-		cmd := exec.Command("journalctl", "-u", "vpn-ui", "--no-pager", "-n", strconv.Itoa(countInt), "-p", level)
+		cmd := exec.Command("journalctl", "-u", "stargate-ui", "--no-pager", "-n", strconv.Itoa(countInt), "-p", level)
 		var out bytes.Buffer
 		cmd.Stdout = &out
 		err = cmd.Run()
 		if err != nil {
-			return []string{"Failed to run journalctl command! Make sure systemd is available and vpn-ui service is registered."}
+			return []string{"Failed to run journalctl command! Make sure systemd is available and stargate-ui service is registered."}
 		}
 		lines = strings.Split(out.String(), "\n")
 	} else {
@@ -1183,7 +1183,7 @@ type BackupNameOptions struct {
 const (
 	// backupNameStem is what a backup is called before any component is added, and
 	// is the whole answer when the operator ticks nothing.
-	backupNameStem = "vpn-ui"
+	backupNameStem = "stargate-ui"
 	// backupNameComponentMax caps a free-text component. serverName and webDomain
 	// are operator-typed and unbounded, while most filesystems stop at 255 bytes
 	// for the whole name.
@@ -1197,7 +1197,7 @@ var backupNameDisallowed = regexp.MustCompile(`[^a-zA-Z0-9_\-.]+`)
 // BuildBackupFilename assembles the name a .db backup is offered under: the stem
 // plus the requested components joined by "_", in a fixed order so two backups of
 // the same panel sort next to each other. Everything false gives a bare
-// "vpn-ui.db", which is the point of the picker's all-unticked case.
+// "stargate-ui.db", which is the point of the picker's all-unticked case.
 //
 // host is the browser's Host header and is only ever a last resort, for the panel
 // name and the domain alike. Callers with no request behind them (the pre-update
@@ -1209,7 +1209,7 @@ func (s *ServerService) BuildBackupFilename(opts BackupNameOptions, host string)
 	add := func(value string) {
 		// A component that sanitizes to nothing is DROPPED, not kept as an empty
 		// slot: a server labelled entirely in Persian must not name its backup
-		// "vpn-ui__20260804.db".
+		// "stargate-ui__20260804.db".
 		if value = sanitizeBackupNamePart(value); value != "" {
 			parts = append(parts, value)
 		}

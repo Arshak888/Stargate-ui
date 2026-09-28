@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # build/backend/build.sh — Build portable, statically-linked VPN daemon binaries
-# that get embedded into the vpn-ui binary (go:embed) and extracted at runtime.
+# that get embedded into the stargate-ui binary (go:embed) and extracted at runtime.
 #
 # "Daemon" is the historical name; the bundle also carries the CLIENT helpers
 # (pptp, openconnect, sstpc) the panel dials OUT with, built by the same recipes
@@ -91,7 +91,7 @@ build_arch() {
         wget -q "https://downloads.sourceforge.net/project/poptop/pptpd/pptpd-1.4.0/pptpd-1.4.0.tar.gz" -O pptpd.tar.gz
         tar xf pptpd.tar.gz
         cd pptpd-1.4.0
-        ./configure --sbindir=/usr/libexec/vpn-ui
+        ./configure --sbindir=/usr/libexec/stargate-ui
         make pptpd pptpctrl LDFLAGS="-static"
         cp pptpd pptpctrl /out/
         strip /out/pptpd /out/pptpctrl || true

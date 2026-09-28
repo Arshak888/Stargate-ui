@@ -2,11 +2,11 @@
 
 `acme.sh` here is the vendored Let's Encrypt / ACME client, embedded into the panel
 binary via `//go:embed build/acme/acme.sh` (see main.go) and written out by
-`vpn-ui install-acme <path>`.
+`stargate-ui install-acme <path>`.
 
 ## Why it is bundled
 
-`obtain_letsencrypt_cert` in `vpn-ui.sh` used to acquire the client at runtime with
+`obtain_letsencrypt_cert` in `stargate-ui.sh` used to acquire the client at runtime with
 `curl https://get.acme.sh | sh`. On a box with no outbound access (or blocked DNS /
 firewalled egress to get.acme.sh) that fetch fails, and the deploy printed:
 
@@ -25,7 +25,7 @@ the final `--issue` reaches out to Let's Encrypt (which needs egress regardless)
 ## `dnsapi/dns_cf.sh`
 
 The Cloudflare DNS-01 hook, from the same tag, bundled for the same reason as the
-client itself and written out beside `acme.sh` by `vpn-ui install-acme <path>`.
+client itself and written out beside `acme.sh` by `stargate-ui install-acme <path>`.
 
 - sha256: `9628ee8238cb3f9cfa1b1a985c0e9593436a3e4f8a9d65a6f775b981be9e76c8`
 

@@ -17,7 +17,7 @@ import (
 )
 
 // The panel's control socket: a root-only unix socket that lets a separate CLI
-// process (`vpn-ui-amd64 ctl <cmd>`) drive the LIVE panel's Xray and daemons.
+// process (`stargate-ui-amd64 ctl <cmd>`) drive the LIVE panel's Xray and daemons.
 //
 // It exists because Xray and the VPN daemons are CHILD PROCESSES of the running
 // panel, tracked only by in-process state: XrayService's package-level `p`
@@ -40,7 +40,7 @@ import (
 // neither a command set nor a reply, and cores.status has to return data.
 
 const (
-	controlSocketName = "vpn-ui.sock"
+	controlSocketName = "stargate-ui.sock"
 	// How long to wait for the stale-socket probe. Only a live panel's accept loop
 	// answers, and it is local, so this is generous already.
 	controlDialTimeout = 500 * time.Millisecond
@@ -57,7 +57,7 @@ const (
 )
 
 // ControlCommands lists every command the socket accepts, in the order the CLI
-// documents them. Exported so `vpn-ui-amd64 ctl` prints the set without keeping a
+// documents them. Exported so `stargate-ui-amd64 ctl` prints the set without keeping a
 // second copy that can drift from the switch in handleControlCommand.
 var ControlCommands = []string{
 	"ping",
@@ -83,7 +83,7 @@ type ControlResponse struct {
 	Cores []CoreStatus `json:"cores,omitempty"`
 }
 
-// ControlSocketPath returns the control socket's path: vpn-ui.sock next to the
+// ControlSocketPath returns the control socket's path: stargate-ui.sock next to the
 // panel binary.
 //
 // Deliberately derived from os.Executable() rather than config.GetDBFolderPath():
@@ -113,7 +113,7 @@ func StartControlSocket() error {
 	// having one (same rule as ReapOrphanXray: never touch a live peer).
 	if conn, derr := net.DialTimeout("unix", path, controlDialTimeout); derr == nil {
 		_ = conn.Close()
-		return fmt.Errorf("another vpn-ui panel is already serving %s", path)
+		return fmt.Errorf("another stargate-ui panel is already serving %s", path)
 	}
 	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("remove stale control socket %s: %w", path, err)
@@ -196,7 +196,7 @@ func handleControlCommand(cmd string) ControlResponse {
 
 	switch cmd {
 	case "ping":
-		return ControlResponse{OK: true, Cmd: cmd, Msg: fmt.Sprintf("vpn-ui %s panel is running (pid %d)", config.GetVersion(), os.Getpid())}
+		return ControlResponse{OK: true, Cmd: cmd, Msg: fmt.Sprintf("stargate-ui %s panel is running (pid %d)", config.GetVersion(), os.Getpid())}
 
 	case "xray.start":
 		// Xray has no separate Start: "stopped" means p == nil / !IsRunning, and

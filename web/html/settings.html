@@ -214,7 +214,7 @@
       entryProtocol: null,
       entryIsIP: false,
       user: {},
-      serviceState: { available: null, name: 'vpn-ui', installed: false, enabled: false, active: false, unit: '', defaultUnit: '', exePath: '' },
+      serviceState: { available: null, name: 'stargate-ui', installed: false, enabled: false, active: false, unit: '', defaultUnit: '', exePath: '' },
       serviceSaving: false,
       serviceLog: '',
       serviceLogLoading: false,
@@ -491,7 +491,7 @@
       // One row per certificate this panel manages.
       //
       // ONLY managed ones, because certificates installed by deploy.sh and the
-      // vpn-ui.sh menu are taken over at startup now (main.go, before the TLS
+      // stargate-ui.sh menu are taken over at startup now (main.go, before the TLS
       // listener is built) rather than waiting behind a button on this page.
       //
       // NOT ADOPTED FROM HERE, deliberately. The TLS reloader is pinned to the

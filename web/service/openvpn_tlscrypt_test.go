@@ -129,7 +129,7 @@ func TestOpenVpnServerConfigOmitsTlsCryptWithNoKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cfg := s.buildServerConfig(in, settings, "udp", 1195, "/usr/local/bin/vpn-ui")
+	cfg := s.buildServerConfig(in, settings, "udp", 1195, "/usr/local/bin/stargate-ui")
 	for _, line := range strings.Split(cfg, "\n") {
 		if strings.HasPrefix(strings.TrimSpace(line), "tls-crypt") {
 			t.Errorf("server config carries %q with no key to point it at", line)

@@ -16,7 +16,7 @@ import (
 	"github.com/vishvananda/netlink"
 )
 
-const nftConfigFile = "/etc/vpn-ui/vpn.nft"
+const nftConfigFile = "/etc/stargate-ui/vpn.nft"
 
 // vpnAddrSpace is the covering /13 (10.0.0.0-10.7.255.255) for the protocol /16s
 // VPN clients live in (10.0 L2TP, 10.1 PPTP, 10.2/10.3 OpenVPN, 10.4 OpenConnect —
@@ -93,7 +93,7 @@ func ensureVpnHostNetworking() {
 	//
 	// This is a HOST-WIDE change to a hardening setting the operator may have chosen
 	// deliberately, and nothing used to record it or put it back, so a box that had
-	// strict reverse-path filtering before vpn-ui stayed loose forever after, even
+	// strict reverse-path filtering before stargate-ui stayed loose forever after, even
 	// once every core had been uninstalled. The value is captured on first sight and
 	// restored when the last core goes (see restoreHostSysctls).
 	for _, key := range []string{"net.ipv4.conf.all.rp_filter", "net.ipv4.conf.default.rp_filter"} {
@@ -1045,7 +1045,7 @@ func (s *NftService) ApplyNftRules() error {
 	}
 
 	// Write and load atomically
-	if err := os.MkdirAll("/etc/vpn-ui", 0755); err != nil {
+	if err := os.MkdirAll("/etc/stargate-ui", 0755); err != nil {
 		return err
 	}
 	if err := os.WriteFile(nftConfigFile, []byte(b.String()), 0644); err != nil {

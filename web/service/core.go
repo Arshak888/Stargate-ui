@@ -1194,8 +1194,8 @@ func (s *CoreService) runProvisionSteps(emit func(ProvisionStep), cores []string
 	// Persist only the modules present on this kernel, so systemd-modules-load
 	// doesn't log a failure each boot for an optional module the kernel dropped.
 	modConf := strings.Join(append(append([]string{}, requiredModules...), loadableOptional...), "\n") + "\n"
-	err := os.WriteFile("/etc/modules-load.d/vpn-ui.conf", []byte(modConf), 0644)
-	emit(ProvisionStep{Name: "persist /etc/modules-load.d/vpn-ui.conf", OK: err == nil, Msg: msgOrOK(err)})
+	err := os.WriteFile("/etc/modules-load.d/stargate-ui.conf", []byte(modConf), 0644)
+	emit(ProvisionStep{Name: "persist /etc/modules-load.d/stargate-ui.conf", OK: err == nil, Msg: msgOrOK(err)})
 
 	err = exec.Command("sysctl", "-w", "net.ipv4.ip_forward=1").Run()
 	emit(ProvisionStep{Name: "sysctl net.ipv4.ip_forward=1", OK: err == nil, Msg: msgOrOK(err)})
@@ -1210,9 +1210,9 @@ func (s *CoreService) runProvisionSteps(emit func(ProvisionStep), cores []string
 	// Recorded before the write so uninstall knows to take it away again (per-core
 	// uninstall used to leave this drop-in behind forever, so a host kept loose
 	// rp_filter across every reboot long after the last VPN core was removed).
-	ownPrepareHostFile("/etc/sysctl.d/99-vpn-ui.conf", "")
-	err = os.WriteFile("/etc/sysctl.d/99-vpn-ui.conf", []byte(sysctlConf), 0644)
-	emit(ProvisionStep{Name: "persist /etc/sysctl.d/99-vpn-ui.conf", OK: err == nil, Msg: msgOrOK(err)})
+	ownPrepareHostFile("/etc/sysctl.d/99-stargate-ui.conf", "")
+	err = os.WriteFile("/etc/sysctl.d/99-stargate-ui.conf", []byte(sysctlConf), 0644)
+	emit(ProvisionStep{Name: "persist /etc/sysctl.d/99-stargate-ui.conf", OK: err == nil, Msg: msgOrOK(err)})
 
 	// Apply loose rp_filter now and, when firewalld is active (Fedora/RHEL), trust
 	// the VPN address space so its default-drop INPUT policy doesn't block the

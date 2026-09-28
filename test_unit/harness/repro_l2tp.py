@@ -38,7 +38,7 @@ print(f"device1: ok={ok1} ip={ip1}")
 if not ok1:
     print("device1 FAIL log:", l1[-700:])
     print("server pptpd/l2tp:", R.server_exec("pgrep -af 'pptpd|xl2tpd' | head -3; "
-          "journalctl -u vpn-ui --since '-30 sec' --no-pager 2>/dev/null | grep -iE 'pptp|GRE|CTRL' | tail -4")[1])
+          "journalctl -u stargate-ui --since '-30 sec' --no-pager 2>/dev/null | grep -iE 'pptp|GRE|CTRL' | tail -4")[1])
 if ok1:
     R.checks.internet(cA)  # traffic-prime so the 2nd concurrent dial from one NAT sticks
 time.sleep(2)
@@ -51,7 +51,7 @@ print(f"device2: ok={ok2} ip={ip2} admitted={admitted}")
 
 time.sleep(4)
 print("--- server evidence (last 35s) ---")
-print(R.server_exec('journalctl -u vpn-ui --since "-35 sec" --no-pager 2>/dev/null '
+print(R.server_exec('journalctl -u stargate-ui --since "-35 sec" --no-pager 2>/dev/null '
                     '| grep -iE "evicted oldest|user-limit|auth accepted|auth rejected|acct-start" | tail -8')[1])
 d1_up = cA.wait_iface(iface, timeout=3)
 print(f"device1 still up after device2: {d1_up or 'DOWN(evicted)'}")

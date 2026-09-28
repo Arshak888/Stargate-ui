@@ -142,8 +142,8 @@
 
 [pages.index]
 "donate" = "Donasi"
-"donateTitle" = "Dukung VPN-UI"
-"donateIntro" = "Jika VPN-UI bermanfaat bagi Anda, donasi ke salah satu alamat ini membantu pemeliharaannya."
+"donateTitle" = "Dukung STARGATE-UI"
+"donateIntro" = "Jika STARGATE-UI bermanfaat bagi Anda, donasi ke salah satu alamat ini membantu pemeliharaannya."
 "restore" = "Pulihkan"
 "systemStatus" = "Status sistem"
 "title" = "Ikhtisar"
@@ -210,7 +210,7 @@
 "exportDatabase" = "Cadangkan"
 "exportDatabaseDesc" = "Klik untuk mengunduh file .db yang berisi cadangan dari database Anda saat ini ke perangkat Anda."
 "backupNameTitle" = "Nama Berkas Cadangan"
-"backupNameDesc" = "Pilih dari apa nama berkas yang diunduh dibentuk. Tanpa satu pun dicentang, berkas disimpan sebagai vpn-ui.db."
+"backupNameDesc" = "Pilih dari apa nama berkas yang diunduh dibentuk. Tanpa satu pun dicentang, berkas disimpan sebagai stargate-ui.db."
 "backupNamePanel" = "Nama panel"
 "backupNameDomain" = "Domain"
 "backupNameDate" = "Tanggal"
@@ -1105,7 +1105,7 @@
 "report" = "🕰 Laporan Terjadwal: {{ .RunTime }}\r\n"
 "datetime" = "⏰ Tanggal & Waktu: {{ .DateTime }}\r\n"
 "hostname" = "💻 Host: {{ .Hostname }}\r\n"
-"version" = "🚀 Versi VPN-UI: {{ .Version }}\r\n"
+"version" = "🚀 Versi STARGATE-UI: {{ .Version }}\r\n"
 "xrayVersion" = "📡 Versi Xray: {{ .XrayVersion }}\r\n"
 "ipv6" = "🌐 IPv6: {{ .IPv6 }}\r\n"
 "ipv4" = "🌐 IPv4: {{ .IPv4 }}\r\n"

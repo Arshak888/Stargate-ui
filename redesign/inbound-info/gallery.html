@@ -471,7 +471,7 @@ body {
  * fields to read down a phone line, the peer router's commands.
  *
  * Two panes so the recipient list is always visible: picking "another
- * vpn-ui panel" versus "a MikroTik" is the whole interaction, and a
+ * stargate-ui panel" versus "a MikroTik" is the whole interaction, and a
  * dropdown would hide the fact that the choice exists.
  * ================================================================== */
 .handoff { display:grid; grid-template-columns:210px 1fr; align-items:stretch; }
@@ -576,7 +576,7 @@ body {
 
 <div class="page">
   <header class="masthead">
-    <p class="eyebrow">vpn-ui / inbound info modal</p>
+    <p class="eyebrow">stargate-ui / inbound info modal</p>
     <h1>Five ways to show an inbound</h1>
     <p>
       The same four inbounds, five information architectures. Today one 799-line template
@@ -1647,7 +1647,7 @@ function recipientsFor(ib) {
     });
     out.push({
       id: "outbound", name: "Another panel", sub: "VPN outbound",
-      title: "vpn-ui outbound fields", why: "The other panel's VPN outbound form takes exactly these. Xray core has no l2tp outbound, this fork dials it with a bundled client and pins the route with sockopt.interface.",
+      title: "stargate-ui outbound fields", why: "The other panel's VPN outbound form takes exactly these. Xray core has no l2tp outbound, this fork dials it with a bundled client and pins the route with sockopt.interface.",
       kind: "fields", propose: true,
       rows: [
         ["Protocol", "l2tp"],

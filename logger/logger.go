@@ -1,4 +1,4 @@
-// Package logger provides logging functionality for the vpn-ui panel with
+// Package logger provides logging functionality for the stargate-ui panel with
 // dual-backend logging (console/syslog and file) and buffered log storage for web UI.
 package logger
 
@@ -14,7 +14,7 @@ import (
 
 const (
 	maxLogBufferSize = 10240                 // Maximum log entries kept in memory
-	logFileName      = "vpn-ui.log"            // Log file name
+	logFileName      = "stargate-ui.log"            // Log file name
 	timeFormat       = "2006/01/02 15:04:05" // Log timestamp format
 )
 
@@ -33,20 +33,20 @@ var (
 // InitLogger initializes dual logging backends: console/syslog and file.
 // Console logging uses the specified level, file logging always uses DEBUG level.
 func InitLogger(level logging.Level) {
-	newLogger := logging.MustGetLogger("vpn-ui")
+	newLogger := logging.MustGetLogger("stargate-ui")
 	backends := make([]logging.Backend, 0, 2)
 
 	// Console/syslog backend with configurable level
 	if consoleBackend := initDefaultBackend(); consoleBackend != nil {
 		leveledBackend := logging.AddModuleLevel(consoleBackend)
-		leveledBackend.SetLevel(level, "vpn-ui")
+		leveledBackend.SetLevel(level, "stargate-ui")
 		backends = append(backends, leveledBackend)
 	}
 
 	// File backend with DEBUG level for comprehensive logging
 	if fileBackend := initFileBackend(); fileBackend != nil {
 		leveledBackend := logging.AddModuleLevel(fileBackend)
-		leveledBackend.SetLevel(logging.DEBUG, "vpn-ui")
+		leveledBackend.SetLevel(logging.DEBUG, "stargate-ui")
 		backends = append(backends, leveledBackend)
 	}
 

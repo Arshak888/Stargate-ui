@@ -702,7 +702,7 @@ body.dark .bo-theme-toggle .bo-i-moon { display:block; }
   color:var(--text); overflow-wrap:anywhere; user-select:all;
 }
 
-/* Donate dialog (VPN-UI tile). Each row is chain / address / copy. The address
+/* Donate dialog (STARGATE-UI tile). Each row is chain / address / copy. The address
    is the payload, so it gets the monospace face and the room: the chain label
    is fixed-width and the button is intrinsic, leaving the middle column to
    absorb whatever is left. Addresses are long and unbreakable, hence the

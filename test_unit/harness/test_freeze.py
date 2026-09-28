@@ -43,7 +43,7 @@ print("  UNFREEZE verdict:", "PASS" if unfrozen_ok else "FAIL",
       "(want enabled + absolute future expiry)")
 
 # frozen client must NOT be flagged for auto-disable/expire (enable=false exempts it):
-_, jn, _ = R.server_exec("journalctl -u vpn-ui --since '-15 sec' --no-pager 2>/dev/null | grep -i fz1 | tail -2")
+_, jn, _ = R.server_exec("journalctl -u stargate-ui --since '-15 sec' --no-pager 2>/dev/null | grep -i fz1 | tail -2")
 
 p.del_inbound(iid)
 print("\ncleanup done. OVERALL:", "PASS" if (frozen_ok and unfrozen_ok) else "FAIL")

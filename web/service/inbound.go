@@ -1,4 +1,4 @@
-// Package service provides business logic services for the vpn-ui web panel,
+// Package service provides business logic services for the stargate-ui web panel,
 // including inbound/outbound management, user administration, settings, and Xray integration.
 package service
 
@@ -5421,7 +5421,7 @@ func (s *InboundService) MigrateDB() {
 	// clients and onto the inbound itself. It also runs on every start (from
 	// GenerateAllConfigs, which is where a plain binary upgrade gets it), so this is
 	// specifically for a database that arrives ALREADY OLD: a restored backup, an
-	// imported foreign DB, or `vpn-ui migrate`. Nothing between here and the first
+	// imported foreign DB, or `stargate-ui migrate`. Nothing between here and the first
 	// GenerateAllConfigs would otherwise lift it, and an mtproto reader is tolerant of
 	// the old shape but a WRITER through the panel's form is not: it would post back what
 	// it read. Idempotent and cheap, like every other pass here.

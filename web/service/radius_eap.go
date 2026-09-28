@@ -52,7 +52,7 @@ const (
 	// eapSessionTTL bounds how long a half-finished EAP exchange lingers.
 	eapSessionTTL = 60 * time.Second
 	// eapServerName is the server identity placed in the MSCHAPv2 Challenge.
-	eapServerName = "vpn-ui"
+	eapServerName = "stargate-ui"
 )
 
 // eapState carries one in-flight EAP-MSCHAPv2 conversation across its round trips,

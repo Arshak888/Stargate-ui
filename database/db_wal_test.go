@@ -9,7 +9,7 @@ import (
 // The whole point of the DSN change: a freshly opened DB must be in WAL.
 func TestInitDBEnablesWAL(t *testing.T) {
 	dir := t.TempDir()
-	p := filepath.Join(dir, "vpn-ui.db")
+	p := filepath.Join(dir, "stargate-ui.db")
 	if err := InitDB(p); err != nil {
 		t.Fatal(err)
 	}
@@ -42,7 +42,7 @@ func TestInitDBEnablesWAL(t *testing.T) {
 
 func TestRemoveSidecars(t *testing.T) {
 	dir := t.TempDir()
-	p := filepath.Join(dir, "vpn-ui.db")
+	p := filepath.Join(dir, "stargate-ui.db")
 	for _, s := range []string{"", "-wal", "-shm"} {
 		if err := os.WriteFile(p+s, []byte("x"), 0o644); err != nil {
 			t.Fatal(err)

@@ -1,12 +1,12 @@
  [English](/README.md) | [فارسی](/README_FA.md) | [العربية](/README_AR.md) | [中文](/README_ZH.md) | [Español](/README_ES.md) | [Русский](/README_RU.md) | [Türkçe](/README_TR.md)
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Sir-MmD/vpn-ui/refs/heads/main/media/logo.png" alt="VPN-UI Logo" width="260">
+  <img src="https://raw.githubusercontent.com/Sir-MmD/stargate-ui/refs/heads/main/media/logo.png" alt="STARGATE-UI Logo" width="260">
 </p>
 
 این پروژه، یک نسخه‌ی ارتقایافته از پنل **[3X-UI](https://github.com/MHSanaei/3x-ui)** (نسخه‌ی 2.9.3) هستش.  هدف این پروژه اضافه کردن پروتکل های مختلف و راه اندازی بصورت یک پنل جامعه با پشتیبانی از قابلیت های **Xray-core**  هستش
 
-![نمای کلی](https://raw.githubusercontent.com/Sir-MmD/vpn-ui/refs/heads/main/media/overview.png)
+![نمای کلی](https://raw.githubusercontent.com/Sir-MmD/stargate-ui/refs/heads/main/media/overview.png)
 
 ## پروتکل‌های جدید
 
@@ -48,7 +48,7 @@
 
 ## قابلیت‌های اختصاصی این فورک
 
-این فورک در کنار امکانات پروژه اصلی VPN-UI، قابلیت‌های بیشتری برای مدیریت اکانت، احراز هویت مشترک، ربات تلگرام و SSH اضافه می‌کند:
+این فورک در کنار امکانات پروژه اصلی STARGATE-UI، قابلیت‌های بیشتری برای مدیریت اکانت، احراز هویت مشترک، ربات تلگرام و SSH اضافه می‌کند:
 
 - **اعتبار ورود مشترک بین پروتکل‌های دارای نام کاربری/رمز عبور**: پروتکل‌های SSH، OpenVPN، L2TP، PPTP، IKEv2، SSTP و OpenConnect برای یک اکانت می‌توانند از **یک Username و Password یکسان** استفاده کنند و این اطلاعات بین تمام Membershipهای همان اکانت مشترک است.
 - **مدیریت متمرکز Credential**: تغییر Username یا Password مشترک از پنل وب، اعتبار جدید را به Membershipهای دیگر همان اکانت منتقل کرده و تنظیمات پروتکل‌ها را همگام نگه می‌دارد.
@@ -65,7 +65,7 @@
 - **ذخیره وضعیت یادآوری Telegram در دیتابیس**: وضعیت ارسال Reminderها ذخیره می‌شود تا اجرای دوره‌ای Job باعث ارسال تکراری نشود.
 - **رفع مشکل رابط تنظیمات CPU تلگرام** در پنل وب.
 
-> این قابلیت‌های اختصاصی روی پروژه اصلی VPN-UI اضافه شده‌اند و در همین فورک نگهداری می‌شوند. پروتکل‌هایی که از کلید، Certificate، UUID، Secret یا روش احراز هویت اختصاصی خودشان استفاده می‌کنند همچنان Credential مخصوص همان پروتکل را دارند و به اجبار به Username/Password تبدیل نمی‌شوند.
+> این قابلیت‌های اختصاصی روی پروژه اصلی STARGATE-UI اضافه شده‌اند و در همین فورک نگهداری می‌شوند. پروتکل‌هایی که از کلید، Certificate، UUID، Secret یا روش احراز هویت اختصاصی خودشان استفاده می‌کنند همچنان Credential مخصوص همان پروتکل را دارند و به اجبار به Username/Password تبدیل نمی‌شوند.
 
 ## سیستم‌عامل‌های تست شده
 
@@ -92,13 +92,13 @@
 ## نصب پنل
 
 ```bash
-curl -Ls https://raw.githubusercontent.com/Arshak888/vpn-ui-custom/refs/heads/main/deploy.sh | sudo bash
+curl -Ls https://raw.githubusercontent.com/Arshak888/stargate-ui-custom/refs/heads/main/deploy.sh | sudo bash
 ```
 
 ## حذف پنل
 
 ```bash
-sudo /opt/vpn-ui/vpn-ui-amd64 --uninstall
+sudo /opt/stargate-ui/stargate-ui-amd64 --uninstall
 ```
 
 > [!NOTE]
@@ -113,7 +113,7 @@ flowchart TB
   SSHC["SSH Client<br/>(ssh -D dynamic SOCKS · badvpn-udpgw for UDP)"]
   GREC["Customer Router<br/>(GRE · IP protocol 47 · optional IPsec / FOU)"]
 
-  subgraph PANEL["vpn-ui panel — root process"]
+  subgraph PANEL["stargate-ui panel — root process"]
     PROC["procmgr<br/>supervises the daemons"]
     RAD["in-binary RADIUS<br/>127.0.0.1:1812 auth · :1813 acct"]
     HOOK["OpenVPN hooks<br/>auth / connect / disconnect / evict"]
@@ -221,13 +221,13 @@ flowchart TB
 ## کامپایل از سورس
 
 ```bash
-git clone https://github.com/Arshak888/vpn-ui-custom.git && cd vpn-ui-custom
+git clone https://github.com/Arshak888/stargate-ui-custom.git && cd stargate-ui-custom
 ./build.sh
 ```
 
 ## تست E2E
 
-![تست E2E](https://raw.githubusercontent.com/Sir-MmD/vpn-ui/refs/heads/main/media/test_unit.png)
+![تست E2E](https://raw.githubusercontent.com/Sir-MmD/stargate-ui/refs/heads/main/media/test_unit.png)
 
 یک تست **E2E** کامل با Python داخل فولدر `test_unit` برای این پروژه طراحی شده که می‌تونید ازش استفاده کنید. مراحلش این‌طوریه:
 

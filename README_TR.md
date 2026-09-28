@@ -1,12 +1,12 @@
 [English](/README.md) | [فارسی](/README_FA.md) | [العربية](/README_AR.md) | [中文](/README_ZH.md) | [Español](/README_ES.md) | [Русский](/README_RU.md) | [Türkçe](/README_TR.md)
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Sir-MmD/vpn-ui/refs/heads/main/media/logo.png" alt="VPN-UI Logo" width="260">
+  <img src="https://raw.githubusercontent.com/Sir-MmD/stargate-ui/refs/heads/main/media/logo.png" alt="STARGATE-UI Logo" width="260">
 </p>
 
 Bu proje, **[3X-UI](https://github.com/MHSanaei/3x-ui)** panelinin (2.9.3 sürümü) geliştirilmiş bir versiyonudur. Projenin amacı; çeşitli protokoller eklemek ve **Xray-core** özelliklerini destekleyen kapsamlı bir panel olarak hayata geçirmektir.
 
-![Genel Görünüm](https://raw.githubusercontent.com/Sir-MmD/vpn-ui/refs/heads/main/media/overview.png)
+![Genel Görünüm](https://raw.githubusercontent.com/Sir-MmD/stargate-ui/refs/heads/main/media/overview.png)
 
 ## Yeni Protokoller
 
@@ -47,7 +47,7 @@ Bu proje, **[3X-UI](https://github.com/MHSanaei/3x-ui)** panelinin (2.9.3 sürü
 
 ## Bu Fork'a Özel Ek Özellikler
 
-Bu fork, orijinal VPN-UI özelliklerine ek olarak hesap yönetimi, ortak kimlik bilgileri, Telegram ve SSH için ek yetenekler sunar:
+Bu fork, orijinal STARGATE-UI özelliklerine ek olarak hesap yönetimi, ortak kimlik bilgileri, Telegram ve SSH için ek yetenekler sunar:
 
 - **Kullanıcı adı/parola kullanan protokoller arasında ortak VPN kimlik bilgileri**: SSH, OpenVPN, L2TP, PPTP, IKEv2, SSTP ve OpenConnect aynı hesap için **aynı kullanıcı adı ve parolayı** kullanabilir; bu bilgiler hesabın tüm Membership kayıtları arasında paylaşılır.
 - **Merkezi kimlik bilgisi yönetimi**: Web Panel üzerinden ortak kullanıcı adı veya parola değiştirildiğinde yeni bilgiler hesabın diğer Membership kayıtlarına aktarılır ve protokol yapılandırmaları senkronize tutulur.
@@ -91,13 +91,13 @@ Bu fork, orijinal VPN-UI özelliklerine ek olarak hesap yönetimi, ortak kimlik 
 ## Panel Kurulumu
 
 ```bash
-curl -Ls https://raw.githubusercontent.com/Arshak888/vpn-ui-custom/refs/heads/main/deploy.sh | sudo bash
+curl -Ls https://raw.githubusercontent.com/Arshak888/stargate-ui-custom/refs/heads/main/deploy.sh | sudo bash
 ```
 
 ## Panel Kaldırma
 
 ```bash
-sudo /opt/vpn-ui/vpn-ui-amd64 --uninstall
+sudo /opt/stargate-ui/stargate-ui-amd64 --uninstall
 ```
 
 > [!NOTE]
@@ -112,7 +112,7 @@ flowchart TB
   SSHC["SSH Client<br/>(ssh -D dynamic SOCKS · badvpn-udpgw for UDP)"]
   GREC["Customer Router<br/>(GRE · IP protocol 47 · optional IPsec / FOU)"]
 
-  subgraph PANEL["vpn-ui panel — root process"]
+  subgraph PANEL["stargate-ui panel — root process"]
     PROC["procmgr<br/>supervises the daemons"]
     RAD["in-binary RADIUS<br/>127.0.0.1:1812 auth · :1813 acct"]
     HOOK["OpenVPN hooks<br/>auth / connect / disconnect / evict"]
@@ -222,13 +222,13 @@ flowchart TB
 ## Kaynaktan Derleme
 
 ```bash
-git clone https://github.com/Arshak888/vpn-ui-custom.git && cd vpn-ui-custom
+git clone https://github.com/Arshak888/stargate-ui-custom.git && cd stargate-ui-custom
 ./build.sh
 ```
 
 ## E2E Testi
 
-![E2E Testi](https://raw.githubusercontent.com/Sir-MmD/vpn-ui/refs/heads/main/media/test_unit.png)
+![E2E Testi](https://raw.githubusercontent.com/Sir-MmD/stargate-ui/refs/heads/main/media/test_unit.png)
 
 Bu proje için `test_unit` klasörü içinde Python ile tam bir **E2E** testi tasarlandı; bunu kullanabilirsiniz. Adımları şöyledir:
 

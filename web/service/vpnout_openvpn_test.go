@@ -125,7 +125,7 @@ CLIENTKEY
 				"remote-cert-tls server",
 				// The profile's own `dev tun` is the panel's to decide, so it is commented
 				// out rather than deleted.
-				"# [vpn-ui] removed, owned by the panel: dev tun",
+				"# [stargate-ui] removed, owned by the panel: dev tun",
 			},
 			notWant: []string{"dev tun"},
 		},
@@ -194,7 +194,7 @@ KEY
 			},
 			want: []string{
 				"auth-user-pass " + ovpnTestDir + "/auth.txt",
-				"# [vpn-ui] removed, owned by the panel: auth-user-pass",
+				"# [stargate-ui] removed, owned by the panel: auth-user-pass",
 			},
 		},
 		{
@@ -231,7 +231,7 @@ hunter2
 			want: []string{"auth-user-pass " + realAuth},
 			notWant: []string{
 				"auth-user-pass " + ovpnTestDir + "/auth.txt",
-				"# [vpn-ui] removed, owned by the panel: auth-user-pass " + realAuth,
+				"# [stargate-ui] removed, owned by the panel: auth-user-pass " + realAuth,
 			},
 		},
 		{
@@ -435,13 +435,13 @@ func TestOvpnOutPanelExportedProfile(t *testing.T) {
 				"<ca>", "-----BEGIN CERTIFICATE-----", "-----END CERTIFICATE-----", "</ca>",
 				// The device is the panel's, so the profile's own `dev tun` is commented out
 				// and the real name written in the panel block.
-				"# [vpn-ui] removed, owned by the panel: dev tun",
+				"# [stargate-ui] removed, owned by the panel: dev tun",
 				"dev " + ovpnTestIface,
 				// A FILE, never the bare directive: a supervised child has no terminal to be
 				// prompted on, and openvpn does not ask for the username until AFTER the TLS
 				// handshake, so the bare form is a tunnel that verifies the server and then
 				// hangs -- indistinguishable, in the log, from a far side that went quiet.
-				"# [vpn-ui] removed, owned by the panel: auth-user-pass",
+				"# [stargate-ui] removed, owned by the panel: auth-user-pass",
 				"auth-user-pass " + ovpnTestDir + "/auth.txt",
 			},
 			notWant: []string{
@@ -694,19 +694,19 @@ TCPv4_CLIENT link remote: [AF_INET]203.0.113.10:1194
 TLS: Initial packet from [AF_INET]203.0.113.10:1194, sid=383f4e53 b2b1aa17`,
 	// The failure this was written for: the far side verified, then said nothing at all.
 	"verified": `TLS: Initial packet from [AF_INET]203.0.113.10:1194, sid=383f4e53 b2b1aa17
-VERIFY OK: depth=1, O=vpn-ui, CN=vpn-ui OpenVPN CA
+VERIFY OK: depth=1, O=stargate-ui, CN=stargate-ui OpenVPN CA
 VERIFY KU OK
 Validating certificate extended key usage
 ++ Certificate has EKU (str) TLS Web Server Authentication, expects TLS Web Server Authentication
 VERIFY EKU OK
-VERIFY OK: depth=0, O=vpn-ui, CN=vpn-ui OpenVPN Server`,
-	"authenticated": `VERIFY OK: depth=0, O=vpn-ui, CN=vpn-ui OpenVPN Server
+VERIFY OK: depth=0, O=stargate-ui, CN=stargate-ui OpenVPN Server`,
+	"authenticated": `VERIFY OK: depth=0, O=stargate-ui, CN=stargate-ui OpenVPN Server
 Control Channel: TLSv1.2, cipher TLSv1.2 ECDHE-ECDSA-AES256-GCM-SHA384, peer certificate: 384 bits ECsecp384r1
-[vpn-ui OpenVPN Server] Peer Connection Initiated with [AF_INET]203.0.113.10:1194
-SENT CONTROL [vpn-ui OpenVPN Server]: 'PUSH_REQUEST' (status=1)
-SENT CONTROL [vpn-ui OpenVPN Server]: 'PUSH_REQUEST' (status=1)`,
-	"pushed": `[vpn-ui OpenVPN Server] Peer Connection Initiated with [AF_INET]203.0.113.10:1194
-SENT CONTROL [vpn-ui OpenVPN Server]: 'PUSH_REQUEST' (status=1)
+[stargate-ui OpenVPN Server] Peer Connection Initiated with [AF_INET]203.0.113.10:1194
+SENT CONTROL [stargate-ui OpenVPN Server]: 'PUSH_REQUEST' (status=1)
+SENT CONTROL [stargate-ui OpenVPN Server]: 'PUSH_REQUEST' (status=1)`,
+	"pushed": `[stargate-ui OpenVPN Server] Peer Connection Initiated with [AF_INET]203.0.113.10:1194
+SENT CONTROL [stargate-ui OpenVPN Server]: 'PUSH_REQUEST' (status=1)
 PUSH: Received control message: 'PUSH_REPLY,route-gateway 10.8.0.1,ping 10,ping-restart 120'
 OPTIONS IMPORT: timers and/or timeouts modified`,
 	"up": `PUSH: Received control message: 'PUSH_REPLY,ifconfig 10.8.0.6 255.255.255.0'
@@ -796,7 +796,7 @@ func TestOvpnOutFilterProfileKeepAuth(t *testing.T) {
 	profile := "remote a 1 udp\nauth-user-pass /etc/creds.txt\nup /bin/evil\n"
 
 	dropped := ovpnOutFilterProfile(profile, false)
-	if !strings.Contains(dropped, "# [vpn-ui] removed, owned by the panel: auth-user-pass /etc/creds.txt") {
+	if !strings.Contains(dropped, "# [stargate-ui] removed, owned by the panel: auth-user-pass /etc/creds.txt") {
 		t.Errorf("auth-user-pass was not commented out:\n%s", dropped)
 	}
 	kept := ovpnOutFilterProfile(profile, true)

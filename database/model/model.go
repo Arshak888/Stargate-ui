@@ -1,4 +1,4 @@
-// Package model defines the database models and data structures used by the vpn-ui panel.
+// Package model defines the database models and data structures used by the stargate-ui panel.
 package model
 
 import (
@@ -63,7 +63,7 @@ type ClientExternalProxy struct {
 	Remark string `json:"remark"`
 }
 
-// User represents an admin account in the vpn-ui panel.
+// User represents an admin account in the stargate-ui panel.
 //
 // Password and TwoFactorToken are secrets and carry json:"-" so they can never be
 // serialized out to the browser: the panel's session cookie is signed but NOT
@@ -411,7 +411,7 @@ func (i *Inbound) GenXrayInboundConfig() *xray.InboundConfig {
 	}
 }
 
-// Setting stores key-value configuration settings for the vpn-ui panel.
+// Setting stores key-value configuration settings for the stargate-ui panel.
 type Setting struct {
 	Id    int    `json:"id" form:"id" gorm:"primaryKey;autoIncrement"`
 	Key   string `json:"key" form:"key"`

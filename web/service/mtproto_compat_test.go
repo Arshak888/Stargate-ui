@@ -195,7 +195,7 @@ func storedInbound(t *testing.T, id int) *model.Inbound {
 }
 
 // A database that arrives ALREADY OLD: a restored backup, an imported foreign DB, or
-// `vpn-ui migrate`. None of those goes through panel startup, and the reader's tolerance
+// `stargate-ui migrate`. None of those goes through panel startup, and the reader's tolerance
 // is not enough on its own, because the panel's inbound form posts back what it read.
 func TestMtprotoImportPathLiftsLegacySettings(t *testing.T) {
 	svc := newInboundDB(t)

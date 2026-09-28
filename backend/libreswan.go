@@ -31,9 +31,9 @@ import (
 // here. The fixed paths below are the contract the build script must honor.
 const (
 	// LibreswanBundleRoot is where the tree unpacks. Kept under the shared
-	// /usr/libexec/vpn-ui prefix but in its own subdir so it never collides with
+	// /usr/libexec/stargate-ui prefix but in its own subdir so it never collides with
 	// the pppd bundle's sbin/ and lib/.
-	LibreswanBundleRoot = "/usr/libexec/vpn-ui/libreswan"
+	LibreswanBundleRoot = "/usr/libexec/stargate-ui/libreswan"
 
 	// IpsecBundled is the launcher for the libreswan `ipsec` command wrapper. It
 	// sets the IPSEC_* dir overrides + the musl loader path, then execs the real
@@ -75,7 +75,7 @@ func LibreswanBundleReady() bool {
 }
 
 // ExtractLibreswanBundle untars the embedded libreswan bundle to the filesystem
-// root (its entries are rooted at usr/libexec/vpn-ui/libreswan). Idempotent;
+// root (its entries are rooted at usr/libexec/stargate-ui/libreswan). Idempotent;
 // no-op when no bundle is embedded for this architecture.
 func ExtractLibreswanBundle() error {
 	if !HasLibreswanBundle() {

@@ -601,7 +601,7 @@ tests:
 3. **PSK unresolvable on the shared charon.** strongSwan needs an owner match for BOTH ends, so
    a single-owner `id` made the secret unusable and charon signed with L2TP's key. Also a
    regression risk FOR L2TP. Fixed with `id_local` + `id_any = %any` and a distinct
-   `gre-<id>.vpn-ui` identity.
+   `gre-<id>.stargate-ui` identity.
 4. **Learner slept up to 55s** before looking for a newly added peer. Fixed with a wake channel.
 5. **`FouAdd` reports EADDRINUSE**, not EEXIST, for an already-registered port, so every tick
    logged a spurious warning once FOU was enabled.

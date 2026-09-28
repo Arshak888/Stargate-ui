@@ -6,7 +6,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v2/database/model"
 )
 
-const testActiveCert = "/opt/vpn-ui/cert/managed/active/fullchain.pem"
+const testActiveCert = "/opt/stargate-ui/cert/managed/active/fullchain.pem"
 
 func TestSSLConsumerClassification(t *testing.T) {
 	cases := []struct {
@@ -81,7 +81,7 @@ func TestSSLConsumerClassification(t *testing.T) {
 			name: "an inbound pinned to a version directory is not a consumer",
 			inbound: &model.Inbound{
 				Id: 8, Remark: "pinned", Protocol: "vless",
-				StreamSettings: `{"security":"tls","tlsSettings":{"certificates":[{"certificateFile":"/opt/vpn-ui/cert/managed/versions/example.com-abcd1234/20260804T120000Z-aabb/fullchain.pem"}]}}`,
+				StreamSettings: `{"security":"tls","tlsSettings":{"certificates":[{"certificateFile":"/opt/stargate-ui/cert/managed/versions/example.com-abcd1234/20260804T120000Z-aabb/fullchain.pem"}]}}`,
 			},
 			wantMatch: false,
 		},
@@ -154,7 +154,7 @@ func TestSSLXrayCertMatch(t *testing.T) {
 		},
 		{
 			"an unclean but equivalent path matches",
-			`{"tlsSettings":{"certificates":[{"certificateFile":"/opt/vpn-ui/cert/managed/./active/fullchain.pem"}]}}`,
+			`{"tlsSettings":{"certificates":[{"certificateFile":"/opt/stargate-ui/cert/managed/./active/fullchain.pem"}]}}`,
 			true, false,
 		},
 	}

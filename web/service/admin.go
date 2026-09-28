@@ -638,7 +638,7 @@ func (s *AdminService) AllInboundsBrief() ([]InboundBrief, error) {
 // onto their row grant nothing and leave a misleading column behind.
 //
 // Called from main.go on every boot and NOT from MigrateDB: that function is reached
-// only by `vpn-ui migrate`, a DB import and a restore, so a backfill placed there
+// only by `stargate-ui migrate`, a DB import and a restore, so a backfill placed there
 // never runs on the upgrade path this exists for.
 func (s *AdminService) MigrationOverviewAccess() {
 	var settingService SettingService

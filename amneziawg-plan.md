@@ -69,7 +69,7 @@ and ran provisioning from the panel API:
 1. **`ensureAmneziawg()` succeeded from scratch in ~80s**: step reported
    `"AmneziaWG (amneziawg kernel module) via apt", ok:true, "amneziawg module built + loaded
    (DKMS 1.0.0)"`. It installed dkms + build-essential (81 pkgs) + `linux-headers-6.8.0-111-generic`,
-   extracted the vendored source to `/usr/src/vpn-ui-amneziawg`, ran `make dkms-install` ->
+   extracted the vendored source to `/usr/src/stargate-ui-amneziawg`, ran `make dkms-install` ->
    `dkms add/build/install` -> `modprobe`. `dkms status`: `amneziawg/1.0.0, 6.8.0-111-generic,
    x86_64: installed`; module version 1.0.20260611. Coexists with the in-tree `wireguard` module.
 2. **Inbound + data plane**: creating an awg inbound brought up `awg1` at `10.8.1.1/24` (base 8)
@@ -209,7 +209,7 @@ E2E's user-limit / multi-user-total subtests applicable instead of N/A.
 Box restored: panel stopped (killed by PID per the box's safety rules), `awg1` removed, no
 listeners/processes left. Still on the box: the binary, a DB with the one test inbound, and the
 DKMS-installed amneziawg module (harmless; auto-rebuilds on kernel upgrade).
-Restart with: `cd /opt/vpn-ui && setsid ./vpn-ui-amd64 >>/var/log/vpn-ui/vpn-ui.log 2>&1 </dev/null &`
+Restart with: `cd /opt/stargate-ui && setsid ./stargate-ui-amd64 >>/var/log/stargate-ui/stargate-ui.log 2>&1 </dev/null &`
 
 ## What AmneziaWG is (one paragraph)
 

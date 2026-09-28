@@ -72,7 +72,7 @@ func ensureIpsecExtracted() error {
 // ABSOLUTE path to the bundle's `ipsec` wrapper plus the `_updown` subcommand.
 // pluto runs its updown script on every SA up/down; the libreswan default
 // `ipsec _updown` relies on `ipsec` being on PATH, but the bundle lives under
-// /usr/libexec/vpn-ui and is NOT on the pluto child's PATH — so the default fails
+// /usr/libexec/stargate-ui and is NOT on the pluto child's PATH — so the default fails
 // with "ipsec: not found" (status 127), which aborts the XFRM policy install and
 // the IPsec SA never comes up. L2TP then only limps along on its raw fallback, and
 // a 2nd concurrent client fails outright. Pointing leftupdown at the absolute path

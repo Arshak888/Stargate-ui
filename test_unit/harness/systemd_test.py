@@ -1,14 +1,14 @@
 """`--systemd` CLI switch E2E (server VM only — no tunnels).
 
-`vpn-ui --systemd` must install + enable-at-boot + start the panel as a systemd
-unit named `vpn-ui` (/etc/systemd/system/vpn-ui.service) and then exit
+`stargate-ui --systemd` must install + enable-at-boot + start the panel as a systemd
+unit named `stargate-ui` (/etc/systemd/system/stargate-ui.service) and then exit
 (main.go installSystemd -> return). This phase runs it on the server VM and
 asserts, via systemctl, that the unit was created, is enabled, and is active —
 and that the panel actually answers under the new unit.
 
 Runs LAST: it swaps the panel's supervisor. The harness normally runs the panel
-as the transient unit `vpn-ui-panel`, which binds :2083; that unit is stopped
-first, otherwise the new `vpn-ui` unit would fight for the busy port and read as
+as the transient unit `stargate-ui-panel`, which binds :2083; that unit is stopped
+first, otherwise the new `stargate-ui` unit would fight for the busy port and read as
 `activating` (Restart=on-failure) rather than `active`.
 """
 from __future__ import annotations
@@ -18,14 +18,14 @@ from .incus import Incus
 from .model import SubTest, Status, PHASE_SYSTEMD
 from .panel import Panel
 
-SERVICE = "vpn-ui"
+SERVICE = "stargate-ui"
 UNIT_FILE = f"/etc/systemd/system/{SERVICE}.service"
 
 
 def run(incus: Incus, vm: str, panel: Panel, cfg: dict, result, log=None) -> None:
     log = log or (lambda *_: None)
     phase = result.phase(PHASE_SYSTEMD)
-    log(f":: systemd — `vpn-ui --systemd` installs + enables + starts unit {SERVICE!r}")
+    log(f":: systemd — `stargate-ui --systemd` installs + enables + starts unit {SERVICE!r}")
 
     def sub(name, ok, detail, logtxt=""):
         st = SubTest(name, Status.PASS if ok else Status.FAIL, detail, logtxt)

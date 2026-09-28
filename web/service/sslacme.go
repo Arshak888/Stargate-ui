@@ -53,7 +53,7 @@ const (
 	//
 	// Stable rather than temporary because acme.sh records these paths in the
 	// per-domain conf and reuses them on a later --renew. Separate from the version
-	// store because of the trap recorded at vpn-ui.sh:663-681: --install-cert can
+	// store because of the trap recorded at stargate-ui.sh:663-681: --install-cert can
 	// die partway and leave a partial key behind, so it must never write anywhere
 	// that is served. Everything here is unvalidated until Stage promotes it.
 	sslInstallDir = "install"
@@ -299,7 +299,7 @@ func sslRunCommand(ctx context.Context, bin string, args, env []string) (string,
 // EnsureAcmeHome creates the pinned home, puts the bundled acme.sh 3.1.4 and its
 // Cloudflare hook in it, and adopts an existing account if there is one.
 //
-// The script is extracted by re-running THIS binary as `vpn-ui install-acme`
+// The script is extracted by re-running THIS binary as `stargate-ui install-acme`
 // (main.go:1407-1425) rather than by embedding it a second time: go:embed cannot
 // reach build/acme from web/service, and the CLI already writes both the script and
 // dnsapi/dns_cf.sh into the right relative layout. acme.sh's own _findHook looks in
@@ -475,7 +475,7 @@ func (d *sslAcmeDriver) issueArgs(req SSLIssueRequest) ([]string, error) {
 		args = append(args, sslListenArg(req)...)
 	case SSLChallengeStandaloneIP:
 		// Every one of these is load-bearing, and all three were established the
-		// hard way in vpn-ui.sh:610-650:
+		// hard way in stargate-ui.sh:610-650:
 		//   --cert-profile shortlived  the ONLY Let's Encrypt profile whose
 		//                              permitted identifiers include `ip`. Without
 		//                              it the order is refused outright.
@@ -567,7 +567,7 @@ func SSLKeyTypeValid(keyType string) bool {
 //
 //   - A POSITIVE --days N takes the branch at acme.sh:5995 and computes
 //     `create + N*86400 - 86400`, i.e. renewal at creation + (N-1) days. So the
-//     `--days 3` that vpn-ui.sh used to pass renews every TWO days: about 3.5
+//     `--days 3` that stargate-ui.sh used to pass renews every TWO days: about 3.5
 //     issuances per 7-day window against a hard cap of 5 with no override form.
 //   - A NEGATIVE --days -N takes a completely different branch at acme.sh:5976 and
 //     computes `expiry + (-N)*86400`, i.e. renewal N days BEFORE expiry.
@@ -646,7 +646,7 @@ func (d *sslAcmeDriver) exec(args []string, env []string) (string, int, error) {
 //
 // Gates on the FULLCHAIN FILE, never on the domain directory. acme.sh creates the
 // directory (and a domain key inside it) even when validation fails, so its
-// presence proves nothing. vpn-ui.sh:663-681 records what gating on the directory
+// presence proves nothing. stargate-ui.sh:663-681 records what gating on the directory
 // cost: a failed issuance marched straight into --install-cert, which then died on
 // a missing fullchain.cer and left a partial key behind.
 func (d *sslAcmeDriver) issuedChainPath(primary string) string {

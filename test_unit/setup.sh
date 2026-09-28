@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# vpn-ui test unit — host backend bootstrap.
+# stargate-ui test unit — host backend bootstrap.
 #
 # Installs + initialises everything the harness needs ON THE HOST:
 #   * incus         — the VM backend that launches the distro matrix

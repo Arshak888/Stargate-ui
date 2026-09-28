@@ -1,12 +1,12 @@
 [English](/README.md) | [فارسی](/README_FA.md) | [العربية](/README_AR.md) | [中文](/README_ZH.md) | [Español](/README_ES.md) | [Русский](/README_RU.md) | [Türkçe](/README_TR.md)
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Sir-MmD/vpn-ui/refs/heads/main/media/logo.png" alt="VPN-UI Logo" width="260">
+  <img src="https://raw.githubusercontent.com/Sir-MmD/stargate-ui/refs/heads/main/media/logo.png" alt="STARGATE-UI Logo" width="260">
 </p>
 
 Этот проект — улучшенная версия панели **[3X-UI](https://github.com/MHSanaei/3x-ui)** (версии 2.9.3). Цель проекта — добавить различные протоколы и реализовать её как комплексную панель с поддержкой возможностей **Xray-core**.
 
-![Общий вид](https://raw.githubusercontent.com/Sir-MmD/vpn-ui/refs/heads/main/media/overview.png)
+![Общий вид](https://raw.githubusercontent.com/Sir-MmD/stargate-ui/refs/heads/main/media/overview.png)
 
 ## Новые протоколы
 
@@ -47,7 +47,7 @@
 
 ## Дополнительные возможности этого форка
 
-Помимо возможностей исходного VPN-UI, этот форк добавляет расширенное управление аккаунтами, общие учётные данные, интеграцию с Telegram и дополнительные функции SSH:
+Помимо возможностей исходного STARGATE-UI, этот форк добавляет расширенное управление аккаунтами, общие учётные данные, интеграцию с Telegram и дополнительные функции SSH:
 
 - **Общие VPN-учётные данные для протоколов с логином и паролем**: SSH, OpenVPN, L2TP, PPTP, IKEv2, SSTP и OpenConnect могут использовать **одинаковые имя пользователя и пароль** для одного аккаунта, причём эти данные общие для всех Membership этого аккаунта.
 - **Централизованное управление учётными данными**: изменение общего имени пользователя или пароля в Web-панели распространяет новые данные на остальные Membership аккаунта и синхронизирует конфигурации протоколов.
@@ -91,13 +91,13 @@
 ## Установка панели
 
 ```bash
-curl -Ls https://raw.githubusercontent.com/Arshak888/vpn-ui-custom/refs/heads/main/deploy.sh | sudo bash
+curl -Ls https://raw.githubusercontent.com/Arshak888/stargate-ui-custom/refs/heads/main/deploy.sh | sudo bash
 ```
 
 ## Удаление панели
 
 ```bash
-sudo /opt/vpn-ui/vpn-ui-amd64 --uninstall
+sudo /opt/stargate-ui/stargate-ui-amd64 --uninstall
 ```
 
 > [!NOTE]
@@ -112,7 +112,7 @@ flowchart TB
   SSHC["SSH Client<br/>(ssh -D dynamic SOCKS · badvpn-udpgw for UDP)"]
   GREC["Customer Router<br/>(GRE · IP protocol 47 · optional IPsec / FOU)"]
 
-  subgraph PANEL["vpn-ui panel — root process"]
+  subgraph PANEL["stargate-ui panel — root process"]
     PROC["procmgr<br/>supervises the daemons"]
     RAD["in-binary RADIUS<br/>127.0.0.1:1812 auth · :1813 acct"]
     HOOK["OpenVPN hooks<br/>auth / connect / disconnect / evict"]
@@ -222,13 +222,13 @@ flowchart TB
 ## Компиляция из исходного кода
 
 ```bash
-git clone https://github.com/Arshak888/vpn-ui-custom.git && cd vpn-ui-custom
+git clone https://github.com/Arshak888/stargate-ui-custom.git && cd stargate-ui-custom
 ./build.sh
 ```
 
 ## E2E-тест
 
-![Тест E2E](https://raw.githubusercontent.com/Sir-MmD/vpn-ui/refs/heads/main/media/test_unit.png)
+![Тест E2E](https://raw.githubusercontent.com/Sir-MmD/stargate-ui/refs/heads/main/media/test_unit.png)
 
 Для этого проекта разработан полноценный **E2E**-тест на Python в папке `test_unit`, которым вы можете воспользоваться. Порядок действий следующий:
 

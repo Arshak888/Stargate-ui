@@ -1,16 +1,16 @@
-# Management CLI (`vpn-ui` menu script)
+# Management CLI (`stargate-ui` menu script)
 
 Goal: an `x-ui`-style terminal management app for this fork, with the 17 items
 below. Status of each is measured against the code as of v1.7.1.
 
 ## Naming / install
 
-- Binary stays `/opt/vpn-ui/vpn-ui-amd64` (live box) or `<exedir>/vpn-ui-amd64`.
-- Menu script installs to `/usr/bin/vpn-ui`, `chmod +x`. No name clash: the
-  binary is `vpn-ui-amd64`, the command is `vpn-ui`.
-- Source lives at repo root as `vpn-ui.sh` (beside `deploy.sh`, `build.sh`).
+- Binary stays `/opt/stargate-ui/stargate-ui-amd64` (live box) or `<exedir>/stargate-ui-amd64`.
+- Menu script installs to `/usr/bin/stargate-ui`, `chmod +x`. No name clash: the
+  binary is `stargate-ui-amd64`, the command is `stargate-ui`.
+- Source lives at repo root as `stargate-ui.sh` (beside `deploy.sh`, `build.sh`).
 - `deploy.sh` installs/refreshes it on every deploy (fresh + update).
-- `vpn-ui-amd64 --uninstall` must delete `/usr/bin/vpn-ui`. Add it to the
+- `stargate-ui-amd64 --uninstall` must delete `/usr/bin/stargate-ui`. Add it to the
   inventory in `web/service/uninstall.go` (model: the systemd-unit removal).
 
 Upstream 3x-ui installs its script by curling raw.githubusercontent at `main`
@@ -28,7 +28,7 @@ Upstream's script scrapes the Go binary's human stdout:
 Do not copy this coupling. Two rules:
 
 1. Anything the script only DISPLAYS: the binary prints it, script just runs it.
-2. Anything the script must BRANCH on: add `vpn-ui-amd64 info --json`.
+2. Anything the script must BRANCH on: add `stargate-ui-amd64 info --json`.
 
 ## Item status
 
@@ -37,7 +37,7 @@ Legend: OK = exists today, FIX = exists but broken/incomplete, NEW = to build.
 | # | Item | Status | Backing |
 |---|------|--------|---------|
 | 1 | Update | NEW (thin) | `web/service/panelupdate.go` has the whole updater |
-| 2 | Un-Install | OK | `vpn-ui-amd64 --uninstall [--yes]`, `main.go:332` |
+| 2 | Un-Install | OK | `stargate-ui-amd64 --uninstall [--yes]`, `main.go:332` |
 | 3 | Change Username | OK | `--user <n>`, `main.go:1570` |
 | 4 | Change Password | OK | `--pass <p>`, `main.go:1572` |
 | 5 | Change Port | OK | `--port <n>`, `main.go:1576` |
@@ -69,7 +69,7 @@ in-process state:
 - `web/service/procmgr.go:130`: `var procMgr = &ProcManager{...}`, a singleton,
   whose per-core logs are an in-memory ring buffer (`procLog`, `procmgr.go:82`).
 
-A separate `vpn-ui-amd64 stop-xray` process starts with `p == nil`. Therefore:
+A separate `stargate-ui-amd64 stop-xray` process starts with `p == nil`. Therefore:
 
 - `StopXray()` returns "xray is not running" while Xray IS running.
 - `RestartXray()` would spawn a SECOND Xray that collides on 62790 and every
@@ -83,7 +83,7 @@ panel. Upstream sidesteps this the same way: their "Restart Xray" is
 
 New `web/service/control.go`, started by `runWebServer()`:
 
-- Listen on `<exedir>/vpn-ui.sock`, mode 0600, owner root. Unlink stale socket
+- Listen on `<exedir>/stargate-ui.sock`, mode 0600, owner root. Unlink stale socket
   on start (mirror `ReapOrphanXray`'s orphan logic).
 - Line protocol, one JSON request -> one JSON response. No auth needed: the
   socket is root-only, and every CLI path already calls `requireRoot()`.
@@ -93,7 +93,7 @@ New `web/service/control.go`, started by `runWebServer()`:
   (`XrayService.RestartXray/StopXray`, `CoreService.RestartAll`), so there is
   one code path, not two.
 
-New CLI subcommand `vpn-ui-amd64 ctl <cmd>` dials the socket and prints the
+New CLI subcommand `stargate-ui-amd64 ctl <cmd>` dials the socket and prints the
 reply. If the socket is absent or refuses: print "panel is not running" and
 exit non-zero. Never fall back to acting locally, that is the bug above.
 
@@ -116,12 +116,12 @@ are NOT on disk. If a "core logs" menu item is ever wanted, it needs the socket.
 
 - Resolve the unit via `SystemdService.GetServiceName()` (`systemd.go:53`). It
   is operator-configurable (setting `systemdServiceName`), NOT hardcoded
-  "vpn-ui". Never assume the name.
+  "stargate-ui". Never assume the name.
 - IMPORTANT (live box 65.109.217.240): the panel there runs MANUALLY via
   `setsid`, with the unit inactive-but-enabled. So "Stop (systemd)" will report
   success while the panel keeps running. The script must detect a
   running-but-not-under-systemd panel and say so, rather than lie.
-  Detect: unit inactive AND a live `vpn-ui-amd64` process AND/OR the control
+  Detect: unit inactive AND a live `stargate-ui-amd64` process AND/OR the control
   socket answers.
 
 ## Item 1: Update
@@ -130,13 +130,13 @@ are NOT on disk. If a "core logs" menu item is ever wanted, it needs the socket.
 - `CheckPanelUpdate()` `:64` -> current vs latest tag (GitHub API)
 - `UpdatePanel()` `:221` -> download, ELF+arch validate, swap, restart
 - `restartPanel()` `:476` -> handles BOTH systemd and manual (setsid/re-exec)
-- Same asset `deploy.sh` uses: `Sir-MmD/vpn-ui` / `vpn-ui-amd64`
+- Same asset `deploy.sh` uses: `Sir-MmD/stargate-ui` / `stargate-ui-amd64`
 
 Do NOT have the CLI call `UpdatePanel()` directly. `restartPanel()` ends in
 `syscall.Exec(exe, os.Args, ...)` when there is no systemd, which from a CLI
 process would re-exec the CLI with its own `update` args, i.e. a loop.
 
-Plan: new `vpn-ui-amd64 update` that REUSES `downloadPanelBinary` +
+Plan: new `stargate-ui-amd64 update` that REUSES `downloadPanelBinary` +
 `isCompatibleBinary`, and then:
 1. Back up the DB first (deploy.sh:202 already does this; the in-binary updater
    does NOT). Copy the WAL/SHM sidecars too. Abort if the backup fails.
@@ -160,7 +160,7 @@ Two real bugs in the same function:
    they rely on `updateSetting` having run first in the same `setting`
    invocation (`main.go:1699` before `:1703`).
 
-Plan: new `vpn-ui-amd64 info [--json]` that calls `InitDB` itself and prints
+Plan: new `stargate-ui-amd64 info [--json]` that calls `InitDB` itself and prints
 username, port, webBasePath, listen IP, SSL on/off, version, unit name+state,
 and the assembled panel URL (reuse the URL logic already in
 `applyExplicitSetting`, `main.go:514`). Menu item 8 just runs it.
@@ -169,16 +169,16 @@ and the assembled panel URL (reuse the URL logic already in
 
 `deploy.sh:43` `obtain_letsencrypt_cert()` already does acme.sh standalone
 HTTP-01, installs the cert, sets `--reloadcmd`, and calls
-`vpn-ui-amd64 cert -webCert <f> -webCertKey <f>`.
+`stargate-ui-amd64 cert -webCert <f> -webCertKey <f>`.
 
 Plan: factor it into the menu script (acme.sh is a bash tool, keep it in bash).
-Both `deploy.sh` and `vpn-ui.sh` should share it rather than fork it. Keep the
+Both `deploy.sh` and `stargate-ui.sh` should share it rather than fork it. Keep the
 existing behaviour of warning when :80 is in use, and stay best-effort (never
 leave the panel's TLS worse than it was found).
 
 ## Separate bug found while mapping (not a menu item)
 
-`vpn-ui-amd64 setting -port 8443` (the legacy Go-flag path) calls `InitDB` with
+`stargate-ui-amd64 setting -port 8443` (the legacy Go-flag path) calls `InitDB` with
 NO busy timeout and NO stop-the-unit envelope, unlike the safe `--port` path.
 Against a live panel it writes concurrently and the panel keeps serving the old
 value until restarted. Either give `setting` the same envelope, or make it a
@@ -186,10 +186,10 @@ thin alias of the `--port` path.
 
 ## Build order
 
-1. `vpn-ui-amd64 info [--json]` + fix the `showSetting` nil-deref.
-2. `web/service/control.go` + `vpn-ui-amd64 ctl <cmd>`.
-3. `vpn-ui-amd64 update` (with the DB backup the in-binary path lacks).
-4. `vpn-ui.sh` menu, sharing `obtain_letsencrypt_cert` with `deploy.sh`.
+1. `stargate-ui-amd64 info [--json]` + fix the `showSetting` nil-deref.
+2. `web/service/control.go` + `stargate-ui-amd64 ctl <cmd>`.
+3. `stargate-ui-amd64 update` (with the DB backup the in-binary path lacks).
+4. `stargate-ui.sh` menu, sharing `obtain_letsencrypt_cert` with `deploy.sh`.
 5. `deploy.sh` installs the script; `uninstall.go` removes it.
 6. E2E: extend `test_unit/` with a menu phase. Do NOT run incus E2E unless
    explicitly asked.

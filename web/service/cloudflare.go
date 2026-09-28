@@ -11,10 +11,10 @@ import (
 )
 
 // Cloudflare API helpers backing the DNS-01 path of obtain_letsencrypt_cert in
-// vpn-ui.sh (`vpn-ui cf verify` / `vpn-ui cf zones`).
+// stargate-ui.sh (`stargate-ui cf verify` / `stargate-ui cf zones`).
 //
 // The menu asks the binary rather than curling the API itself for the same reason
-// it reads `vpn-ui info --get`: no jq on a minimal box, and no shell parsing of
+// it reads `stargate-ui info --get`: no jq on a minimal box, and no shell parsing of
 // JSON. It also keeps the token out of a command line, since /proc/<pid>/cmdline is
 // world-readable while the environment the binary reads it from is not.
 //

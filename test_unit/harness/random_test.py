@@ -1,6 +1,6 @@
 """`--random` CLI switch E2E (server VM only — no tunnels).
 
-`vpn-ui --random` generates a fresh random panel port, login username, login
+`stargate-ui --random` generates a fresh random panel port, login username, login
 password and web base path, persists them to the DB, and prints them. This phase
 runs it on the server VM, parses the printed values, restarts the panel, and
 asserts the panel now answers on the NEW port + web path with the NEW credentials
@@ -39,7 +39,7 @@ def _parse(out: str) -> dict:
 def run(incus: Incus, vm: str, panel: Panel, cfg: dict, result, log=None) -> None:
     log = log or (lambda *_: None)
     phase = result.phase(PHASE_RANDOM)
-    log(":: random — `vpn-ui --random` randomizes port + username + password + web path")
+    log(":: random — `stargate-ui --random` randomizes port + username + password + web path")
 
     def sub(name, ok, detail, logtxt=""):
         st = SubTest(name, Status.PASS if ok else Status.FAIL, detail, logtxt)

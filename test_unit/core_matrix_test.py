@@ -27,7 +27,7 @@ import time
 
 VM = "coretest"
 IMAGE = "images:ubuntu/24.04/cloud"
-REMOTE = "/root/vpn-ui"
+REMOTE = "/root/stargate-ui"
 PORT = 2053
 
 # ---------------------------------------------------------------------------
@@ -36,11 +36,11 @@ PORT = 2053
 # agree with itself and the test would prove nothing.
 # ---------------------------------------------------------------------------
 FEAT_PATHS = {
-    "pppd": "/usr/libexec/vpn-ui/sbin/pppd",
-    "pptpctrl": "/usr/libexec/vpn-ui/pptpctrl",
-    "accel": "/usr/libexec/vpn-ui-accel",
-    "strongswan": "/usr/libexec/vpn-ui-strongswan",
-    "amneziawg": "/usr/src/vpn-ui-amneziawg",
+    "pppd": "/usr/libexec/stargate-ui/sbin/pppd",
+    "pptpctrl": "/usr/libexec/stargate-ui/pptpctrl",
+    "accel": "/usr/libexec/stargate-ui-accel",
+    "strongswan": "/usr/libexec/stargate-ui-strongswan",
+    "amneziawg": "/usr/src/stargate-ui-amneziawg",
 }
 
 CORES = {
@@ -176,22 +176,22 @@ def launch():
 def push_panel(binary: str, bindir: str):
     log("pushing the panel binary + xray core")
     vmsh(f"mkdir -p {REMOTE}/bin")
-    incus("file", "push", binary, f"{VM}{REMOTE}/vpn-ui", "--mode", "0755", timeout=900)
+    incus("file", "push", binary, f"{VM}{REMOTE}/stargate-ui", "--mode", "0755", timeout=900)
     for f in ("xray-linux-amd64", "geoip.dat", "geosite.dat", "config.json"):
         incus("file", "push", f"{bindir}/{f}", f"{VM}{REMOTE}/bin/{f}",
               "--mode", "0755", timeout=900, check=False)
 
     log("starting the panel")
-    vmsh(f"cd {REMOTE} && ./vpn-ui --port {PORT} --user admin --pass admin --path / "
+    vmsh(f"cd {REMOTE} && ./stargate-ui --port {PORT} --user admin --pass admin --path / "
          f">/root/setting.log 2>&1", timeout=300)
     # A transient systemd unit, not `setsid nohup ... &`: incus exec allocates a
     # pty and waits for it to close, so a backgrounded child keeps the exec call
     # hanging even with its own stdio redirected. systemd-run hands the process
     # to pid 1 and returns immediately. Same approach as test_unit/provision.py.
-    vmsh("systemctl reset-failed vpn-ui-test 2>/dev/null; "
-         "systemctl stop vpn-ui-test 2>/dev/null; true", timeout=60)
-    rc, out, err = vmsh(f"systemd-run --unit=vpn-ui-test --working-directory={REMOTE} "
-                        f"{REMOTE}/vpn-ui", timeout=120)
+    vmsh("systemctl reset-failed stargate-ui-test 2>/dev/null; "
+         "systemctl stop stargate-ui-test 2>/dev/null; true", timeout=60)
+    rc, out, err = vmsh(f"systemd-run --unit=stargate-ui-test --working-directory={REMOTE} "
+                        f"{REMOTE}/stargate-ui", timeout=120)
     if rc != 0:
         raise RuntimeError(f"failed to start the panel unit: {out}\n{err}")
 
@@ -297,7 +297,7 @@ def present_feats() -> set:
 
 
 def persisted_modules() -> set:
-    rc, out, _ = vmsh("cat /etc/modules-load.d/vpn-ui.conf 2>/dev/null")
+    rc, out, _ = vmsh("cat /etc/modules-load.d/stargate-ui.conf 2>/dev/null")
     return {l.strip() for l in out.splitlines() if l.strip()}
 
 
@@ -373,8 +373,8 @@ def check_removal(core: str):
     # Nothing may survive under the shared bundle root: half-removing it (the
     # plugin dir but not sbin/pppd) is exactly the kind of leak a per-path
     # check misses.
-    rc, out, _ = vmsh("find /usr/libexec/vpn-ui /usr/libexec/vpn-ui-accel "
-                      "/usr/libexec/vpn-ui-strongswan -mindepth 0 2>/dev/null | head -20")
+    rc, out, _ = vmsh("find /usr/libexec/stargate-ui /usr/libexec/stargate-ui-accel "
+                      "/usr/libexec/stargate-ui-strongswan -mindepth 0 2>/dev/null | head -20")
     leftovers = [l for l in out.splitlines() if l.strip()]
     record(f"{tag}/libexec-clean", not leftovers,
            f"left behind {leftovers[:6]}" if leftovers else "/usr/libexec fully cleaned")

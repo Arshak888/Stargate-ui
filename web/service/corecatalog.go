@@ -166,8 +166,8 @@ var coreCatalog = []coreSpec{
 		feats:      []string{featAccel},
 		// The config ROOT as well as the per-inbound files: a glob alone leaves the
 		// directory behind once the last inbound is gone.
-		paths: []string{"/etc/vpn-ui-sstp"},
-		globs: []string{"/etc/vpn-ui-sstp/server-*"},
+		paths: []string{"/etc/stargate-ui-sstp"},
+		globs: []string{"/etc/stargate-ui-sstp/server-*"},
 	},
 	{
 		name: "ikev2", title: "IKEv2", backend: "strongSwan (charon)",
@@ -175,7 +175,7 @@ var coreCatalog = []coreSpec{
 		usesRadius: true,
 		optModules: []string{"af_key", "esp4", "xfrm_user"},
 		feats:      []string{featStrongswan},
-		// /etc/vpn-ui-ikev2 is deliberately NOT here. Despite the name it is the
+		// /etc/stargate-ui-ikev2 is deliberately NOT here. Despite the name it is the
 		// SHARED charon config root: writeCharonConf() creates it whenever charon
 		// is needed by either protocol, so an L2TP-only box has one too. Removing
 		// it with IKEv2 would delete a directory L2TP still uses (and it would be
@@ -209,11 +209,11 @@ var coreCatalog = []coreSpec{
 		desc:    "Telegram MTProto proxy",
 		daemons: []string{"telemt"},
 		// See the SSTP entry: the root goes too.
-		paths: []string{"/etc/vpn-ui-mtproto"},
-		globs: []string{"/etc/vpn-ui-mtproto/server-*"},
+		paths: []string{"/etc/stargate-ui-mtproto"},
+		globs: []string{"/etc/stargate-ui-mtproto/server-*"},
 	},
 	{
-		name: "ssh", title: "SSH", backend: "Built-in (vpn-ui)",
+		name: "ssh", title: "SSH", backend: "Built-in (stargate-ui)",
 		desc: "SSH tunnel gateway, served by the panel itself", builtin: true,
 	},
 	{
@@ -221,7 +221,7 @@ var coreCatalog = []coreSpec{
 		desc: "The Xray data plane every other core routes through", builtin: true,
 	},
 	{
-		name: "radius", title: "RADIUS", backend: "Built-in (vpn-ui)",
+		name: "radius", title: "RADIUS", backend: "Built-in (stargate-ui)",
 		desc: "Authentication for the dial-in protocols, served by the panel itself", builtin: true,
 	},
 }

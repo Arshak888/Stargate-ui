@@ -16,9 +16,9 @@ from .incus import Incus
 from .model import JobResult, SubTest, Status, PHASE_CORE
 from .panel import Panel, PanelError
 
-REMOTE_DIR = "/root/vpn-ui"
-REMOTE_BIN = REMOTE_DIR + "/vpn-ui"
-PANEL_UNIT = "vpn-ui-panel"
+REMOTE_DIR = "/root/stargate-ui"
+REMOTE_BIN = REMOTE_DIR + "/stargate-ui"
+PANEL_UNIT = "stargate-ui-panel"
 
 # Modules the panel loads (web/service/core.go vpnKernelModules). We spot-check
 # the ones that matter for the three protocols under test.

@@ -126,12 +126,12 @@ accounting), occtl KillClient. So reject-strategy may already work via Access-Re
   Must-pass all distros (bundled). `test_subject/` currently empty — build+stage
   binary first. Per memory `no-auto-e2e`: never run incus E2E unless user asks.
 
-### Phase 7 — Live verify (box in memory `vpn-ui-live-test-box`)
+### Phase 7 — Live verify (box in memory `stargate-ui-live-test-box`)
 Real openconnect client connects → 10.4.{id} block → egress via Xray → Framed-IP
 pin by index → K-limit reject+evict → accounting. Delete test inbound after.
 
 ## Build / test commands
-- Backend build: `CGO_ENABLED=1 go build -o vpn-ui main.go`
+- Backend build: `CGO_ENABLED=1 go build -o stargate-ui main.go`
 - Tests: `CGO_ENABLED=1 go test ./web/... -count=1`
 - Daemon bundle (needs docker/podman): `build/backend/build.sh amd64` (or run
   `build/backend/ocserv-bundle.sh` in alpine:3.22 with `-v vol:/usr/local -v out:/out`).

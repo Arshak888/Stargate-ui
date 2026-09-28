@@ -142,8 +142,8 @@
 
 [pages.index]
 "donate" = "捐赠"
-"donateTitle" = "支持 VPN-UI"
-"donateIntro" = "如果 VPN-UI 对你有帮助，向以下任一地址捐赠可以帮助它持续维护。"
+"donateTitle" = "支持 STARGATE-UI"
+"donateIntro" = "如果 STARGATE-UI 对你有帮助，向以下任一地址捐赠可以帮助它持续维护。"
 "restore" = "恢复"
 "systemStatus" = "系统状态"
 "title" = "系统状态"
@@ -210,7 +210,7 @@
 "exportDatabase" = "备份"
 "exportDatabaseDesc" = "点击下载包含当前数据库备份的 .db 文件到您的设备。"
 "backupNameTitle" = "备份文件名"
-"backupNameDesc" = "选择下载文件的名称由哪些部分组成。全部不勾选时保存为 vpn-ui.db。"
+"backupNameDesc" = "选择下载文件的名称由哪些部分组成。全部不勾选时保存为 stargate-ui.db。"
 "backupNamePanel" = "面板名称"
 "backupNameDomain" = "域名"
 "backupNameDate" = "日期"
@@ -1106,7 +1106,7 @@
 "report" = "🕰 定时报告：{{ .RunTime }}\r\n"
 "datetime" = "⏰ 日期时间：{{ .DateTime }}\r\n"
 "hostname" = "💻 主机名：{{ .Hostname }}\r\n"
-"version" = "🚀 VPN-UI 版本：{{ .Version }}\r\n"
+"version" = "🚀 STARGATE-UI 版本：{{ .Version }}\r\n"
 "xrayVersion" = "📡 Xray 版本: {{ .XrayVersion }}\r\n"
 "ipv6" = "🌐 IPv6：{{ .IPv6 }}\r\n"
 "ipv4" = "🌐 IPv4：{{ .IPv4 }}\r\n"

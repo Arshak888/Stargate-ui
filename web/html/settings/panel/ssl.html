@@ -37,7 +37,7 @@
 -->
 
 <!-- NOTHING ABOUT acme.sh APPEARS HERE ANY MORE. A certificate that deploy.sh or
-     the vpn-ui.sh menu installed is taken over automatically, at boot and again
+     the stargate-ui.sh menu installed is taken over automatically, at boot and again
      when this tab opens (sslSync), and acme.sh's own cron is retired as part of
      that once it has nothing left to renew. The page used to carry a warning and a
      Stop button for a situation the operator did not create and could not have
@@ -284,7 +284,7 @@
 <a-modal v-model="ssl.logOpen" :title="sslLogTitleText()" :footer="null" :width="900"
     :class="themeSwitcher.currentTheme" wrap-class-name="ssl-log-modal">
     <div class="ssl-rawlog-bar">
-        <span class="ssl-rawlog-meta">vpn-ui &middot; [[ sslConsoleLabel() ]]</span>
+        <span class="ssl-rawlog-meta">stargate-ui &middot; [[ sslConsoleLabel() ]]</span>
         <a-button size="small" @click="sslCopyLog">
             <a-icon type="copy"></a-icon>{{ i18n "pages.settings.ssl.copyLog" }}
         </a-button>

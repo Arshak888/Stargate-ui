@@ -15,7 +15,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v2/logger"
 )
 
-// The ownership manifest: a record of what vpn-ui actually put on this host.
+// The ownership manifest: a record of what stargate-ui actually put on this host.
 //
 // Install and uninstall used to work from a static catalog of paths, and that
 // catalog cannot answer the only question that matters when removing something:
@@ -43,11 +43,11 @@ import (
 // It is a JSON file rather than a DB table for three reasons specific to this
 // codebase: service.Uninstall() must work with the DB missing or corrupt (main.go
 // tolerates InitDB failing); a DB import swaps the whole file, so a table would
-// arrive describing SOMEONE ELSE'S host; and /etc/vpn-ui already exists and is
+// arrive describing SOMEONE ELSE'S host; and /etc/stargate-ui already exists and is
 // already panel-owned (nftables.go writes vpn.nft there).
 
 // ownershipDir is the panel's own /etc directory. It already holds vpn.nft.
-const ownershipDir = "/etc/vpn-ui"
+const ownershipDir = "/etc/stargate-ui"
 
 // ownershipVersion is bumped when the on-disk shape changes incompatibly. A
 // manifest from the future is treated as unreadable, which fails safe: an
@@ -91,7 +91,7 @@ const (
 	ownIpRule = "iprule"
 )
 
-// ownState is the tri-state answer to "was this here before vpn-ui?".
+// ownState is the tri-state answer to "was this here before stargate-ui?".
 //
 // The unknown state is the whole reason this is not a bool. A host provisioned by
 // a build that predates the manifest has artifacts nobody recorded, and guessing
@@ -108,7 +108,7 @@ const (
 // mayDelete reports whether an artifact in this state may be removed by us.
 func (s ownState) mayDelete() bool { return s == ownStateNo }
 
-// OwnedArtifact is one thing vpn-ui created, modified, or deliberately left alone.
+// OwnedArtifact is one thing stargate-ui created, modified, or deliberately left alone.
 type OwnedArtifact struct {
 	// Kind + ID together identify the artifact. ID is the path for a file, the
 	// interface name for an iface, the unit name for a unit, and so on.
@@ -344,7 +344,7 @@ func ownRecordUnit(unit, core string, enabled, active bool) {
 		wasEnabled, wasActive := enabled, active
 		e.WasEnabled = &wasEnabled
 		e.WasActive = &wasActive
-		e.Note = "disabled so vpn-ui could run this daemon itself"
+		e.Note = "disabled so stargate-ui could run this daemon itself"
 	}
 	ownAddCore(e, core)
 	ownSaveLocked()
@@ -502,7 +502,7 @@ func ownReleaseEntry(kind, id string, cores []string) (ownAction, OwnedArtifact,
 
 	e := ownFindLocked(kind, id)
 	if e == nil {
-		return ownAction{Keep: "not recorded as installed by vpn-ui"}, OwnedArtifact{}, false
+		return ownAction{Keep: "not recorded as installed by stargate-ui"}, OwnedArtifact{}, false
 	}
 
 	removing := map[string]bool{}
@@ -529,7 +529,7 @@ func ownReleaseEntry(kind, id string, cores []string) (ownAction, OwnedArtifact,
 		if e.PreExisting == ownStateUnknown {
 			return ownAction{Keep: "predates ownership tracking; left in place"}, snapshot, true
 		}
-		return ownAction{Keep: "was already on this host before vpn-ui"}, snapshot, true
+		return ownAction{Keep: "was already on this host before stargate-ui"}, snapshot, true
 	}
 	return ownAction{Delete: true}, snapshot, true
 }
@@ -577,7 +577,7 @@ func ownBackupFile(path string) (string, string, error) {
 //
 //   - absent -> ours, and deleting it on uninstall is correct;
 //   - present with no record -> the operator's, backed up into
-//     /etc/vpn-ui/backups/ and marked preExisting, so uninstall restores their
+//     /etc/stargate-ui/backups/ and marked preExisting, so uninstall restores their
 //     version instead of leaving our render or deleting the file.
 //
 // Files this reached too late (a host already provisioned by an older build) are
@@ -616,7 +616,7 @@ func ownPrepareHostFile(path, core string) {
 	e := ownUpsertLocked(ownFile, path, ownStateYes)
 	e.Backup = backup
 	e.Sha256 = sum
-	e.Note = "already present before vpn-ui; original backed up"
+	e.Note = "already present before stargate-ui; original backed up"
 	ownAddCore(e, core)
 	ownSaveLocked()
 	ownMu.Unlock()
@@ -644,7 +644,7 @@ func ownPrepareDir(path, core string) {
 	e := ownUpsertLocked(ownDir, path, state)
 	e.CreatedByUs = created
 	if !created {
-		e.Note = "directory already existed; only vpn-ui's own files inside it are removed"
+		e.Note = "directory already existed; only stargate-ui's own files inside it are removed"
 	}
 	ownAddCore(e, core)
 	ownSaveLocked()
@@ -665,7 +665,7 @@ func ownPrepareSymlink(path, target, core string) {
 		return
 	}
 	if _, err := os.Lstat(path); err == nil {
-		ownNote(ownSymlink, path, core, "already present; vpn-ui did not link its bundle here")
+		ownNote(ownSymlink, path, core, "already present; stargate-ui did not link its bundle here")
 		return
 	}
 	ownMu.Lock()
@@ -714,13 +714,13 @@ func ownReleasePath(path string, cores []string) (removed, kept string) {
 		if _, err := os.Lstat(path); err != nil {
 			return "", "" // already gone; not worth a line
 		}
-		// No record either way. A path only vpn-ui ever creates is still ours: the
+		// No record either way. A path only stargate-ui ever creates is still ours: the
 		// per-inbound directories are created as inbounds are added, long after the
 		// manifest was synthesised, and refusing to clean those up would turn
 		// uninstall into a no-op for the very files it exists to remove. Anything
 		// else is reported and left exactly where it is.
 		if !ownPanelPrivatePath(path) {
-			return "", path + " (kept: not recorded as installed by vpn-ui)"
+			return "", path + " (kept: not recorded as installed by stargate-ui)"
 		}
 		if removeIfPresent(path) {
 			return path, ""
@@ -764,8 +764,8 @@ var ownSynthesizeOnce sync.Once
 //
 // The classification is by evidence, not by guessing:
 //
-//   - A path only vpn-ui ever creates (the per-inbound directories, our own
-//     /etc/vpn-ui-* roots, our swanctl conf.d drop-ins) is recorded as OURS. No
+//   - A path only stargate-ui ever creates (the per-inbound directories, our own
+//     /etc/stargate-ui-* roots, our swanctl conf.d drop-ins) is recorded as OURS. No
 //     distro ships those names, so uninstall keeps working on upgraded hosts.
 //   - A path shared with a distro package (/etc/pptpd.conf, /etc/ipsec.secrets,
 //     /etc/ocserv, ...) is recorded as UNKNOWN. Unknown never gets deleted, it
@@ -792,7 +792,7 @@ func OwnSynthesize() {
 		// the one that matters most: it is what records an operator's own gre/wgc/awg
 		// device as theirs BEFORE the core that would sweep it is ever installed.
 		if n := ownSynthesizeIfaces(installedSet); n > 0 {
-			logger.Info("ownership: recorded", n, "existing network interface(s) matching vpn-ui's own naming")
+			logger.Info("ownership: recorded", n, "existing network interface(s) matching stargate-ui's own naming")
 		}
 
 		var ss SettingService
@@ -853,7 +853,7 @@ func ownSynthesizePath(path, core string) int {
 	note := "found on this host by an upgrade; not deleted because nobody recorded who created it"
 	if ownPanelPrivatePath(path) {
 		state = ownStateNo
-		note = "a path only vpn-ui creates; adopted on upgrade"
+		note = "a path only stargate-ui creates; adopted on upgrade"
 	}
 	ownMu.Lock()
 	e := ownUpsertLocked(kind, path, state)
@@ -871,9 +871,9 @@ func ownSynthesizePath(path, core string) int {
 func ownPanelPrivatePath(path string) bool {
 	base := filepath.Base(path)
 	switch {
-	case strings.HasPrefix(path, "/etc/vpn-ui-"): // our own per-core roots
+	case strings.HasPrefix(path, "/etc/stargate-ui-"): // our own per-core roots
 		return true
-	case strings.HasPrefix(path, "/etc/vpn-ui/"):
+	case strings.HasPrefix(path, "/etc/stargate-ui/"):
 		return true
 	case strings.HasPrefix(base, "server-"): // per-inbound dirs under a shared root
 		return true
@@ -902,7 +902,7 @@ var sharedHostFiles = map[string]string{
 	"/etc/strongswan.conf":         "ikev2",
 	"/etc/swanctl/swanctl.conf":    "ikev2",
 	"/etc/default/grub":            "",
-	"/etc/sysctl.d/99-vpn-ui.conf": "",
+	"/etc/sysctl.d/99-stargate-ui.conf": "",
 }
 
 func sharedHostFilePaths() []string {
@@ -932,7 +932,7 @@ type OwnedArtifactReport struct {
 	Note        string   `json:"note,omitempty"`
 }
 
-// OwnershipReport lists what vpn-ui believes it owns on this host, so an operator
+// OwnershipReport lists what stargate-ui believes it owns on this host, so an operator
 // can see before an uninstall what will be removed and what will be left alone.
 func OwnershipReport() []OwnedArtifactReport {
 	entries := ownEntries()

@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 #
-# build.sh — build the complete, self-contained vpn-ui binary. Run it, that's it.
+# build.sh — build the complete, self-contained stargate-ui binary. Run it, that's it.
 #
 #   ./build.sh            the full build, exactly as before
 #   ./build.sh --help     every switch, with what it skips and what that costs
 #
 # The Xray core is pinned as a git submodule (third_party/Xray-core, at a fixed
 # commit). On every run it syncs that submodule, builds the Xray core from it, and
-# fetches the latest geo files — then compiles build/out/vpn-ui-<arch> with everything
+# fetches the latest geo files — then compiles build/out/stargate-ui-<arch> with everything
 # baked in via go:embed. warpcli.sh is committed project source
 # (web/service/warpcli.sh) and embedded directly. The static VPN daemon bundle is
 # pinned + slow to build, so it is reused when already present.
@@ -23,7 +23,7 @@ cd "$REPO_ROOT"
 
 usage() {
     cat <<'EOF'
-vpn-ui build: compiles build/out/vpn-ui-<arch> with the Xray core, the geo data
+stargate-ui build: compiles build/out/stargate-ui-<arch> with the Xray core, the geo data
 files and the static VPN daemon bundle baked in.
 
 Usage: ./build.sh [options]          # no options = the full build
@@ -161,7 +161,7 @@ do_run() {
 }
 
 hr
-step "vpn-ui build ${_CD:-}(${ARCH})${_CR:-}"
+step "stargate-ui build ${_CD:-}(${ARCH})${_CR:-}"
 hr
 if (( DRY_RUN )); then info "dry run: nothing is fetched, built or written"; fi
 
@@ -278,10 +278,10 @@ fi
 
 # 3. Panel binary (cgo required for sqlite). Output goes to build/out/.
 OUT_DIR="$REPO_ROOT/build/out"
-OUT_BIN="$OUT_DIR/vpn-ui-$ARCH"
-step "compiling vpn-ui"
+OUT_BIN="$OUT_DIR/stargate-ui-$ARCH"
+step "compiling stargate-ui"
 if (( DRY_RUN )); then
-    info "would run: CGO_ENABLED=1 GOARCH=$ARCH go build -o build/out/vpn-ui-$ARCH main.go"
+    info "would run: CGO_ENABLED=1 GOARCH=$ARCH go build -o build/out/stargate-ui-$ARCH main.go"
     hr
     ok "dry run: nothing was built"
     hr
@@ -291,6 +291,6 @@ mkdir -p "$OUT_DIR"
 CGO_ENABLED=1 GOARCH="$ARCH" go build -o "$OUT_BIN" main.go
 
 hr
-ok "done: ${_CB:-}$(ls -lh "$OUT_BIN" | awk '{print $5}')${_CR:-} -> ${_CB:-}build/out/vpn-ui-${ARCH}${_CR:-}"
-info "run it:  ./build/out/vpn-ui-${ARCH}"
+ok "done: ${_CB:-}$(ls -lh "$OUT_BIN" | awk '{print $5}')${_CR:-} -> ${_CB:-}build/out/stargate-ui-${ARCH}${_CR:-}"
+info "run it:  ./build/out/stargate-ui-${ARCH}"
 hr

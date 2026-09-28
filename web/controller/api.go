@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// APIController handles the main API routes for the vpn-ui panel, including inbounds and server management.
+// APIController handles the main API routes for the stargate-ui panel, including inbounds and server management.
 type APIController struct {
 	BaseController
 	inboundController *InboundController

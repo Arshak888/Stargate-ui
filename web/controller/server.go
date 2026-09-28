@@ -248,7 +248,7 @@ func locationPayload(info *service.ExitInfo) gin.H {
 	}
 }
 
-// distroStatus reports whether the running host distro is on vpn-ui's tested list,
+// distroStatus reports whether the running host distro is on stargate-ui's tested list,
 // for the dashboard's unsupported-distro warning modal.
 func (a *ServerController) distroStatus(c *gin.Context) {
 	supported, pretty, reason := service.DistroSupported()
@@ -304,7 +304,7 @@ func (a *ServerController) getXrayVersion(c *gin.Context) {
 	jsonObj(c, versions, nil)
 }
 
-// checkUpdate reports whether a newer vpn-ui panel release is available. The
+// checkUpdate reports whether a newer stargate-ui panel release is available. The
 // result is cached for 5 minutes — including FAILURES (negative cache) — so the
 // per-overview-load auto-check can't burn GitHub's unauthenticated rate limit even
 // during an outage. The manual button passes ?force=1 to bypass the cache.
@@ -671,7 +671,7 @@ func (a *ServerController) getDb(c *gin.Context) {
 // an old bookmark, a script, or someone hitting /getDb directly, and those keep the
 // dated name this endpoint has always produced. The picker posts all four every
 // time, unticked ones included as false, so an all-false request is unambiguous and
-// does yield the bare vpn-ui.db it asked for.
+// does yield the bare stargate-ui.db it asked for.
 func backupNameOptions(c *gin.Context) service.BackupNameOptions {
 	picked := false
 	flag := func(name string) bool {
@@ -718,7 +718,7 @@ func (a *ServerController) importDB(c *gin.Context) {
 	jsonObj(c, I18nWeb(c, "pages.index.importDatabaseSuccess"), nil)
 }
 
-// importForeignDB imports a stock 3x-ui (or vpn-ui) backup over the current
+// importForeignDB imports a stock 3x-ui (or stargate-ui) backup over the current
 // database, keeping this panel's own reachability/identity settings. Unlike
 // importDB (a like-for-like restore of this panel's own backup) it is meant for
 // migrating in from another panel: it reports what landed, and because the admin

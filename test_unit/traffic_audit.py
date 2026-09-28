@@ -35,7 +35,7 @@ from test_unit.harness.incus import Incus
 from test_unit.harness.panel import Panel
 
 SERVER = os.getenv("TA_SERVER", "65.109.217.240")
-PANEL_HOST = os.getenv("TA_PANEL_HOST", "vpn-ui.mmd.sh")
+PANEL_HOST = os.getenv("TA_PANEL_HOST", "stargate-ui.mmd.sh")
 PANEL_PORT = int(os.getenv("TA_PORT", "9090"))
 PANEL_USER = os.getenv("TA_USER", "a")
 PANEL_PASS = os.getenv("TA_PASS", "a")
@@ -89,7 +89,7 @@ def ssh_server(cmd: str, timeout: int = 60) -> str:
 def counted(email: str) -> tuple[int, int]:
     """(up, down) bytes the panel has recorded for this account."""
     out = ssh_server(
-        "python3 -c \"import sqlite3;c=sqlite3.connect('/opt/vpn-ui/vpn-ui.db');"
+        "python3 -c \"import sqlite3;c=sqlite3.connect('/opt/stargate-ui/stargate-ui.db');"
         "r=c.execute('select up,down from client_traffics where email=?',"
         f"('{email}',)).fetchone();print(r[0],r[1]) if r else print(0,0)\"")
     try:

@@ -2920,7 +2920,7 @@ func distinctInboundIds(targets []service.BulkClientTarget) []int {
 //     existed in settings.clients and on no page that lists accounts.
 //   - the DELETE paths. A deleted account kept its account row and every
 //     membership: the tables drifted from the data plane, InboundIdsForEmail
-//     reported inbounds the account was no longer on, and `vpn-ui revert-accounts`
+//     reported inbounds the account was no longer on, and `stargate-ui revert-accounts`
 //     was blocked forever by a phantom multi-membership account that no longer
 //     existed anywhere in settings. Found on a live panel.
 //   - creating an inbound. The inbound form carries its first client inline, so a

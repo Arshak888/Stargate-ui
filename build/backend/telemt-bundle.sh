@@ -10,7 +10,7 @@
 # tarball URL plus a pile of local .patch files that could silently stop applying.
 #
 # The fork's patch (see its commit message) adds [access.user_modes]: per-ACCOUNT
-# connection modes. vpn-ui exposes modes per client, which upstream's process-wide
+# connection modes. stargate-ui exposes modes per client, which upstream's process-wide
 # [general.modes] cannot express: without it the panel's per-client mode toggles
 # would gate the LINKS we hand out but not the proxy itself.
 #

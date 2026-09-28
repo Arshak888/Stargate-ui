@@ -51,7 +51,7 @@ func getSetting(t *testing.T, db *gorm.DB, key string) string {
 // come from the backup.
 func TestImportForeignDBBringsDataAndPreservesPanelSettings(t *testing.T) {
 	tmp := t.TempDir()
-	t.Setenv("VPNUI_DB_FOLDER", tmp) // config.GetDBPath() -> tmp/vpn-ui.db; no legacy paths
+	t.Setenv("VPNUI_DB_FOLDER", tmp) // config.GetDBPath() -> tmp/stargate-ui.db; no legacy paths
 
 	// A foreign backup: one inbound + client, plus settings that differ from this
 	// panel (webPort/secret) and one that is pure data (subTitle).

@@ -1,5 +1,5 @@
 // Package backend bundles the VPN daemon binaries (xl2tpd, and later
-// openvpn/libreswan/pppd) directly into the vpn-ui executable via go:embed and
+// openvpn/libreswan/pppd) directly into the stargate-ui executable via go:embed and
 // extracts them at runtime. This lets the panel "bake in" the backend instead
 // of installing daemons per-distro through the host package manager.
 //
@@ -85,8 +85,8 @@ var Daemons = []Daemon{
 
 // PptpCtrlLink is the fixed path pptpd was compiled to exec pptpctrl from
 // (--sbindir sentinel). Provisioning symlinks it to the extracted pptpctrl so
-// the bundle works regardless of where vpn-ui is installed.
-const PptpCtrlLink = "/usr/libexec/vpn-ui/pptpctrl"
+// the bundle works regardless of where stargate-ui is installed.
+const PptpCtrlLink = "/usr/libexec/stargate-ui/pptpctrl"
 
 // archDir is the embedded sub-directory for the running architecture.
 func archDir() string { return "bin/" + runtime.GOARCH }
@@ -107,9 +107,9 @@ func Available() bool {
 
 // BinDir is the absolute directory where daemons are extracted. It is the SAME
 // "bin" folder the Xray core uses (config.GetBinFolderPath()), so every backend
-// file lands flat in bin/ with no sub-folder — resolved next to the vpn-ui
-// executable, so it adapts to any install location (/usr/local/vpn-ui,
-// /usr/lib/vpn-ui, …). An absolute VPNUI_BIN_FOLDER is honored as-is.
+// file lands flat in bin/ with no sub-folder — resolved next to the stargate-ui
+// executable, so it adapts to any install location (/usr/local/stargate-ui,
+// /usr/lib/stargate-ui, …). An absolute VPNUI_BIN_FOLDER is honored as-is.
 func BinDir() string {
 	bin := config.GetBinFolderPath()
 	if filepath.IsAbs(bin) {
@@ -117,7 +117,7 @@ func BinDir() string {
 	}
 	exe, err := os.Executable()
 	if err != nil {
-		return filepath.Join("/usr/local/vpn-ui", bin)
+		return filepath.Join("/usr/local/stargate-ui", bin)
 	}
 	return filepath.Join(filepath.Dir(exe), bin)
 }
@@ -274,7 +274,7 @@ func WriteFileAtomic(dest string, data []byte, mode os.FileMode) error {
 }
 
 // extractBundleTGZ untars an embedded relocatable bundle to the filesystem root. Its
-// entries are stored at their real deploy path (usr/libexec/vpn-ui-<x>/...), so
+// entries are stored at their real deploy path (usr/libexec/stargate-ui-<x>/...), so
 // untarring at / recreates the tree exactly where the launchers expect it.
 //
 // New code only. ExtractPppdBundle, ExtractLibreswanBundle, ExtractAccelBundle and

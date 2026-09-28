@@ -188,7 +188,7 @@ func (s *UserService) UpdateFirstUser(username string, password string) error {
 }
 
 // SetFirstUsername changes ONLY the first user's login username, preserving the
-// existing (already-hashed) password. Used by `vpn-ui --user <name>` when no
+// existing (already-hashed) password. Used by `stargate-ui --user <name>` when no
 // --pass is given, so an operator can rename the admin without re-supplying the
 // password.
 func (s *UserService) SetFirstUsername(username string) error {

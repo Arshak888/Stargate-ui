@@ -24,7 +24,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v2/util/random"
 )
 
-// Manual update: the operator names a vpn-ui binary themselves, either by picking a
+// Manual update: the operator names a stargate-ui binary themselves, either by picking a
 // file in the browser or by giving a URL the panel downloads, instead of fetching the
 // release from GitHub. Same installer, same rollback copy, same restart; only the
 // source of the bytes differs, which is why this ends in installPanelBinary rather than
@@ -50,7 +50,7 @@ const (
 	PanelUploadSame      = "same"
 	PanelUploadUnknown   = "unknown"
 
-	// A version probe should answer instantly; anything slower is not a vpn-ui binary
+	// A version probe should answer instantly; anything slower is not a stargate-ui binary
 	// behaving normally and must not hold a request open.
 	panelVersionProbeTimeout = 15 * time.Second
 	panelVersionProbeMaxOut  = 4 << 10
@@ -92,7 +92,7 @@ var (
 )
 
 // panelVersionPattern is what a version line has to look like. It is the cheapest test
-// that separates "a vpn-ui binary" from "some other ELF that printed its usage": the
+// that separates "a stargate-ui binary" from "some other ELF that printed its usage": the
 // panel answers -v with a bare dotted version and nothing else.
 var panelVersionPattern = regexp.MustCompile(`^v?\d+(\.\d+)*$`)
 
@@ -163,7 +163,7 @@ func StagePanelBinary(src io.Reader, declaredSize int64) (StagedPanelInfo, error
 	// else's ELF is refused before the probe below ever runs it.
 	if !isGoBinary(staged) {
 		_ = os.Remove(staged)
-		return info, errors.New("that file is not a Go binary, so it is not a vpn-ui panel")
+		return info, errors.New("that file is not a Go binary, so it is not a stargate-ui panel")
 	}
 
 	version, err := panelBinaryVersion(staged)
@@ -286,7 +286,7 @@ func StagePanelBinaryFromURL(rawURL string) (StagedPanelInfo, error) {
 	if err != nil {
 		return info, fmt.Errorf("that URL could not be requested: %w", err)
 	}
-	req.Header.Set("User-Agent", "vpn-ui")
+	req.Header.Set("User-Agent", "stargate-ui")
 
 	resp, err := panelFetchClient().Do(req)
 	if err != nil {
@@ -481,9 +481,9 @@ func panelBinaryVersion(path string) (string, error) {
 
 	if err := cmd.Run(); err != nil {
 		if ctx.Err() != nil {
-			return "", errors.New("that binary did not answer with a version (it hung), so it is not a vpn-ui build")
+			return "", errors.New("that binary did not answer with a version (it hung), so it is not a stargate-ui build")
 		}
-		return "", errors.New("that binary could not be run to read its version, so it is not a usable vpn-ui build")
+		return "", errors.New("that binary could not be run to read its version, so it is not a usable stargate-ui build")
 	}
 
 	// First line only. -v prints the version and exits, so anything after it is noise
@@ -493,7 +493,7 @@ func panelBinaryVersion(path string) (string, error) {
 		version = strings.TrimSpace(version[:i])
 	}
 	if !panelVersionPattern.MatchString(version) {
-		return "", errors.New("that file did not report a version number, so it is not a vpn-ui binary")
+		return "", errors.New("that file did not report a version number, so it is not a stargate-ui binary")
 	}
 	return strings.TrimPrefix(version, "v"), nil
 }

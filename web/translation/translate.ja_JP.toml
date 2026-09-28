@@ -142,8 +142,8 @@
 
 [pages.index]
 "donate" = "寄付"
-"donateTitle" = "VPN-UI を支援する"
-"donateIntro" = "VPN-UI がお役に立っているなら、以下のいずれかのアドレスへの寄付が開発の継続に役立ちます。"
+"donateTitle" = "STARGATE-UI を支援する"
+"donateIntro" = "STARGATE-UI がお役に立っているなら、以下のいずれかのアドレスへの寄付が開発の継続に役立ちます。"
 "restore" = "復元"
 "systemStatus" = "システム状態"
 "title" = "システムステータス"
@@ -210,7 +210,7 @@
 "exportDatabase" = "バックアップ"
 "exportDatabaseDesc" = "クリックして、現在のデータベースのバックアップを含む .db ファイルをデバイスにダウンロードします。"
 "backupNameTitle" = "バックアップのファイル名"
-"backupNameDesc" = "ダウンロードするファイル名に含める項目を選びます。すべて外すと vpn-ui.db として保存されます。"
+"backupNameDesc" = "ダウンロードするファイル名に含める項目を選びます。すべて外すと stargate-ui.db として保存されます。"
 "backupNamePanel" = "パネル名"
 "backupNameDomain" = "ドメイン"
 "backupNameDate" = "日付"
@@ -1105,7 +1105,7 @@
 "report" = "🕰 定期報告：{{ .RunTime }}\r\n"
 "datetime" = "⏰ 日時：{{ .DateTime }}\r\n"
 "hostname" = "💻 ホスト名：{{ .Hostname }}\r\n"
-"version" = "🚀 VPN-UI バージョン：{{ .Version }}\r\n"
+"version" = "🚀 STARGATE-UI バージョン：{{ .Version }}\r\n"
 "xrayVersion" = "📡 Xray バージョン: {{ .XrayVersion }}\r\n"
 "ipv6" = "🌐 IPv6：{{ .IPv6 }}\r\n"
 "ipv4" = "🌐 IPv4：{{ .IPv4 }}\r\n"

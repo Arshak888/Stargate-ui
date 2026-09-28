@@ -78,11 +78,11 @@ VMs with distinct source IPs. Real same-NAT K>1 is not achievable from auth alon
 Green: core-init, server-setup, **openvpn, l2tp, openconnect** (all fully green),
 bulk-ops, backup-restore, **warp-socks**, systemd, uninstall. Two phases surfaced issues:
 
-- **`random-cfg` → `--random` SIGSEGV → FIXED.** `vpn-ui --random` panicked (nil gorm DB)
+- **`random-cfg` → `--random` SIGSEGV → FIXED.** `stargate-ui --random` panicked (nil gorm DB)
   because `randomizeSetting()` (main.go) called `svc.GetServiceName()` (a DB read) BEFORE
   `database.InitDB()`. The `GetServiceName` call was added above the pre-existing InitDB by
   commit `ae4e7b36c` ("safer --random"), so `--random` has crashed since then. Fix: move
-  `InitDB` to the top of `randomizeSetting`. Verified: `sudo vpn-ui --random` exit 0; the
+  `InitDB` to the top of `randomizeSetting`. Verified: `sudo stargate-ui --random` exit 0; the
   focused `--tests random-cfg` E2E is 6/6 green (randomize + restart-on-new-port + login +
   restore). **Not caused by the openconnect work.**
 
@@ -199,8 +199,8 @@ threshold, or verify manually on the live box.
 ---
 
 ## How to resume
-- Build (canonical, no flags): `./build.sh` → `build/out/vpn-ui-amd64`. Then stage:
-  `cp build/out/vpn-ui-amd64 test_unit/test_subject/vpn-ui`.
+- Build (canonical, no flags): `./build.sh` → `build/out/stargate-ui-amd64`. Then stage:
+  `cp build/out/stargate-ui-amd64 test_unit/test_subject/stargate-ui`.
   (Daemons/core are cached; a Go-only change just recompiles the panel.)
 - Unit tests: `CGO_ENABLED=1 go test ./web/service/ -count=1`. Relevant:
   `TestHandleAuthOpenconnectPAP` (web/service/radius_openconnect_test.go) drives a
@@ -219,7 +219,7 @@ threshold, or verify manually on the live box.
 ### Gotchas learned (save a re-discovery)
 - ocserv logs auth to **SYSLOG** in the VM (`journalctl` / `/var/log/syslog`), NOT
   the procmgr ring buffer (which only holds the MAIN process's startup). The panel
-  RADIUS Info logs are in `/var/log/vpn-ui/vpn-ui.log` (timestamps UTC; host +3:30).
+  RADIUS Info logs are in `/var/log/stargate-ui/stargate-ui.log` (timestamps UTC; host +3:30).
   ocserv ring buffer via API: `GET /panel/core/logs/openconnect` (admin/admin).
 - incus bridges can lose their IPv4 (firewalld reload flushes `incusbr0` →
   dnsmasq "no address" → VMs get no IPv4). Fix: `systemctl restart incus`.

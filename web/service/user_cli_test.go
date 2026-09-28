@@ -9,7 +9,7 @@ import (
 )
 
 // TestCliSettingMutations covers the setting/credential mutations that back the
-// `vpn-ui --user/--pass/--port/--path` switches: SetPort, SetBasePath,
+// `stargate-ui --user/--pass/--port/--path` switches: SetPort, SetBasePath,
 // UpdateFirstUser, and the new SetFirstUsername — which must rename the admin
 // WITHOUT touching the password (the whole point of allowing --user without --pass).
 func TestCliSettingMutations(t *testing.T) {

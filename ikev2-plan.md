@@ -339,7 +339,7 @@ CA + leaf `--san <host> --flag serverAuth` (RSA, SAN mandatory, serverAuth EKU).
 ---
 
 # Build / test commands (once building)
-- Quick compile: `CGO_ENABLED=1 go build -o /tmp/vpn-ui-ikev2 main.go`
+- Quick compile: `CGO_ENABLED=1 go build -o /tmp/stargate-ui-ikev2 main.go`
 - Unit: `CGO_ENABLED=1 go test ./web/... -count=1`
 - Full bundled binary: `./build.sh` (rebuilds daemons incl. strongswan bundle)
 - Daemon bundle alone (docker/podman): `build/backend/build.sh amd64`

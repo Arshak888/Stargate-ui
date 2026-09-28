@@ -318,7 +318,7 @@ body{ margin:0; background:var(--paper); color:var(--ink);
   <div class="masthead">
     <div class="mast-row">
       <div>
-        <div class="stamp">vpn-ui / clients / second attempt</div>
+        <div class="stamp">stargate-ui / clients / second attempt</div>
         <h1>Five designs, not five containers</h1>
         <p>
           The first set was one design in five wrappers. These five differ in what the view <em>is</em>:
@@ -677,7 +677,7 @@ const KIND={uri:'Link',conf:'Config file',creds:'Credentials',none:'Nothing to g
   const pad=(s,n)=>String(s)+' '.repeat(Math.max(0,n-String(s).length));
   function body(){
     const L=[];
-    L.push(`<span class="pr">$</span> <span class="hl">vpn-ui account show ${ACC.email}${verb==='all'?'':' --'+verb}</span>`);
+    L.push(`<span class="pr">$</span> <span class="hl">stargate-ui account show ${ACC.email}${verb==='all'?'':' --'+verb}</span>`);
     L.push('');
     if(verb==='all'||verb==='tech'){
       L.push(`<span class="dim">account</span>   <span class="hl">${ACC.email}</span>   <span class="ok">enabled</span> <span class="ok">online</span>`);

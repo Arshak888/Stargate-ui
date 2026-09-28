@@ -193,7 +193,7 @@ prepare_src() {
     # outside the repo so it survives fresh checkouts too) so we clone ONCE, then
     # only `git fetch` to pick up updates on later runs — never re-clone every
     # build. Override the location with XRAY_CACHE.
-    local cache="${XRAY_CACHE:-${XDG_CACHE_HOME:-$HOME/.cache}/vpn-ui-build/Xray-core}"
+    local cache="${XRAY_CACHE:-${XDG_CACHE_HOME:-$HOME/.cache}/stargate-ui-build/Xray-core}"
     if [[ -d "$cache/.git" ]]; then
         info "reusing cached Xray-core clone ($cache); fetching updates" >&2
         git -C "$cache" remote set-url origin "$XRAY_REPO" >/dev/null 2>&1 || true

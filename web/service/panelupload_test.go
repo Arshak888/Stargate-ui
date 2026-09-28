@@ -36,7 +36,7 @@ func TestComparePanelVersions(t *testing.T) {
 	}
 }
 
-// A binary that does not answer with a version is not a vpn-ui build, and installing
+// A binary that does not answer with a version is not a stargate-ui build, and installing
 // it would replace the panel with something that cannot come back up.
 func TestPanelBinaryVersionRejectsNonPanelOutput(t *testing.T) {
 	dir := t.TempDir()
@@ -67,7 +67,7 @@ func TestPanelBinaryVersionRejectsNonPanelOutput(t *testing.T) {
 
 	t.Run("usage text is refused", func(t *testing.T) {
 		if _, err := panelBinaryVersion(write("usage", `echo "usage: something [opts]"`)); err == nil {
-			t.Error("a binary printing usage was accepted as a vpn-ui build")
+			t.Error("a binary printing usage was accepted as a stargate-ui build")
 		}
 	})
 
@@ -218,12 +218,12 @@ func TestValidatePanelBinaryURL(t *testing.T) {
 		in      string
 		wantErr string // substring; "" means it must be accepted
 	}{
-		{"https://example.com/vpn-ui-amd64", ""},
-		{"http://10.0.0.5/vpn-ui-amd64", ""}, // a private mirror is the point, not a mistake
+		{"https://example.com/stargate-ui-amd64", ""},
+		{"http://10.0.0.5/stargate-ui-amd64", ""}, // a private mirror is the point, not a mistake
 		{"  https://example.com/x  ", ""},    // pasted with whitespace
 		{"", "enter the URL"},
 		{"   ", "enter the URL"},
-		{"example.com/vpn-ui-amd64", "missing its scheme"},
+		{"example.com/stargate-ui-amd64", "missing its scheme"},
 		{"file:///etc/passwd", "cannot be downloaded from"},
 		{"ftp://example.com/x", "cannot be downloaded from"},
 		{"https://", "has no host"},

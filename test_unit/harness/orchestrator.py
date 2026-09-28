@@ -472,7 +472,7 @@ def run_job(spec: dict, index: int, cfg: dict,
                             traceback.format_exc()[-1500:]))
 
         # --- `--systemd` CLI switch. Swaps the panel's supervisor (transient
-        #     unit -> installed `vpn-ui` unit) on the same port. Before uninstall
+        #     unit -> installed `stargate-ui` unit) on the same port. Before uninstall
         #     so the teardown has an installed unit to remove. ---
         if not _aborting() and _sel(PHASE_SYSTEMD):
             try:
@@ -547,7 +547,7 @@ def _skip_remaining(result: JobResult):
 
 
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="vpn-ui incus test unit")
+    ap = argparse.ArgumentParser(description="stargate-ui incus test unit")
     ap.add_argument("-c", "--config", default=os.path.join(
         os.path.dirname(__file__), "..", "config.toml"))
     ap.add_argument("--only", default="", help="comma-separated distro names to run")
@@ -604,7 +604,7 @@ def main(argv=None):
     cfg["_selected"] = selected
 
     # Resolve a relative binary path against the config's dir (test_unit/), so the
-    # default "test_subject/vpn-ui" means the binary in the test_subject/ folder
+    # default "test_subject/stargate-ui" means the binary in the test_subject/ folder
     # (its sibling bin/ dir carries the xray core + geo files, pushed together).
     cfg_dir = os.path.dirname(os.path.abspath(args.config))
     if not os.path.isabs(cfg["binary"]):
@@ -630,7 +630,7 @@ def main(argv=None):
 
     # ---- pacman-style run banner ----
     bar = style.bold_blue("::")
-    print(f"\n{style.bold_blue('╭─')} {style.bold_white('vpn-ui test unit')}")
+    print(f"\n{style.bold_blue('╭─')} {style.bold_white('stargate-ui test unit')}")
     print(f"{bar} distros      {style.cyan(', '.join(s['name'] for s in servers))}")
     print(f"{bar} concurrency  {style.bold(str(cfg['concurrency']))} "
           f"({cfg['concurrency']*3} VMs max at once)")

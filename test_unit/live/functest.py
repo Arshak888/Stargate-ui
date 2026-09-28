@@ -16,7 +16,7 @@ panel holding a disabled client.
 """
 import json, ssl, sys, time, urllib.parse, urllib.request, http.cookiejar
 
-BASE = sys.argv[1] if len(sys.argv) > 1 else "https://vpn-ui.mmd.sh:9090"
+BASE = sys.argv[1] if len(sys.argv) > 1 else "https://stargate-ui.mmd.sh:9090"
 USER = sys.argv[2] if len(sys.argv) > 2 else "a"
 PASS = sys.argv[3] if len(sys.argv) > 3 else "a"
 

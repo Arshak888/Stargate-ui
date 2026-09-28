@@ -4,7 +4,7 @@ set -euo pipefail
 
 REPO="Arshak888/vpn-ui-custom"
 ASSET="stargate-ui-amd64"
-DEST_DIR="/opt/vpn-ui"
+DEST_DIR="/opt/stargate-ui"
 DEST="$DEST_DIR/$ASSET"
 # The DEFAULT systemd unit name, and ONLY a fallback. The operator can rename the
 # service from the panel (settings key systemdServiceName), and `$DEST --systemd`
@@ -12,14 +12,14 @@ DEST="$DEST_DIR/$ASSET"
 # script configure one unit and then restart another. Every systemctl call goes
 # through unit_name() instead; this is what it answers with when there is no binary
 # to ask yet.
-UNIT_FALLBACK="vpn-ui"
-# The management menu (`vpn-ui`, legacy command path). Installed from INSIDE the binary we just placed
+UNIT_FALLBACK="stargate-ui"
+# The management menu (`stargate-ui`, legacy command path). Installed from INSIDE the binary we just placed
 # ($DEST install-menu), never curled from the repo's default branch: that would pin
 # a menu from a different release than the binary it drives.
-MENU="/usr/bin/vpn-ui"
+MENU="/usr/bin/stargate-ui"
 DL_URL="https://github.com/$REPO/releases/latest/download/$ASSET"
 # The panel keeps its SQLite DB next to the binary (exe dir). Backups go beside it.
-DB="$DEST_DIR/vpn-ui.db"
+DB="$DEST_DIR/stargate-ui.db"
 BACKUP_DIR="$DEST_DIR/backups"
 # Real-SSL (Let's Encrypt via acme.sh: Cloudflare DNS-01 or standalone HTTP-01).
 # DEPLOY_DOMAIN / DEPLOY_EMAIL preset these for a non-interactive issuance;
@@ -75,9 +75,9 @@ fmt_time() {
 }
 
 # Real-SSL (Let's Encrypt via acme.sh) lives in ONE place: obtain_letsencrypt_cert
-# in vpn-ui.sh, which is sourced further below once the menu script is installed.
+# in stargate-ui.sh, which is sourced further below once the menu script is installed.
 # It used to be defined here and copied into the menu, which is exactly how two
-# acme.sh flows drift apart. Sourcing (rather than running `vpn-ui ssl`) keeps it
+# acme.sh flows drift apart. Sourcing (rather than running `stargate-ui ssl`) keeps it
 # in THIS shell, so its DOMAIN/EMAIL prompts fill in the variables the completion
 # message below prints.
 
@@ -325,7 +325,7 @@ ok "downloaded $(fmt_bytes "$DL_BYTES") in $(fmt_time "$DL_SECS")  (avg $(fmt_by
 # open — falls back to the default name, so a broken read degrades to the historical
 # behaviour instead of a `systemctl restart ""`.
 #
-# Deliberately NOT named panel_unit: vpn-ui.sh, sourced below for
+# Deliberately NOT named panel_unit: stargate-ui.sh, sourced below for
 # obtain_letsencrypt_cert, defines a panel_unit() of its own that warns and returns
 # non-zero with no fallback. Sourcing would silently replace ours, and this set -e
 # script would then die at the restart on any host whose panel could not be read.
@@ -354,12 +354,12 @@ stop_unit_if_active "$old_unit"
 if [[ "$old_unit" != "$UNIT_FALLBACK" ]]; then
     stop_unit_if_active "$UNIT_FALLBACK"
 fi
-# Also reap a panel launched OUTSIDE systemd (a bare ./vpn-ui): the stop above only
+# Also reap a panel launched OUTSIDE systemd (a bare ./stargate-ui): the stop above only
 # touches the unit, so a hand-launched panel would keep the web + Xray ports bound and
 # collide with the unit we (re)start below. Its orphaned Xray/daemons are then cleared
 # by the fresh panel's own startup reap. Done before the new unit starts, so safe.
 if command -v pkill >/dev/null 2>&1; then
-    pkill -x vpn-ui 2>/dev/null || true
+    pkill -x stargate-ui 2>/dev/null || true
     pkill -x "$(basename "$DEST")" 2>/dev/null || true
 fi
 
@@ -370,7 +370,7 @@ fi
 if [[ "$MODE" == "update" && -f "$DB" ]]; then
     install -d -m 0755 "$BACKUP_DIR"
     ts="$(date +%Y%m%d-%H%M%S)"
-    backup="$BACKUP_DIR/vpn-ui_${OLD_VER:-unknown}_${ts}.db"
+    backup="$BACKUP_DIR/stargate-ui_${OLD_VER:-unknown}_${ts}.db"
     cp -p "$DB" "$backup" || die "DB backup failed ($DB -> $backup) — aborting before replacing the binary."
     for side in wal shm; do
         [[ -f "$DB-$side" ]] && cp -p "$DB-$side" "$backup-$side" || true
@@ -384,22 +384,22 @@ trap - EXIT
 ok "installed -> $DEST"
 
 # Install/refresh the management menu on BOTH paths (fresh install and update), so
-# `vpn-ui` always matches the binary that ships it. Must come before the TLS step
+# `stargate-ui` always matches the binary that ships it. Must come before the TLS step
 # below, which sources the menu for obtain_letsencrypt_cert.
 msg "Installing the ${MENU} management menu"
 # VPNUI_BIN is what the menu (and the sourced SSL function) resolve the panel
 # binary from, so a non-default DEST_DIR carries through instead of falling back to
-# the compiled-in /opt/vpn-ui default.
+# the compiled-in /opt/stargate-ui default.
 export VPNUI_BIN="$DEST"
 if "$DEST" install-menu >/dev/null 2>&1 && [[ -r "$MENU" ]]; then
-    ok "management menu -> ${MENU}  (run: ${TEAL}vpn-ui${R})"
+    ok "management menu -> ${MENU}  (run: ${TEAL}stargate-ui${R})"
     # Bring in obtain_letsencrypt_cert: the single implementation, shared rather
-    # than copied. vpn-ui.sh does nothing at top level when sourced (its menu is
+    # than copied. stargate-ui.sh does nothing at top level when sourced (its menu is
     # behind a sourced/executed guard), so this only defines functions.
-    # shellcheck source=vpn-ui.sh
+    # shellcheck source=stargate-ui.sh
     source "$MENU"
 else
-    warn "could not install ${MENU}, so the 'vpn-ui' menu is unavailable on this host."
+    warn "could not install ${MENU}, so the 'stargate-ui' menu is unavailable on this host."
     # Keep the TLS branch below honest instead of letting an undefined function
     # abort the whole deploy: real SSL simply isn't on offer without the menu.
     obtain_letsencrypt_cert() { warn "real SSL needs ${MENU}, which failed to install. Skipping."; return 1; }
@@ -409,7 +409,7 @@ fi
 # credentials (--random); updates DO NOT, so the operator's existing port, login
 # and web path survive the upgrade.
 if [[ "$MODE" == "install" ]]; then
-    # Optional migration: import an existing 3x-ui (or vpn-ui) backup database before
+    # Optional migration: import an existing 3x-ui (or stargate-ui) backup database before
     # the panel is configured, so an operator moving over keeps their inbounds,
     # clients, traffic and admin logins. The import preserves THIS install's own
     # port/path/TLS/secret, so only the operator's data comes across. This is
@@ -561,7 +561,7 @@ else
     fi
 fi
 if [[ -x "$MENU" ]]; then
-    act "manage:  ${TEAL}vpn-ui${R}  (update, login, start/stop, Xray, SSL)"
+    act "manage:  ${TEAL}stargate-ui${R}  (update, login, start/stop, Xray, SSL)"
 fi
 act "status:  ${TEAL}systemctl status ${unit}${R}"
 act "logs:    ${TEAL}journalctl -u ${unit} -f${R}"

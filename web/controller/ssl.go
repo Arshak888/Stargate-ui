@@ -263,7 +263,7 @@ func (a *SettingController) sslNickname(c *gin.Context) {
 }
 
 // sslAdopt takes a certificate this host is already serving, but that no profile
-// owns, into the store: the deploy.sh / vpn-ui-menu case.
+// owns, into the store: the deploy.sh / stargate-ui-menu case.
 //
 // Super-admin like every other mutation here, and for the sharper reason: it writes
 // the file the webserver will load as its own TLS identity, from a path the caller
@@ -282,7 +282,7 @@ func (a *SettingController) sslAdopt(c *gin.Context) {
 	jsonObj(c, res, nil)
 }
 
-// sslSync takes over every certificate deploy.sh or the vpn-ui.sh menu installed,
+// sslSync takes over every certificate deploy.sh or the stargate-ui.sh menu installed,
 // and retires acme.sh's own scheduler once it has nothing left to renew.
 //
 // A POST and super-admin, because it writes certificate material and can re-point a

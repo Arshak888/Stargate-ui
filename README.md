@@ -1,12 +1,12 @@
 [English](/README.md) | [فارسی](/README_FA.md) | [العربية](/README_AR.md) | [中文](/README_ZH.md) | [Español](/README_ES.md) | [Русский](/README_RU.md) | [Türkçe](/README_TR.md)
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/Sir-MmD/vpn-ui/refs/heads/main/media/logo.png" alt="Stargate UI Logo" width="260">
+  <img src="https://raw.githubusercontent.com/Sir-MmD/stargate-ui/refs/heads/main/media/logo.png" alt="Stargate UI Logo" width="260">
 </p>
 
 This project is an enhanced version of the **[3X-UI](https://github.com/MHSanaei/3x-ui)** panel (version 2.9.3). The goal of this project is to add various protocols and set it up as an all-in-one panel with support for **Xray-core** features.
 
-![Overview](https://raw.githubusercontent.com/Sir-MmD/vpn-ui/refs/heads/main/media/overview.png)
+![Overview](https://raw.githubusercontent.com/Sir-MmD/stargate-ui/refs/heads/main/media/overview.png)
 
 ## New Protocols
 
@@ -56,7 +56,7 @@ the core rather than by a daemon, and they work as **inbounds and outbounds**:
 
 ## Custom Fork Features
 
-This fork extends the upstream VPN-UI with additional account automation, shared credentials, Telegram management, and SSH features:
+This fork extends the upstream STARGATE-UI with additional account automation, shared credentials, Telegram management, and SSH features:
 
 - **Shared VPN credentials across login-based protocols**: SSH, OpenVPN, L2TP, PPTP, IKEv2, SSTP, and OpenConnect can use the same **username and password** for a single account. The account-level credentials are shared across all memberships of that account.
 - **Centralized credential management**: changing a shared VPN username or password from the Web Panel propagates the new credentials to the account's other memberships and keeps the native protocol configuration synchronized.
@@ -73,7 +73,7 @@ This fork extends the upstream VPN-UI with additional account automation, shared
 - **Database-backed Telegram reminder state**: reminder delivery state is persisted so scheduled jobs remain idempotent across repeated runs.
 - **Telegram settings UI fix**: corrected the Telegram CPU control markup in the Web Panel.
 
-> These custom features are maintained in this fork on top of the upstream VPN-UI project. Protocols that use native key, certificate, UUID, secret, or other authentication schemes continue to use their protocol-specific credentials rather than forcing a username/password model.
+> These custom features are maintained in this fork on top of the upstream STARGATE-UI project. Protocols that use native key, certificate, UUID, secret, or other authentication schemes continue to use their protocol-specific credentials rather than forcing a username/password model.
 
 ## Tested Operating Systems
 
@@ -100,13 +100,13 @@ This fork extends the upstream VPN-UI with additional account automation, shared
 ## Installing the Panel
 
 ```bash
-curl -Ls https://raw.githubusercontent.com/Arshak888/vpn-ui-custom/refs/heads/main/deploy.sh | sudo bash
+curl -Ls https://raw.githubusercontent.com/Arshak888/stargate-ui-custom/refs/heads/main/deploy.sh | sudo bash
 ```
 
 ## Uninstalling the Panel
 
 ```bash
-sudo /opt/vpn-ui/vpn-ui-amd64 --uninstall
+sudo /opt/stargate-ui/stargate-ui-amd64 --uninstall
 ```
 
 > [!NOTE]
@@ -121,7 +121,7 @@ flowchart TB
   SSHC["SSH Client<br/>(ssh -D dynamic SOCKS · badvpn-udpgw for UDP)"]
   GREC["Customer Router<br/>(GRE · IP protocol 47 · optional IPsec / FOU)"]
 
-  subgraph PANEL["vpn-ui panel — root process"]
+  subgraph PANEL["stargate-ui panel — root process"]
     PROC["procmgr<br/>supervises the daemons"]
     RAD["in-binary RADIUS<br/>127.0.0.1:1812 auth · :1813 acct"]
     HOOK["OpenVPN hooks<br/>auth / connect / disconnect / evict"]
@@ -231,13 +231,13 @@ flowchart TB
 ## Building from Source
 
 ```bash
-git clone https://github.com/Arshak888/vpn-ui-custom.git && cd vpn-ui-custom
+git clone https://github.com/Arshak888/stargate-ui-custom.git && cd stargate-ui-custom
 ./build.sh
 ```
 
 ## E2E Testing
 
-![E2E Test](https://raw.githubusercontent.com/Sir-MmD/vpn-ui/refs/heads/main/media/test_unit.png)
+![E2E Test](https://raw.githubusercontent.com/Sir-MmD/stargate-ui/refs/heads/main/media/test_unit.png)
 
 A complete **E2E** test written in Python has been designed for this project inside the `test_unit` folder, which you are welcome to use. The steps are as follows:
 

@@ -1006,7 +1006,7 @@ func TestLoginTwoFactorPrompt(t *testing.T) {
 		t.Helper()
 		r := gin.New()
 		// login writes a session, so the store has to be there or it panics.
-		r.Use(sessions.Sessions("vpn-ui", cookie.NewStore([]byte("test-secret"))))
+		r.Use(sessions.Sessions("stargate-ui", cookie.NewStore([]byte("test-secret"))))
 		r.Use(func(c *gin.Context) {
 			c.Set("base_path", "/")
 			c.Set("I18n", func(i18nType locale.I18nType, key string, keyParams ...string) string { return key })
@@ -1023,7 +1023,7 @@ func TestLoginTwoFactorPrompt(t *testing.T) {
 	t.Run("the preflight never claims an account has 2FA", func(t *testing.T) {
 		newIdorFixture(t)
 		r := gin.New()
-		r.Use(sessions.Sessions("vpn-ui", cookie.NewStore([]byte("test-secret"))))
+		r.Use(sessions.Sessions("stargate-ui", cookie.NewStore([]byte("test-secret"))))
 		r.Use(func(c *gin.Context) {
 			c.Set("base_path", "/")
 			c.Set("I18n", func(i18nType locale.I18nType, key string, keyParams ...string) string { return key })

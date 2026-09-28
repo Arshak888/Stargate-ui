@@ -1,4 +1,4 @@
-// Package web provides the main web server implementation for the vpn-ui panel,
+// Package web provides the main web server implementation for the stargate-ui panel,
 // including HTTP/HTTPS serving, routing, templates, and background job scheduling.
 package web
 
@@ -93,7 +93,7 @@ func EmbeddedAssets() embed.FS {
 	return assetsFS
 }
 
-// Server represents the main web server for the vpn-ui panel with controllers, services, and scheduled jobs.
+// Server represents the main web server for the stargate-ui panel with controllers, services, and scheduled jobs.
 type Server struct {
 	httpServer *http.Server
 	listener   net.Listener
@@ -231,7 +231,7 @@ func (s *Server) initRouter() (*gin.Engine, error) {
 		sessionOptions.MaxAge = sessionMaxAge * 60 // minutes -> seconds
 	}
 	store.Options(sessionOptions)
-	engine.Use(sessions.Sessions("vpn-ui", store))
+	engine.Use(sessions.Sessions("stargate-ui", store))
 	engine.Use(func(c *gin.Context) {
 		c.Set("base_path", basePath)
 	})
@@ -331,7 +331,7 @@ func (s *Server) initRouter() (*gin.Engine, error) {
 // jobs) which the panel relies on for periodic maintenance and monitoring.
 func (s *Server) startTask() {
 	// Before ANY Init* below touches the host: work out what on this box was already
-	// here and what vpn-ui put here, and write it down. The Init* calls create netdevs
+	// here and what stargate-ui put here, and write it down. The Init* calls create netdevs
 	// and rewrite shared config files, and the reconcilers that follow delete whatever
 	// they believe is theirs, so the ownership record has to exist first. See
 	// service/ownership.go.
@@ -628,7 +628,7 @@ func (s *Server) Start() (err error) {
 	if hostDisp == "" || hostDisp == "0.0.0.0" || hostDisp == "::" {
 		hostDisp = "0.0.0.0"
 	}
-	fmt.Printf("\nvpn-ui panel listening on %s://%s:%d%s\n\n", scheme, hostDisp, port, basePath)
+	fmt.Printf("\nstargate-ui panel listening on %s://%s:%d%s\n\n", scheme, hostDisp, port, basePath)
 
 	s.httpServer = &http.Server{
 		Handler: engine,

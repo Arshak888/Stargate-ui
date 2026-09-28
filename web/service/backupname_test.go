@@ -20,20 +20,20 @@ var filenameGate = regexp.MustCompile(`^[a-zA-Z0-9_\-.]+$`)
 
 func TestBuildBackupFilenameNothingTicked(t *testing.T) {
 	var s ServerService
-	if got := s.BuildBackupFilename(BackupNameOptions{}, "panel.example.com"); got != "vpn-ui.db" {
-		t.Errorf("all components off = %q; want vpn-ui.db", got)
+	if got := s.BuildBackupFilename(BackupNameOptions{}, "panel.example.com"); got != "stargate-ui.db" {
+		t.Errorf("all components off = %q; want stargate-ui.db", got)
 	}
 }
 
 func TestBuildBackupFilenameComponents(t *testing.T) {
 	var s ServerService
-	date := regexp.MustCompile(`^vpn-ui_\d{8}\.db$`)
+	date := regexp.MustCompile(`^stargate-ui_\d{8}\.db$`)
 	if got := s.BuildBackupFilename(BackupNameOptions{Date: true}, ""); !date.MatchString(got) {
-		t.Errorf("date only = %q; want vpn-ui_<8 digits>.db", got)
+		t.Errorf("date only = %q; want stargate-ui_<8 digits>.db", got)
 	}
-	dateTime := regexp.MustCompile(`^vpn-ui_\d{8}_\d{6}\.db$`)
+	dateTime := regexp.MustCompile(`^stargate-ui_\d{8}_\d{6}\.db$`)
 	if got := s.BuildBackupFilename(BackupNameOptions{Date: true, Time: true}, ""); !dateTime.MatchString(got) {
-		t.Errorf("date+time = %q; want vpn-ui_<date>_<time>.db", got)
+		t.Errorf("date+time = %q; want stargate-ui_<date>_<time>.db", got)
 	}
 }
 
@@ -52,7 +52,7 @@ func TestBuildBackupFilenamePreUpdateIsMultiSlot(t *testing.T) {
 		t.Errorf("%q carries no timestamp, so a second update from this version would overwrite it", got)
 	}
 	// The name is joined onto the backups/ directory, so it must stay inside it.
-	if dir := filepath.Dir(filepath.Join("/opt/vpn-ui", got)); dir != "/opt/vpn-ui" {
+	if dir := filepath.Dir(filepath.Join("/opt/stargate-ui", got)); dir != "/opt/stargate-ui" {
 		t.Errorf("%q escapes its directory (resolved to %q)", got, dir)
 	}
 }

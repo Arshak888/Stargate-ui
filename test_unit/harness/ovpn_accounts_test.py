@@ -66,14 +66,14 @@ def load_cfg() -> dict:
 
 def server_dump(server_exec, iid: int, transport: str) -> str:
     """Everything needed to explain a failed connect, in one blob."""
-    d = f"/usr/local/vpn-ui/openvpn/{iid}"
+    d = f"/usr/local/stargate-ui/openvpn/{iid}"
     cmds = [
         ("status", f"cat {d}/status-{transport}.log 2>/dev/null | head -30"),
         ("blocks", f"for f in {d}/blocks-{transport}/*; do echo \"== $f\"; cat $f; done 2>/dev/null"),
         ("leases", f"ls -l {d}/leases-{transport}/ 2>/dev/null"),
         ("ccd", f"ls -l {d}/ccd-{transport}/ 2>/dev/null"),
         ("ovpn-conf", f"grep -E 'client-config-dir|duplicate-cn|username-as-common-name|server |max-clients|verify-client-cert|client-connect|auth-user-pass-verify' {d}/server-{transport}.conf 2>/dev/null"),
-        ("panel-log", "tail -n 60 /var/log/vpn-ui/vpn-ui.log 2>/dev/null"),
+        ("panel-log", "tail -n 60 /var/log/stargate-ui/stargate-ui.log 2>/dev/null"),
         ("ovpn-proc", "ps ax | grep -c '[o]penvpn --config' ; true"),
     ]
     out = []

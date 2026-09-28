@@ -13,7 +13,7 @@ import (
 // ---------------------------------------------------------------------------
 // The IP validator.
 //
-// The table is the one from ssl_ip_valid_v4 / _v6 in vpn-ui.sh:289-346, so the
+// The table is the one from ssl_ip_valid_v4 / _v6 in stargate-ui.sh:289-346, so the
 // panel and the installer cannot drift apart on what is worth spending a
 // validation attempt on.
 // ---------------------------------------------------------------------------

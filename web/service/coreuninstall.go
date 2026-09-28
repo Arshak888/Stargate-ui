@@ -246,7 +246,7 @@ func (s *CoreService) runCoreUninstall(selected []string, emit func(ProvisionSte
 	// Everything deliberately left in place, from any step, with the reason. The
 	// manifest-driven steps below add to it as well as the shared-feature step, so
 	// an operator can see in one list both "IPsec stayed because L2TP needs it" and
-	// "your /etc/ocserv stayed because it was here before vpn-ui was".
+	// "your /etc/ocserv stayed because it was here before stargate-ui was".
 	var kept []string
 
 	// 1. Stop the daemons first, so nothing is executing from a path about to be
@@ -330,7 +330,7 @@ func (s *CoreService) runCoreUninstall(selected []string, emit func(ProvisionSte
 	//     PSKs we replaced), /etc/swanctl/swanctl.conf we truncated to a single
 	//     `include` line, /etc/strongswan.conf we rewrote outright. Uninstall used to
 	//     leave our render behind (or delete the file), so the operator's own IPsec
-	//     never worked again. Each one was copied to /etc/vpn-ui/backups/ before the
+	//     never worked again. Each one was copied to /etc/stargate-ui/backups/ before the
 	//     first overwrite; this puts the copy back.
 	var restored []string
 	for _, p := range sharedHostFilePaths() {
@@ -354,7 +354,7 @@ func (s *CoreService) runCoreUninstall(selected []string, emit func(ProvisionSte
 	// 2c. Reversible host state that is not a file: the systemd units we disabled to
 	//     take a daemon over, and the NIC offload GRE's FOU mode turned off. Both
 	//     were one-way changes with nothing recorded, so a host that had its own
-	//     xl2tpd or ocserv running before vpn-ui never got it back.
+	//     xl2tpd or ocserv running before stargate-ui never got it back.
 	if line := restoreDisabledUnits(selected, emit); line != "" {
 		kept = append(kept, line)
 	}
@@ -399,15 +399,15 @@ func (s *CoreService) runCoreUninstall(selected []string, emit func(ProvisionSte
 	//    NOT rmmod'd: unloading a live module can drop unrelated traffic, and it
 	//    buys nothing that the next boot does not.
 	if len(remaining) == 0 {
-		emit(ProvisionStep{Name: "persist /etc/modules-load.d/vpn-ui.conf", OK: true,
-			Msg: removedMsg(removeIfPresent("/etc/modules-load.d/vpn-ui.conf"))})
+		emit(ProvisionStep{Name: "persist /etc/modules-load.d/stargate-ui.conf", OK: true,
+			Msg: removedMsg(removeIfPresent("/etc/modules-load.d/stargate-ui.conf"))})
 
 		// 5b. The last core is gone, so the host-wide data-plane settings have nobody
 		//     left to serve. Neither of these was ever undone by a per-core uninstall,
-		//     so a host kept a vpn-ui sysctl drop-in and loose rp_filter forever after
+		//     so a host kept a stargate-ui sysctl drop-in and loose rp_filter forever after
 		//     the last protocol was removed.
-		if gone, left := ownReleasePath("/etc/sysctl.d/99-vpn-ui.conf", selected); gone != "" {
-			emit(ProvisionStep{Name: "remove /etc/sysctl.d/99-vpn-ui.conf", OK: true, Msg: gone})
+		if gone, left := ownReleasePath("/etc/sysctl.d/99-stargate-ui.conf", selected); gone != "" {
+			emit(ProvisionStep{Name: "remove /etc/sysctl.d/99-stargate-ui.conf", OK: true, Msg: gone})
 		} else if left != "" {
 			kept = append(kept, left)
 		}
@@ -421,8 +421,8 @@ func (s *CoreService) runCoreUninstall(selected []string, emit func(ProvisionSte
 				mods = append(mods, m)
 			}
 		}
-		err := os.WriteFile("/etc/modules-load.d/vpn-ui.conf", []byte(strings.Join(dedupe(mods), "\n")+"\n"), 0644)
-		emit(ProvisionStep{Name: "persist /etc/modules-load.d/vpn-ui.conf", OK: err == nil,
+		err := os.WriteFile("/etc/modules-load.d/stargate-ui.conf", []byte(strings.Join(dedupe(mods), "\n")+"\n"), 0644)
+		emit(ProvisionStep{Name: "persist /etc/modules-load.d/stargate-ui.conf", OK: err == nil,
 			Msg: msgOrOK(err)})
 	}
 
@@ -463,7 +463,7 @@ func (s *CoreService) runCoreUninstall(selected []string, emit func(ProvisionSte
 // migrateFromSystemd runs `systemctl disable --now` on openvpn-server@*, xl2tpd,
 // pptpd and ipsec, and nothing distinguished the units WE generated from the
 // distro's own. On a host that was already running its own xl2tpd, installing any
-// core stopped it for good: uninstalling vpn-ui afterwards did not bring it back
+// core stopped it for good: uninstalling stargate-ui afterwards did not bring it back
 // because nothing had recorded that it was ever running. Each disable is now
 // recorded with the unit's enabled/active state; this replays it.
 //
@@ -660,7 +660,7 @@ func removeFeature(feat string) ProvisionStep {
 		}
 		// /etc/strongswan.conf is a HOST file: charon.go rewrites it wholesale, so on
 		// a box with its own strongSwan we replaced their configuration. Released
-		// through the manifest, which restores their copy from /etc/vpn-ui/backups/
+		// through the manifest, which restores their copy from /etc/stargate-ui/backups/
 		// instead of deleting the file.
 		if gone, _ := ownReleasePath("/etc/strongswan.conf", []string{"ikev2", "l2tp"}); gone != "" {
 			removed = append(removed, gone)
@@ -742,7 +742,7 @@ func removeIfPresent(path string) bool {
 }
 
 // removeDirIfEmpty deletes a directory only when nothing is left in it. Used for
-// the roots two features share (/usr/libexec/vpn-ui holds both the pppd bundle
+// the roots two features share (/usr/libexec/stargate-ui holds both the pppd bundle
 // and the pptpctrl link), so whichever feature is removed last takes the
 // directory and neither takes it early.
 func removeDirIfEmpty(path string) bool {
@@ -766,7 +766,7 @@ func unlinkIfPointsAt(link, wantTarget string) bool {
 // unlinkAny removes a path only when it is a symlink.
 //
 // ONLY SAFE FOR A PATH INSIDE OUR OWN TREE, which today means PptpCtrlLink under
-// /usr/libexec/vpn-ui. It used to be applied to /usr/lib/ipsec and
+// /usr/libexec/stargate-ui. It used to be applied to /usr/lib/ipsec and
 // /usr/lib/accel-ppp as well, where a symlink can just as easily be the
 // operator's own (to their strongSwan or accel-ppp module tree) and removing it
 // broke their installation; those two now go through unlinkIfPointsAt, which

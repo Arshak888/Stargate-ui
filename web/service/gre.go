@@ -754,7 +754,7 @@ func (s *GreService) ensureGretun(name string, want *netlink.Gretun, mtu int) er
 		// before us is the operator's, however improbable the collision. Refuse rather
 		// than recreate it: the recreate path below is a LinkDel.
 		if ownForbidsDelete(ownIface, name) {
-			return fmt.Errorf("%s already exists and was not created by vpn-ui; not touching it", name)
+			return fmt.Errorf("%s already exists and was not created by stargate-ui; not touching it", name)
 		}
 		// Recreate only when an addressing-relevant attribute actually changed, so an
 		// unrelated edit never drops a live tunnel.

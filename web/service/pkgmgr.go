@@ -14,7 +14,7 @@ import (
 )
 
 // packageManager abstracts the host's package manager. It's used for the one
-// VPN dependency that can't be baked into the vpn-ui binary — libreswan (the
+// VPN dependency that can't be baked into the stargate-ui binary — libreswan (the
 // IPsec daemon for L2TP/IPsec), whose pluto + NSS crypto don't relocate
 // reliably. Everything else (xl2tpd, openvpn, pptpd, pppd) ships in the binary.
 type packageManager struct {
@@ -82,7 +82,7 @@ func (pm *packageManager) installPackage(pkg string) (string, error) {
 	// we left it" apart from "we installed libreswan, remove it yourself if nothing
 	// else needs it", which are very different pieces of advice.
 	if pm.packageInstalled(pkg) {
-		ownNote(ownPackage, pkg, "", "already installed on this host before vpn-ui")
+		ownNote(ownPackage, pkg, "", "already installed on this host before stargate-ui")
 	} else {
 		ownClaim(ownPackage, pkg, "")
 	}
@@ -447,7 +447,7 @@ func isModuleDisableCommand(cmd string) bool {
 //   - `blacklist <mod>` (Fedora/RHEL ship /etc/modprobe.d/<mod>-blacklist.conf for
 //     the L2TP modules): kmod's deny-list makes systemd-modules-load SKIP the module
 //     (journal: "Module '<mod>' is deny-listed (by kmod)"), so the entries in
-//     /etc/modules-load.d/vpn-ui.conf never load on boot and L2TP stays down after a
+//     /etc/modules-load.d/stargate-ui.conf never load on boot and L2TP stays down after a
 //     reboot until setup is re-run (an explicit modprobe bypasses the deny-list).
 //   - `install <mod> /bin/false` (RHEL/CIS hardening form): replaces the load with a
 //     no-op, blocking BOTH systemd-modules-load and an explicit modprobe.
@@ -487,11 +487,11 @@ func unblacklistVpnModules() (cleared []string, log string) {
 				f := strings.Fields(ln)
 				switch {
 				case len(f) >= 2 && f[0] == "blacklist" && need[f[1]]:
-					lines[i] = "# " + ln + "    # vpn-ui: required VPN module"
+					lines[i] = "# " + ln + "    # stargate-ui: required VPN module"
 					modified = true
 					clear(f[1])
 				case len(f) >= 3 && f[0] == "install" && need[f[1]] && isModuleDisableCommand(f[2]):
-					lines[i] = "# " + ln + "    # vpn-ui: required VPN module"
+					lines[i] = "# " + ln + "    # stargate-ui: required VPN module"
 					modified = true
 					clear(f[1])
 				}

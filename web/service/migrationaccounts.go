@@ -688,7 +688,7 @@ func extractAccountCredential(account *model.Account, entry map[string]any, prot
 // ensurePreMigrationBackup takes ONE tagged snapshot before the first pass.
 //
 // Deliberately not SettingService.backupPanelDB: that one is best-effort and
-// single-slot (vpn-ui_<version>.db), so a second upgrade from the same version
+// single-slot (stargate-ui_<version>.db), so a second upgrade from the same version
 // silently overwrites the only copy you would want back.
 func (s *AccountService) ensurePreMigrationBackup() (string, error) {
 	var settingService SettingService
@@ -714,7 +714,7 @@ func (s *AccountService) ensurePreMigrationBackup() (string, error) {
 			_, _ = sqlDB.Exec("PRAGMA wal_checkpoint(TRUNCATE)")
 		}
 	}
-	dst := filepath.Join(dir, fmt.Sprintf("vpn-ui_pre-accounts_%s.db", time.Now().Format("20060102-150405")))
+	dst := filepath.Join(dir, fmt.Sprintf("stargate-ui_pre-accounts_%s.db", time.Now().Format("20060102-150405")))
 	if err := CopyFile(dbPath, dst); err != nil {
 		return "", fmt.Errorf("%s -> %s: %w", dbPath, dst, err)
 	}

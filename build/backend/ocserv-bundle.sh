@@ -163,7 +163,7 @@ cd "openconnect-${OPENCONNECT_VER}"
 # pptpd's --sbindir gets, so the binary behaves even if a caller forgets --script.
 ./configure \
     --prefix=/usr \
-    --with-vpnc-script=/usr/libexec/vpn-ui/vpnc-script \
+    --with-vpnc-script=/usr/libexec/stargate-ui/vpnc-script \
     --without-openssl \
     --disable-nls --disable-shared --enable-static \
     --without-libproxy --without-stoken --without-libpskc \

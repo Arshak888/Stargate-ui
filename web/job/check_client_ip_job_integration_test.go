@@ -15,7 +15,7 @@ import (
 	"github.com/op/go-logging"
 )
 
-// vpn-ui logger must be initialised once before any code path that can
+// stargate-ui logger must be initialised once before any code path that can
 // log a warning. otherwise log.Warningf panics on a nil logger.
 var loggerInitOnce sync.Once
 
@@ -36,7 +36,7 @@ func setupIntegrationDB(t *testing.T) {
 	t.Setenv("VPNUI_DB_FOLDER", dbDir)
 	t.Setenv("VPNUI_LOG_FOLDER", logDir)
 
-	if err := database.InitDB(filepath.Join(dbDir, "vpn-ui.db")); err != nil {
+	if err := database.InitDB(filepath.Join(dbDir, "stargate-ui.db")); err != nil {
 		t.Fatalf("database.InitDB failed: %v", err)
 	}
 	// LIFO cleanup order: this runs before t.TempDir's own cleanup.

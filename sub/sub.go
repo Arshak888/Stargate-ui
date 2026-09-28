@@ -1,4 +1,4 @@
-// Package sub provides subscription server functionality for the vpn-ui panel,
+// Package sub provides subscription server functionality for the stargate-ui panel,
 // including HTTP/HTTPS servers for serving subscription links and JSON configurations.
 package sub
 

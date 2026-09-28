@@ -100,7 +100,7 @@ func (a *SettingController) initRouter(g *gin.RouterGroup) {
 	// so it sits on the same super-admin gate as everything else that mutates here.
 	g.POST("/ssl/delete-profile", requireSuperAdmin(), a.sslDeleteProfile)
 	g.POST("/ssl/adopt", requireSuperAdmin(), a.sslAdopt)
-	// Taking over what deploy.sh and vpn-ui.sh installed. Writes certificate
+	// Taking over what deploy.sh and stargate-ui.sh installed. Writes certificate
 	// material and can re-point a listener, so it takes the same gate as issuing.
 	g.POST("/ssl/sync", requireSuperAdmin(), a.sslSync)
 	g.POST("/ssl/auto-renew", requireSuperAdmin(), a.sslAutoRenew)

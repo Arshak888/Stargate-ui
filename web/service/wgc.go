@@ -523,7 +523,7 @@ func (s *WgcService) ensureLink(iface string, mtu int, blockNet net.IP, prefix i
 	} else if ownForbidsDelete(ownIface, iface) {
 		// A device with our exact generated name that the manifest says predates us. We
 		// would otherwise adopt it, rewrite its addresses and eventually delete it.
-		return fmt.Errorf("%s already exists and was not created by vpn-ui; not touching it", iface)
+		return fmt.Errorf("%s already exists and was not created by stargate-ui; not touching it", iface)
 	}
 	if blockNet != nil {
 		v4 := blockNet.To4()

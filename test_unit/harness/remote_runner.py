@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Remote scenario runner — drives the LIVE vpn-ui panel on a remote server plus
+"""Remote scenario runner — drives the LIVE stargate-ui panel on a remote server plus
 local incus client VMs to test, over real WAN, for openvpn / l2tp-raw /
 l2tp-ipsec / pptp:
 
@@ -15,7 +15,7 @@ live box your network may not reach pptp — run protocols individually there.
 
 Client VMs: cA=deb11 cB=deb13 cC=deb12 (all apt, behind one host NAT -> share a
 public IP = realistic multi-device-behind-NAT test). Server signals are read over
-ssh (unit = vpn-ui; RADIUS logs at INFO show in journalctl).
+ssh (unit = stargate-ui; RADIUS logs at INFO show in journalctl).
 """
 from __future__ import annotations
 
@@ -106,7 +106,7 @@ def server_exec(cmd):
 
 def journal_since(pattern, secs=50, extra=""):
     _, out, _ = server_exec(
-        f'journalctl -u vpn-ui --no-pager --since "-{secs} seconds" 2>/dev/null '
+        f'journalctl -u stargate-ui --no-pager --since "-{secs} seconds" 2>/dev/null '
         f'| grep {extra} "{pattern}" | tail -3')
     return out.strip()
 

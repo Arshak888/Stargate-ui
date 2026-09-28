@@ -37,7 +37,7 @@ _TEMPLATE = r"""<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>vpn-ui test unit report</title>
+<title>stargate-ui test unit report</title>
 <style>
   :root{
     --bg:#0f1115; --panel:#171a21; --line:#252a34; --fg:#e6e9ef; --muted:#9aa4b2;
@@ -81,7 +81,7 @@ _TEMPLATE = r"""<!doctype html>
 </head>
 <body>
 <header>
-  <h1>vpn-ui test unit report</h1>
+  <h1>stargate-ui test unit report</h1>
   <div class="meta" id="meta"></div>
 </header>
 <div class="wrap">

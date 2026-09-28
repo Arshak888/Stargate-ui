@@ -419,7 +419,7 @@ func TestSSLAcmeOpArgsRejectsUnknownOp(t *testing.T) {
 // The failure gate: on the fullchain FILE, never on the domain directory.
 // acme.sh creates the directory (and a domain key inside it) even when validation
 // fails, so its presence proves nothing. Gating on the directory let a failed
-// issuance march into --install-cert (vpn-ui.sh:663-681).
+// issuance march into --install-cert (stargate-ui.sh:663-681).
 func TestSSLAcmeIssuedChainPathGatesOnTheFile(t *testing.T) {
 	root := t.TempDir()
 	d := newSSLAcmeDriver(root)

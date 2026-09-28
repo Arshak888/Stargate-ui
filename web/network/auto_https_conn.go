@@ -1,4 +1,4 @@
-// Package network provides network utilities for the vpn-ui web panel,
+// Package network provides network utilities for the stargate-ui web panel,
 // including automatic HTTP to HTTPS redirection functionality.
 package network
 

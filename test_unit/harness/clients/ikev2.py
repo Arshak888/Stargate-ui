@@ -1,6 +1,6 @@
 """IKEv2/IPsec client (strongSwan `charon` + `swanctl`) — eap-mschapv2 / psk / eap-tls.
 
-The vpn-ui server runs ONE shared strongSwan charon on UDP 500/4500 serving every
+The stargate-ui server runs ONE shared strongSwan charon on UDP 500/4500 serving every
 ikev2 inbound. The CLIENT here is strongSwan too, driven via swanctl (the modern
 VICI/charon-systemd interface, not the legacy `ipsec` stroke one used by
 clients/l2tp.py's IPsec mode). connect() picks the auth blocks from inbound.auth_mode:
@@ -37,7 +37,7 @@ SERVER-CA TRUST
 ---------------
 The server presents a self-signed leaf; the client must trust the CA that signed it.
 server_setup captured that CA (the `caCert` from POST /generate-ikev2-cert) onto the
-Inbound. We write it into swanctl's CA dir `/etc/swanctl/x509ca/vpn-ui-ca-<id>.pem`
+Inbound. We write it into swanctl's CA dir `/etc/swanctl/x509ca/stargate-ui-ca-<id>.pem`
 and `swanctl --load-all` (which runs --load-creds, loading x509ca/) trusts it. We use a
 PER-INBOUND filename and NEVER flush the dir, so across the multi-inbound test the dir
 ACCUMULATES every inbound's CA — the one shared charon may present any inbound's leaf,
@@ -166,7 +166,7 @@ def _auth_blocks(inbound, acct, remote_id):
             (getattr(inbound, "client_key", "") or "", "/etc/swanctl/private/client.key", "0600"),
         ]
         if ca:
-            pushes.append((ca, f"/etc/swanctl/x509ca/vpn-ui-ca-{inbound.inbound_id}.pem", "0644"))
+            pushes.append((ca, f"/etc/swanctl/x509ca/stargate-ui-ca-{inbound.inbound_id}.pem", "0644"))
         return local, remote_pubkey, "", pushes
 
     # default: eap-mschapv2 (username via eap_id, password in the secrets block; server
@@ -185,7 +185,7 @@ def _auth_blocks(inbound, acct, remote_id):
         "    }\n"
         "}"
     )
-    pushes = [(ca, f"/etc/swanctl/x509ca/vpn-ui-ca-{inbound.inbound_id}.pem", "0644")] if ca else []
+    pushes = [(ca, f"/etc/swanctl/x509ca/stargate-ui-ca-{inbound.inbound_id}.pem", "0644")] if ca else []
     return local, remote_pubkey, secrets, pushes
 
 # strongswan.conf drop-in (read at charon startup; /etc/strongswan.conf includes
@@ -270,7 +270,7 @@ def connect(client: Client, inbound, which: str,
             .replace("@@SECRETS@@", secrets_b)
             .replace("@@IFID@@", IF_ID))
     client.push(conf, "/etc/swanctl/swanctl.conf", mode="0600")
-    client.push(_STRONGSWAN_DROPIN, "/etc/strongswan.d/99-vpn-ui-client.conf")
+    client.push(_STRONGSWAN_DROPIN, "/etc/strongswan.d/99-stargate-ui-client.conf")
     for content, path, mode in pushes:
         if content:
             client.push(content, path, mode=mode)

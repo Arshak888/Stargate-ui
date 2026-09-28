@@ -23,9 +23,9 @@ import (
 
 // The panel's logger is a package global that stays nil until InitLogger runs,
 // and a reload logs. Point the file backend at a temporary directory so the run
-// does not need /var/log/vpn-ui.
+// does not need /var/log/stargate-ui.
 func TestMain(m *testing.M) {
-	logDir, err := os.MkdirTemp("", "vpn-ui-cert-reload")
+	logDir, err := os.MkdirTemp("", "stargate-ui-cert-reload")
 	if err == nil {
 		os.Setenv("VPNUI_LOG_FOLDER", logDir)
 	}
@@ -66,7 +66,7 @@ func generateSelfSigned(t *testing.T, serial int64) certPair {
 	}
 	tmpl := &x509.Certificate{
 		SerialNumber:          big.NewInt(serial),
-		Subject:               pkix.Name{CommonName: "vpn-ui cert reload test"},
+		Subject:               pkix.Name{CommonName: "stargate-ui cert reload test"},
 		NotBefore:             time.Now().Add(-time.Hour),
 		NotAfter:              time.Now().Add(24 * time.Hour),
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,

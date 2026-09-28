@@ -16,7 +16,7 @@ import (
 )
 
 // Importing a stock 3x-ui database is a wholesale swap, not a row-by-row merge:
-// vpn-ui's schema is a strict superset of stock 3x-ui, and InitDB already carries
+// stargate-ui's schema is a strict superset of stock 3x-ui, and InitDB already carries
 // the adopt migrations (promote the lone admin to super admin, adopt ownerless
 // inbounds, move global 2FA onto the user) that turn a single-admin stock DB into
 // this fork's model. So the whole file replaces the current one and InitDB does
@@ -44,7 +44,7 @@ var preservedSettingKeys = []string{
 }
 
 // vpnRangeProtocols are the tunnelled protocols that own per-inbound /24 ranges.
-// After importing a vpn-ui backup that carries them, the ranges are re-normalized
+// After importing a stargate-ui backup that carries them, the ranges are re-normalized
 // so ownership is non-overlapping on this host. A no-op for a stock 3x-ui backup,
 // which has none of these inbounds.
 var vpnRangeProtocols = []string{"l2tp", "pptp", "openvpn", "openconnect", "sstp", "ikev2", "wg-c", "awg", "gre"}
@@ -66,7 +66,7 @@ type ImportReport struct {
 	PreservedSettings []string `json:"preservedSettings"`
 }
 
-// ImportForeignDB replaces the current database with an uploaded 3x-ui (or vpn-ui)
+// ImportForeignDB replaces the current database with an uploaded 3x-ui (or stargate-ui)
 // backup, preserving this panel's reachability/identity settings (see
 // preservedSettingKeys). activate regenerates daemon configs and restarts Xray; a
 // fresh CLI install passes false because the panel is not running yet and its own

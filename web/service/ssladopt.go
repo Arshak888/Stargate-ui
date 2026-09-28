@@ -15,11 +15,11 @@ import (
 
 // Certificates this panel is serving but does not manage, and how to take them over.
 //
-// deploy.sh and the vpn-ui menu have their own real-SSL path (vpn-ui.sh's
+// deploy.sh and the stargate-ui menu have their own real-SSL path (stargate-ui.sh's
 // obtain_letsencrypt_cert). It predates the certificate store and works completely
 // outside it: acme.sh runs from $HOME/.acme.sh, installs the pair to
 // <exe dir>/cert/{fullchain.pem,privkey.pem}, points the panel there with
-// `vpn-ui cert`, and leaves acme.sh's OWN cron to renew it. Everything works, and
+// `stargate-ui cert`, and leaves acme.sh's OWN cron to renew it. Everything works, and
 // the SSL page reports "the panel is NOT using the managed certificate", because
 // strictly it is not.
 //
@@ -36,7 +36,7 @@ import (
 // acme.sh's cron is a separate, explicit action (StopLegacyRenewal), because the
 // same cron may still be renewing domains that were never adopted.
 
-// sslLegacyPairName is what vpn-ui.sh's --install-cert writes.
+// sslLegacyPairName is what stargate-ui.sh's --install-cert writes.
 const (
 	sslLegacyCertName = "fullchain.pem"
 	sslLegacyKeyName  = "privkey.pem"
@@ -122,7 +122,7 @@ func DetectAdoptableCertificates() []SSLAdoptable {
 		{
 			filepath.Join(certDir, sslLegacyCertName),
 			filepath.Join(certDir, sslLegacyKeyName),
-			"installed by deploy.sh / the vpn-ui menu",
+			"installed by deploy.sh / the stargate-ui menu",
 		},
 	}
 

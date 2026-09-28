@@ -16,7 +16,7 @@ import (
 	"github.com/goccy/go-json"
 )
 
-// The certificate an ocserv inbound on another vpn-ui actually handed out before the
+// The certificate an ocserv inbound on another stargate-ui actually handed out before the
 // generator learned to set a SAN: self-issued, CA:FALSE, CN a description rather than
 // an address, no subjectAltName. Kept verbatim because the golden pin below was
 // verified twice against it outside this package: once with
@@ -513,7 +513,7 @@ func TestSstpOutProxyReachesThePtyCommand(t *testing.T) {
 	d := &sstpOutDriver{}
 	s := &sstpOutSettings{Server: "vpn.example.com", Username: "u", Password: "p",
 		Proxy: "http://pu:pp@10.0.0.1:3128"}
-	got := d.ptyCommand("/usr/bin/sstpc", "vpn1", "/etc/vpn-ui-sstp-out/vpn1/ca.pem", s)
+	got := d.ptyCommand("/usr/bin/sstpc", "vpn1", "/etc/stargate-ui-sstp-out/vpn1/ca.pem", s)
 	if !strings.Contains(got, "--proxy 'http://pu:pp@10.0.0.1:3128'") {
 		t.Fatalf("the proxy is not passed to sstpc: %s", got)
 	}
@@ -525,7 +525,7 @@ func TestSstpOutProxyReachesThePtyCommand(t *testing.T) {
 
 	bare := *s
 	bare.Proxy = ""
-	if strings.Contains(d.ptyCommand("/usr/bin/sstpc", "vpn1", "/etc/vpn-ui-sstp-out/vpn1/ca.pem", &bare), "--proxy") {
+	if strings.Contains(d.ptyCommand("/usr/bin/sstpc", "vpn1", "/etc/stargate-ui-sstp-out/vpn1/ca.pem", &bare), "--proxy") {
 		t.Fatal("a tunnel with no proxy is given --proxy anyway")
 	}
 	// The idempotence key is a hash of the whole settings struct, so the proxy is

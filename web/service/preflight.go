@@ -36,7 +36,7 @@ func preflightFile(path string) *coreHostConflict {
 		return nil
 	}
 	return &coreHostConflict{Kind: ownFile, What: path,
-		Detail: "already present; vpn-ui will replace it and keep a copy in " + ownershipBackupDir}
+		Detail: "already present; stargate-ui will replace it and keep a copy in " + ownershipBackupDir}
 }
 
 // preflightDir reports a config directory the core will write into.
@@ -46,7 +46,7 @@ func preflightDir(path string) *coreHostConflict {
 		return nil
 	}
 	return &coreHostConflict{Kind: ownDir, What: path,
-		Detail: "already exists; vpn-ui will add its own files inside it and never remove the directory"}
+		Detail: "already exists; stargate-ui will add its own files inside it and never remove the directory"}
 }
 
 // preflightUnit reports a distro service the panel will stop and disable so it
@@ -66,7 +66,7 @@ func preflightUnit(unit string) *coreHostConflict {
 		state = "running"
 	}
 	return &coreHostConflict{Kind: ownUnit, What: unit,
-		Detail: state + "; vpn-ui will stop and disable it so the panel can run this daemon, and re-enable it on uninstall"}
+		Detail: state + "; stargate-ui will stop and disable it so the panel can run this daemon, and re-enable it on uninstall"}
 }
 
 // preflightIfaces reports the operator's own netdevs that share a protocol's
@@ -96,7 +96,7 @@ func preflightIfaces(core string) []coreHostConflict {
 			continue
 		}
 		out = append(out, coreHostConflict{Kind: ownIface, What: name,
-			Detail: "your own interface; vpn-ui will not touch it"})
+			Detail: "your own interface; stargate-ui will not touch it"})
 	}
 	return out
 }
@@ -138,7 +138,7 @@ func hostConflictsFor(core string) []coreHostConflict {
 		// than named. An enabled instance is the operator's own server.
 		if matches, _ := filepath.Glob("/etc/openvpn/server/*.conf"); len(matches) > 0 {
 			out = append(out, coreHostConflict{Kind: ownFile, What: "/etc/openvpn/server/*.conf",
-				Detail: "the distro's own OpenVPN server configs; vpn-ui neither reads nor removes them"})
+				Detail: "the distro's own OpenVPN server configs; stargate-ui neither reads nor removes them"})
 		}
 	case "openconnect":
 		add(preflightDir("/etc/ocserv"))

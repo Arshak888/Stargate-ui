@@ -10,10 +10,10 @@ import (
 
 // Taking over what the shell flows installed, without asking.
 //
-// WHY THIS IS AUTOMATIC NOW. deploy.sh and the vpn-ui.sh menu both end their TLS
-// path the same way (vpn-ui.sh:709-717): acme.sh issues into ~/.acme.sh/<domain>,
+// WHY THIS IS AUTOMATIC NOW. deploy.sh and the stargate-ui.sh menu both end their TLS
+// path the same way (stargate-ui.sh:709-717): acme.sh issues into ~/.acme.sh/<domain>,
 // --install-cert copies the pair to <dbdir>/cert/{fullchain,privkey}.pem, and
-// `vpn-ui cert -webCert` points the panel at those two files. That is a perfectly
+// `stargate-ui cert -webCert` points the panel at those two files. That is a perfectly
 // good certificate which the panel could see but did not own, so the manager used
 // to list it as "not managed here" behind a Take over button, and separately
 // warned that acme.sh had its own cron. Two pieces of homework for a state the

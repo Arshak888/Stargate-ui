@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// supportedDistros is the hard-coded list of distros vpn-ui is actually tested on
+// supportedDistros is the hard-coded list of distros stargate-ui is actually tested on
 // — the test_unit E2E matrix (test_unit/config.toml). Key = /etc/os-release ID,
 // value = tested MAJOR versions. A nil value means a rolling release (any version).
 // Keep this in sync with the test matrix.
@@ -50,7 +50,7 @@ func distroSupportedBy(id, versionID string) (ok bool, reason string) {
 	return false, fmt.Sprintf("%s %s is untested (tested: %s)", id, major, strings.Join(majors, "/"))
 }
 
-// DistroSupported reports whether the running host is on vpn-ui's tested distro
+// DistroSupported reports whether the running host is on stargate-ui's tested distro
 // list, along with the pretty host name and (when unsupported) a short reason.
 func DistroSupported() (ok bool, pretty, reason string) {
 	ok, reason = distroSupportedBy(osReleaseField("ID"), osReleaseField("VERSION_ID"))

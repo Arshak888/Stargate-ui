@@ -1,9 +1,9 @@
 """`--uninstall` CLI switch E2E (server VM only — full teardown assertion).
 
-`vpn-ui --uninstall --yes` reverses everything the panel installs: it stops and
-removes the systemd unit `vpn-ui.service`, kills the VPN daemons
+`stargate-ui --uninstall --yes` reverses everything the panel installs: it stops and
+removes the systemd unit `stargate-ui.service`, kills the VPN daemons
 (openvpn/xl2tpd/pptpd/pluto), deletes the nft table `ip vpn`, removes the /etc
-configs, the bundle trees under /usr/libexec/vpn-ui, the fwmark-1/table-100
+configs, the bundle trees under /usr/libexec/stargate-ui, the fwmark-1/table-100
 policy routing, logs, the sibling `bin/` dir, the DB, and finally the binary file
 itself. It deliberately KEEPS distro packages (libreswan/nftables/iproute2 +
 kernel modules) — printing them as "remove manually" — and cannot reverse the
@@ -11,7 +11,7 @@ GRUB boot-default pin / modprobe un-blacklist edits (also flagged in stdout).
 `--yes` skips the interactive confirm.
 
 Runs LAST, after systemd: at entry the panel is live under the installed
-`vpn-ui.service` unit. This phase asserts the install is present, runs the
+`stargate-ui.service` unit. This phase asserts the install is present, runs the
 uninstall, then asserts the host is left clean.
 """
 from __future__ import annotations
@@ -24,14 +24,14 @@ from .model import (SubTest, Status, PHASE_UNINSTALL, PHASE_SYSTEMD,
 from .panel import Panel
 
 # Reuse the server-side binary path the core-init/systemd phases push to.
-UNIT_FILE = "/etc/systemd/system/vpn-ui.service"
-LIBEXEC = "/usr/libexec/vpn-ui"
+UNIT_FILE = "/etc/systemd/system/stargate-ui.service"
+LIBEXEC = "/usr/libexec/stargate-ui"
 BIN_DIR = provision.REMOTE_DIR + "/bin"
-DB_FILE = provision.REMOTE_DIR + "/vpn-ui.db"
+DB_FILE = provision.REMOTE_DIR + "/stargate-ui.db"
 ETC_CONFIGS = [
-    "/etc/vpn-ui",
-    "/etc/sysctl.d/99-vpn-ui.conf",
-    "/etc/modules-load.d/vpn-ui.conf",
+    "/etc/stargate-ui",
+    "/etc/sysctl.d/99-stargate-ui.conf",
+    "/etc/modules-load.d/stargate-ui.conf",
     "/etc/xl2tpd/xl2tpd.conf",
 ]
 DAEMONS = ["openvpn", "xl2tpd", "pptpd", "pluto"]
@@ -41,7 +41,7 @@ def run(incus: Incus, vm: str, panel: Panel, cfg: dict, result, log=None) -> Non
     log = log or (lambda *_: None)
     phase = result.phase(PHASE_UNINSTALL)
     port = cfg["panel"]["port"]
-    log(":: uninstall — `vpn-ui --uninstall --yes` tears everything down + assert clean host")
+    log(":: uninstall — `stargate-ui --uninstall --yes` tears everything down + assert clean host")
 
     def sub(name, status, detail, logtxt=""):
         st = SubTest(name, status, detail, logtxt)
@@ -66,9 +66,9 @@ def run(incus: Incus, vm: str, panel: Panel, cfg: dict, result, log=None) -> Non
     #     Which artifacts exist depends on which phases the --tests selection
     #     actually ran — the orchestrator uses dependency-aware substrate: the
     #     panel (port) comes from core-init and is always up; server-setup (and so
-    #     the nft `ip vpn` table + /etc/vpn-ui it creates) runs only for
-    #     protocol/bulk/backup selections; the /usr/libexec/vpn-ui bundle is only
-    #     extracted once a protocol daemon runs; the vpn-ui.service unit only
+    #     the nft `ip vpn` table + /etc/stargate-ui it creates) runs only for
+    #     protocol/bulk/backup selections; the /usr/libexec/stargate-ui bundle is only
+    #     extracted once a protocol daemon runs; the stargate-ui.service unit only
     #     exists if the systemd phase ran. Mirror those conditions so a narrow
     #     selection (e.g. `--tests uninstall`, panel-only) doesn't spuriously FAIL
     #     on artifacts that were never installed. The default full run selects
@@ -83,10 +83,10 @@ def run(incus: Incus, vm: str, panel: Panel, cfg: dict, result, log=None) -> Non
                  or _ran(PHASE_BULK) or _ran(PHASE_BACKUP))
     checks = [(f"ss -ltn | grep -q ':{port} '", f"panel :{port}")]  # core-init (always)
     if setup_ran:
-        checks.append(("test -e /etc/vpn-ui", "/etc/vpn-ui"))
+        checks.append(("test -e /etc/stargate-ui", "/etc/stargate-ui"))
         checks.append(("nft list table ip vpn", "nft table ip vpn"))
     if _ran(PHASE_SYSTEMD):
-        checks.insert(0, (f"test -f {UNIT_FILE}", "vpn-ui.service"))
+        checks.insert(0, (f"test -f {UNIT_FILE}", "stargate-ui.service"))
     if any(_ran(p) for p in protos):
         checks.append((f"test -d {LIBEXEC}", LIBEXEC))  # bundle extracted by a running daemon
     present, miss = [], []
@@ -112,7 +112,7 @@ def run(incus: Incus, vm: str, panel: Panel, cfg: dict, result, log=None) -> Non
     # --- 3) assert the host is clean ---
     # systemd unit removed + inactive + panel port no longer served.
     rc_unit, _, _ = _ex(f"test -f {UNIT_FILE}")
-    rc_act, _, _ = _ex("systemctl is-active --quiet vpn-ui")
+    rc_act, _, _ = _ex("systemctl is-active --quiet stargate-ui")
     rc_port, _, _ = _ex(f"ss -ltn | grep -q ':{port} '")
     unit_gone = rc_unit != 0 and rc_act != 0 and rc_port != 0
     sub("systemd-removed", Status.PASS if unit_gone else Status.FAIL,
@@ -140,7 +140,7 @@ def run(incus: Incus, vm: str, panel: Panel, cfg: dict, result, log=None) -> Non
         "all /etc configs removed" if not still
         else f"still present: {', '.join(still)}", ov)
 
-    # bundle trees under /usr/libexec/vpn-ui removed.
+    # bundle trees under /usr/libexec/stargate-ui removed.
     rc, _, _ = _ex(f"test -d {LIBEXEC}")
     sub("libexec-removed", Status.PASS if rc != 0 else Status.FAIL,
         f"{LIBEXEC} gone" if rc != 0 else f"{LIBEXEC} STILL PRESENT")

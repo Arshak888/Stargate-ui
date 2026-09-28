@@ -1,4 +1,4 @@
-// Package job provides background job implementations for the vpn-ui web panel,
+// Package job provides background job implementations for the stargate-ui web panel,
 // including traffic monitoring, system checks, and periodic maintenance tasks.
 package job
 

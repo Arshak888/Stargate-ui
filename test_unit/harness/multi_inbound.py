@@ -994,7 +994,7 @@ def _restore_sweep(cA, sc, panel, phase, ready, log) -> None:
 # ---------------------------------------------------------------------------
 # stage 7: one IP limit, counted across the account's inbounds
 # ---------------------------------------------------------------------------
-SPEEDLIMIT_PATH = "/root/vpn-ui/bin/speedlimits.json"
+SPEEDLIMIT_PATH = "/root/stargate-ui/bin/speedlimits.json"
 
 # Three Xray-native protocols on three DIFFERENT inbounds. The cap is the CORE's to
 # enforce only for these (speedlimit.go::ipLimitEnforcedInCore excludes every VPN

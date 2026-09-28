@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// XUIController is the main controller for the vpn-ui panel, managing sub-controllers.
+// XUIController is the main controller for the stargate-ui panel, managing sub-controllers.
 type XUIController struct {
 	BaseController
 
@@ -72,7 +72,7 @@ func (a *XUIController) index(c *gin.Context) {
 	var serverService service.ServerService
 	panelName, domain := serverService.BackupNameParts(browserHost(c))
 
-	// The donate dialog on the VPN-UI tile. Rendered server-side rather than
+	// The donate dialog on the STARGATE-UI tile. Rendered server-side rather than
 	// fetched: the list is static, so a round trip would only add a spinner.
 	html(c, "index.html", "pages.index.title", gin.H{
 		"donate":            donateAddresses,

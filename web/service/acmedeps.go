@@ -3,7 +3,7 @@ package service
 import "strings"
 
 // EnsureAcmeDeps best-effort installs the host packages the Let's Encrypt flow
-// (obtain_letsencrypt_cert in vpn-ui.sh, driving acme.sh) needs but that minimal
+// (obtain_letsencrypt_cert in stargate-ui.sh, driving acme.sh) needs but that minimal
 // cloud images frequently ship without:
 //
 //   - A cron daemon (crontab). acme.sh's `--install` pre-check HARD-FAILS without

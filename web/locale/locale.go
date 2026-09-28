@@ -1,4 +1,4 @@
-// Package locale provides internationalization (i18n) support for the vpn-ui web panel,
+// Package locale provides internationalization (i18n) support for the stargate-ui web panel,
 // including translation loading, localization, and middleware for web and bot interfaces.
 package locale
 

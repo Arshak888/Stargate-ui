@@ -22,7 +22,7 @@ import (
 const (
 	// StrongswanBundleRoot is where the tree unpacks. Its own subdir under the shared
 	// /usr/libexec prefix so it never collides with the pppd/accel/libreswan bundles.
-	StrongswanBundleRoot = "/usr/libexec/vpn-ui-strongswan" // must equal the bundle build PREFIX
+	StrongswanBundleRoot = "/usr/libexec/stargate-ui-strongswan" // must equal the bundle build PREFIX
 
 	// CharonBundled is the charon daemon launcher (procmgr runs this directly).
 	CharonBundled = StrongswanBundleRoot + "/sbin/charon"
@@ -72,7 +72,7 @@ func StrongswanBundleReady() bool {
 }
 
 // ExtractStrongswanBundle untars the embedded strongSwan bundle to the filesystem
-// root (its entries are rooted at usr/libexec/vpn-ui-strongswan). Idempotent; no-op
+// root (its entries are rooted at usr/libexec/stargate-ui-strongswan). Idempotent; no-op
 // if the bundle is absent. Mirrors ExtractAccelBundle.
 func ExtractStrongswanBundle() error {
 	if !HasStrongswanBundle() {

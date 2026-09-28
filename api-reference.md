@@ -1,4 +1,4 @@
-# vpn-ui panel API reference
+# stargate-ui panel API reference
 
 Request and response shapes for the panel's HTTP API, covering all 19 protocols (the 5
 Xray-native ones inherited from upstream 3x-ui, the 3 native ones this fork adds, and the
@@ -47,7 +47,7 @@ curl -sS -c "$JAR" -X POST "$BASE/login" \
 
 Then send `-b "$JAR"` on every call. `GET $BASE/logout` clears it.
 
-The cookie is named **`vpn-ui`**. It is a signed (not encrypted) gin-contrib cookie
+The cookie is named **`stargate-ui`**. It is a signed (not encrypted) gin-contrib cookie
 session that holds **only the admin's numeric id**; the user row is re-read from the
 database on every request, so a permission change or an account disable takes effect
 immediately rather than lingering until the cookie expires. `MaxAge` comes from the

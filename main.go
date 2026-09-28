@@ -1,4 +1,4 @@
-// Package main is the entry point for the vpn-ui web panel application.
+// Package main is the entry point for the stargate-ui web panel application.
 // It initializes the database, web server, and handles command-line operations for managing the panel.
 package main
 
@@ -67,7 +67,7 @@ func initLogger() {
 	}
 }
 
-// runWebServer initializes and starts the web server for the vpn-ui panel.
+// runWebServer initializes and starts the web server for the stargate-ui panel.
 // stdoutIsTTY reports whether stdout is an interactive terminal, so ANSI colour
 // is only emitted when it will render (and not when output is piped/redirected).
 func stdoutIsTTY() bool {
@@ -96,7 +96,7 @@ func requireRoot() {
 	if os.Geteuid() == 0 {
 		return
 	}
-	const m = "vpn-ui must be run as root. It binds privileged ports, writes systemd units, and manages nftables, routing and the VPN daemons.\n       Try: sudo vpn-ui"
+	const m = "stargate-ui must be run as root. It binds privileged ports, writes systemd units, and manages nftables, routing and the VPN daemons.\n       Try: sudo stargate-ui"
 	if fi, err := os.Stderr.Stat(); err == nil && os.Getenv("NO_COLOR") == "" && fi.Mode()&os.ModeCharDevice != 0 {
 		fmt.Fprintf(os.Stderr, "\x1b[1;38;5;203mError:\x1b[0m %s\n", m)
 	} else {
@@ -105,11 +105,11 @@ func requireRoot() {
 	os.Exit(1)
 }
 
-// ansiVpnUI renders "[VPN-UI]" in the panel logo's colours — teal brackets,
+// ansiVpnUI renders "[STARGATE-UI]" in the panel logo's colours — teal brackets,
 // deep-teal letters, a green hyphen — as a bold CLI banner. Falls back to plain
 // text when NO_COLOR is set or stdout isn't a TTY.
 func ansiVpnUI() string {
-	const text = "[VPN-UI]"
+	const text = "[STARGATE-UI]"
 	if os.Getenv("NO_COLOR") != "" || !stdoutIsTTY() {
 		return text
 	}
@@ -137,7 +137,7 @@ func ansiVpnUI() string {
 }
 
 // warnUnsupportedDistro prints a prominent warning at panel startup when the host
-// distro is not on vpn-ui's tested list (service.DistroSupported). Colorful when
+// distro is not on stargate-ui's tested list (service.DistroSupported). Colorful when
 // stdout is a TTY (honors NO_COLOR); always also emits a logger.Warning so it lands
 // in the journal / non-TTY logs too.
 func warnUnsupportedDistro() {
@@ -145,13 +145,13 @@ func warnUnsupportedDistro() {
 	if ok {
 		return
 	}
-	logger.Warningf("unsupported distro: %s (%s) — not officially supported by vpn-ui, expect errors",
+	logger.Warningf("unsupported distro: %s (%s) — not officially supported by stargate-ui, expect errors",
 		pretty, reason)
 
 	tested := service.SupportedDistroSummary()
 	if os.Getenv("NO_COLOR") != "" || !stdoutIsTTY() {
 		fmt.Fprintf(os.Stderr,
-			"\nWARNING: %s is NOT officially supported by vpn-ui. It may run, but expect errors.\n"+
+			"\nWARNING: %s is NOT officially supported by stargate-ui. It may run, but expect errors.\n"+
 				"Tested distros: %s.\n\n", pretty, tested)
 		return
 	}
@@ -164,7 +164,7 @@ func warnUnsupportedDistro() {
 	rule := yb + strings.Repeat("━", 64) + reset
 	fmt.Fprintln(os.Stderr, "\n"+rule)
 	fmt.Fprintln(os.Stderr, rb+"⚠  UNSUPPORTED DISTRO"+reset)
-	fmt.Fprintf(os.Stderr, "%s%s%s is not officially supported by vpn-ui — %sexpect errors%s.\n",
+	fmt.Fprintf(os.Stderr, "%s%s%s is not officially supported by stargate-ui — %sexpect errors%s.\n",
 		yb, pretty, reset, rb, reset)
 	fmt.Fprintf(os.Stderr, "%sTested: %s%s\n", dim, tested, reset)
 	fmt.Fprintln(os.Stderr, rule+"\n")
@@ -243,7 +243,7 @@ func runWebServer() {
 	// account. See web/service/wgxray.go.
 	service.ReconcileAllWireguardXrayKeys()
 
-	// Take over the certificate deploy.sh or the vpn-ui.sh menu installed, so the
+	// Take over the certificate deploy.sh or the stargate-ui.sh menu installed, so the
 	// panel manages and renews it instead of leaving it to acme.sh's own cron.
 	//
 	// HERE, AND NOT IN web.go, for one reason that decides it: the TLS reloader is
@@ -305,18 +305,18 @@ func runWebServer() {
 		}
 	}
 
-	// Ensure the `vpn-ui` management menu is installed, so the command works on a
+	// Ensure the `stargate-ui` management menu is installed, so the command works on a
 	// hand-deployed box that never ran deploy.sh's `install-menu`. Idempotent and
 	// best-effort; see ensureMenuInstalled.
 	ensureMenuInstalled()
 
-	// The root-only control socket the `vpn-ui-amd64 ctl` CLI (and the vpn-ui menu)
+	// The root-only control socket the `stargate-ui-amd64 ctl` CLI (and the stargate-ui menu)
 	// drives Xray and the daemons through. Started before the servers, so it is
 	// already answering by the time the panel is up, and NON-FATAL on failure: it is
 	// a convenience for the CLI, and a panel carrying VPN traffic without it beats a
 	// panel that refused to boot over it.
 	if err := service.StartControlSocket(); err != nil {
-		logger.Warning("control socket unavailable (the vpn-ui menu's Xray/cores items will not work):", err)
+		logger.Warning("control socket unavailable (the stargate-ui menu's Xray/cores items will not work):", err)
 	}
 
 	var server *web.Server
@@ -399,7 +399,7 @@ func runWebServer() {
 
 // installSystemd creates the panel's systemd unit, enables it at boot, and starts
 // it — so the panel runs under systemd instead of a direct binary execution.
-// Invoked by `vpn-ui --systemd`. Must run as root (it writes /etc/systemd/system).
+// Invoked by `stargate-ui --systemd`. Must run as root (it writes /etc/systemd/system).
 func installSystemd() {
 	if err := database.InitDB(config.GetDBPath()); err != nil {
 		log.Fatalf("Error initializing database: %v", err)
@@ -428,7 +428,7 @@ func installSystemd() {
 // binary itself. It is the inverse of `--systemd`/provisioning. Distro packages
 // (libreswan, nftables, iproute2, kernel modules) and irreversible boot/modprobe
 // edits are left in place and flagged for the operator. Invoked by
-// `vpn-ui --uninstall`; `--yes`/`--force` skips the confirmation prompt. Must run
+// `stargate-ui --uninstall`; `--yes`/`--force` skips the confirmation prompt. Must run
 // as root. Best-effort: a single failed step is recorded, not fatal.
 //
 // coresAnswer pre-answers "remove the installed VPN cores too?": service.InboundsKeep
@@ -474,11 +474,11 @@ func runUninstall(assumeYes bool, coresAnswer string) {
 	askCores := coresAnswer == "" && !assumeYes && (!dbOK || len(installedCores) > 0)
 
 	if !assumeYes {
-		fmt.Println("This will REMOVE vpn-ui and everything it installed on this host:")
+		fmt.Println("This will REMOVE stargate-ui and everything it installed on this host:")
 		fmt.Println("  • the systemd unit, child daemons (openvpn/xl2tpd/pptpd/pluto)")
 		fmt.Println("  • nftables 'ip vpn' table, firewalld trust, fwmark routing (table 100)")
-		fmt.Println("  • /etc configs, /usr/libexec/vpn-ui bundles, logs, bin/, the database")
-		fmt.Println("  • the vpn-ui binary itself")
+		fmt.Println("  • /etc configs, /usr/libexec/stargate-ui bundles, logs, bin/, the database")
+		fmt.Println("  • the stargate-ui binary itself")
 		fmt.Println("Distro packages and boot/modprobe edits are kept and listed at the end.")
 		if askCores {
 			// The list above is the FULL teardown, which is not what happens if the
@@ -499,7 +499,7 @@ func runUninstall(assumeYes bool, coresAnswer string) {
 	//   --yes  removes them, because that is what `--uninstall --yes` has always
 	//          done and what every unattended caller (deploy scripts, the E2E
 	//          harness) asserts on. Changing it would silently break automation.
-	//   a bare Enter keeps them, because typing "yes" to "remove vpn-ui" is not
+	//   a bare Enter keeps them, because typing "yes" to "remove stargate-ui" is not
 	//          the same as agreeing to take a live VPN service down with it, and
 	//          the cores are the expensive half to rebuild.
 	keepCores := false
@@ -513,7 +513,7 @@ func runUninstall(assumeYes bool, coresAnswer string) {
 		// installed: nothing to spare, so the teardown stays whole.
 	}
 
-	fmt.Println("Uninstalling vpn-ui...")
+	fmt.Println("Uninstalling stargate-ui...")
 	report := service.Uninstall(service.UninstallOptions{ExePath: exePath, KeepCores: keepCores})
 	if keepCores && len(installedCores) > 0 {
 		report.Kept = append(report.Kept, "cores left installed: "+strings.Join(installedCores, ", "))
@@ -541,7 +541,7 @@ func runUninstall(assumeYes bool, coresAnswer string) {
 		// Then the install directory, but ONLY when the teardown emptied it.
 		// os.Remove on a directory is a plain rmdir: it refuses a non-empty one,
 		// which is exactly the guard wanted here — an operator who kept notes or
-		// their own files in /opt/vpn-ui does not lose them, while the usual case
+		// their own files in /opt/stargate-ui does not lose them, while the usual case
 		// (nothing left but the directory itself) stops leaving a stale dir on
 		// every uninstalled host.
 		if dir := filepath.Dir(exePath); dir != "" && dir != "/" && dir != "." {
@@ -567,7 +567,7 @@ func runUninstall(assumeYes bool, coresAnswer string) {
 			fmt.Println("  !", e)
 		}
 	}
-	fmt.Println("\nvpn-ui uninstalled.")
+	fmt.Println("\nstargate-ui uninstalled.")
 }
 
 // askKeepCores asks whether the installed VPN cores should come off the host as
@@ -589,9 +589,9 @@ func askKeepCores(stdin *bufio.Reader, installed []string) bool {
 	fmt.Println("  • remove: their daemons, /etc configs, bundled trees and bin/ go too,")
 	fmt.Println("    along with the nftables table and fwmark routing they all pass through")
 	fmt.Println("  • keep:   all of that is left exactly as it is")
-	fmt.Println("RADIUS runs INSIDE the vpn-ui binary, not as a separate daemon, so kept L2TP,")
+	fmt.Println("RADIUS runs INSIDE the stargate-ui binary, not as a separate daemon, so kept L2TP,")
 	fmt.Println("PPTP, OpenVPN, OpenConnect, SSTP and IKEv2 cores cannot authenticate new logins")
-	fmt.Println("once vpn-ui is gone. WireGuard, AmneziaWG, GRE and MTProto are unaffected.")
+	fmt.Println("once stargate-ui is gone. WireGuard, AmneziaWG, GRE and MTProto are unaffected.")
 	fmt.Print("Remove the cores too? [y/N]: ")
 	line, _ := stdin.ReadString('\n')
 	switch strings.ToLower(strings.TrimSpace(line)) {
@@ -621,7 +621,7 @@ func randomFreePort() int {
 
 // randomizeSetting generates a fresh random port, login username, login password
 // and web base path for the panel, persists them, and prints them so the operator
-// can log in. Invoked by `vpn-ui --random` (composable with --systemd, which is
+// can log in. Invoked by `stargate-ui --random` (composable with --systemd, which is
 // applied afterwards so the unit boots with these settings).
 func randomizeSetting() error {
 	// Open the DB FIRST. GetServiceName below and every SettingService/UserService
@@ -698,7 +698,7 @@ func randomizeSetting() error {
 }
 
 // applyExplicitSetting sets the panel login username/password, web port and/or web
-// base path to explicit values from `vpn-ui --user/--pass/--port/--path`. It uses
+// base path to explicit values from `stargate-ui --user/--pass/--port/--path`. It uses
 // the exact same "work safe" envelope as randomizeSetting: open the DB first, stop
 // the running systemd panel (it holds the DB open and serves the old values), write
 // the changes, then bring it back up so the live panel serves the new values. Any
@@ -847,7 +847,7 @@ func certHost(certFile string) string {
 }
 
 // panelInfo is the panel's login/access + service state, as printed by
-// `vpn-ui info`. The JSON field names are a CONTRACT with the vpn-ui menu script:
+// `stargate-ui info`. The JSON field names are a CONTRACT with the stargate-ui menu script:
 // they are what `--json` emits and what `--get <field>` looks up, so the script
 // never greps human output. That coupling (upstream's
 // `x-ui setting -show true | grep -Eo 'port: .+' | awk '{print $2}'`) breaks the
@@ -925,7 +925,7 @@ func collectPanelInfo(resolvePublicIP bool) panelInfo {
 		info.IP, info.URL = panelAccessURL(&settingService, info.Port, info.WebBasePath)
 	}
 
-	// Never hardcode "vpn-ui": the unit name is operator-configurable (settings key
+	// Never hardcode "stargate-ui": the unit name is operator-configurable (settings key
 	// systemdServiceName), and ServiceState resolves it the same way the panel's own
 	// Settings page does.
 	sd := service.SystemdService{}
@@ -963,7 +963,7 @@ func collectPanelInfo(resolvePublicIP bool) panelInfo {
 	return info
 }
 
-// runInfo implements `vpn-ui info [--json|--get <field>]`: the panel's login,
+// runInfo implements `stargate-ui info [--json|--get <field>]`: the panel's login,
 // access URL and service state in one place. Menu item "View current login info"
 // is just this.
 //
@@ -1141,7 +1141,7 @@ func ctlPing() bool {
 	return err == nil && resp.OK
 }
 
-// runCtl implements `vpn-ui ctl <cmd> [--json]`: hand one command to the RUNNING
+// runCtl implements `stargate-ui ctl <cmd> [--json]`: hand one command to the RUNNING
 // panel over its control socket and print the reply.
 //
 // When the socket is absent or refuses, this reports that the panel is not running
@@ -1165,14 +1165,14 @@ func runCtl(args []string) {
 		os.Exit(2)
 	}
 	if cmd == "" {
-		fmt.Fprintf(os.Stderr, "usage: vpn-ui ctl <command> [--json]\ncommands: %s\n",
+		fmt.Fprintf(os.Stderr, "usage: stargate-ui ctl <command> [--json]\ncommands: %s\n",
 			strings.Join(service.ControlCommands, ", "))
 		os.Exit(2)
 	}
 
 	conn, err := ctlDial()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "the vpn-ui panel is not running: no answer on %s (%v)\n",
+		fmt.Fprintf(os.Stderr, "the stargate-ui panel is not running: no answer on %s (%v)\n",
 			service.ControlSocketPath(), err)
 		fmt.Fprintln(os.Stderr, "Xray and the VPN daemons are children of the running panel, so they can only")
 		fmt.Fprintln(os.Stderr, "be controlled through it. Start the panel first, then retry.")
@@ -1215,7 +1215,7 @@ func printCoreStatus(cores []service.CoreStatus) {
 	}
 }
 
-// runUpdate implements `vpn-ui update`: install the latest published release over
+// runUpdate implements `stargate-ui update`: install the latest published release over
 // this binary.
 //
 // It deliberately does NOT call ServerService.UpdatePanel(). That path ends in
@@ -1303,7 +1303,7 @@ func runUpdate() {
 	}
 	fmt.Printf("Installed %s -> %s\n", upd.Latest, exe)
 
-	// Refresh /usr/bin/vpn-ui from the NEW binary, not from this (outgoing) one: the
+	// Refresh /usr/bin/stargate-ui from the NEW binary, not from this (outgoing) one: the
 	// menu script ships inside the binary precisely so the two always match, and a
 	// menu from the old release driving the new binary is the version skew this
 	// design exists to prevent. Best-effort: a failed menu refresh must not make a
@@ -1326,7 +1326,7 @@ func runUpdate() {
 
 	// No active unit. Do not pretend the update took effect: the swapped file only
 	// runs on the next start, and on a box where the panel was launched by hand
-	// (setsid ./vpn-ui-amd64 &) the OLD binary keeps serving until someone kills it.
+	// (setsid ./stargate-ui-amd64 &) the OLD binary keeps serving until someone kills it.
 	fmt.Printf("The new binary is installed, but the unit %q is not active, so nothing was restarted.\n", unit)
 	if ctlPing() {
 		fmt.Println("A panel IS running outside systemd (its control socket answers): it keeps serving")
@@ -1342,7 +1342,7 @@ func runUpdate() {
 // aborts the update rather than replacing the binary on a hope.
 //
 // service.backupPanelDB (the in-panel updater's) is not reused: it is best-effort
-// and single-slot (vpn-ui_<version>.db), so a second update from the same version
+// and single-slot (stargate-ui_<version>.db), so a second update from the same version
 // silently overwrites the only copy of the DB you would want back.
 //
 // Unlike deploy.sh we do not stop the panel first. Swapping the binary does not
@@ -1370,7 +1370,7 @@ func backupPanelDBForUpdate(fromVersion string) (string, error) {
 	if fromVersion == "" {
 		fromVersion = "unknown"
 	}
-	dst := filepath.Join(dir, fmt.Sprintf("vpn-ui_%s_%s.db", fromVersion, time.Now().Format("20060102-150405")))
+	dst := filepath.Join(dir, fmt.Sprintf("stargate-ui_%s_%s.db", fromVersion, time.Now().Format("20060102-150405")))
 	if err := service.CopyFile(db, dst); err != nil {
 		return "", fmt.Errorf("%s -> %s: %w", db, dst, err)
 	}
@@ -1385,7 +1385,7 @@ func backupPanelDBForUpdate(fromVersion string) (string, error) {
 	return dst, nil
 }
 
-// menuScript is the `vpn-ui` management menu, shipped INSIDE the binary it drives.
+// menuScript is the `stargate-ui` management menu, shipped INSIDE the binary it drives.
 //
 // Upstream installs its menu by curling raw.githubusercontent at `main`, which
 // pins the tip of the default branch even when the box is running a tagged
@@ -1395,12 +1395,12 @@ func backupPanelDBForUpdate(fromVersion string) (string, error) {
 // `install-menu` on the NEW binary. It also means deploy.sh can install the menu
 // while piped from curl, with no second download.
 //
-//go:embed vpn-ui.sh
+//go:embed stargate-ui.sh
 var menuScript []byte
 
 // The Let's Encrypt / ACME client (pinned acme.sh, see build/acme/README.md),
 // baked into the binary so real SSL works OFFLINE. obtain_letsencrypt_cert in
-// vpn-ui.sh used to acquire it with `curl https://get.acme.sh | sh`, which fails on
+// stargate-ui.sh used to acquire it with `curl https://get.acme.sh | sh`, which fails on
 // a box with no/blocked egress to get.acme.sh and left the panel on plain HTTP with
 // only "acme.sh not found after install, skipping real SSL." The menu now extracts
 // THIS copy and runs its --install locally; only the final --issue needs network.
@@ -1418,7 +1418,7 @@ var acmeScript []byte
 //go:embed build/acme/dnsapi/dns_cf.sh
 var acmeDnsCfHook []byte
 
-// installAcmeScript implements `vpn-ui install-acme <path>`: write the embedded
+// installAcmeScript implements `stargate-ui install-acme <path>`: write the embedded
 // acme.sh client (0755) to <path>, plus the Cloudflare DNS hook as
 // <dir>/dnsapi/dns_cf.sh. The management menu extracts it to a scratch dir and runs
 // it as `--install`, so Let's Encrypt issuance no longer depends on fetching the
@@ -1429,7 +1429,7 @@ var acmeDnsCfHook []byte
 // into $HOME/.acme.sh/dnsapi/, which is the only place _findHook reads at issue time.
 func installAcmeScript(args []string) {
 	if len(args) == 0 || args[0] == "" {
-		fmt.Fprintln(os.Stderr, "usage: vpn-ui install-acme <path>")
+		fmt.Fprintln(os.Stderr, "usage: stargate-ui install-acme <path>")
 		os.Exit(1)
 	}
 	if err := backend.WriteFileAtomic(args[0], acmeScript, 0o755); err != nil {
@@ -1447,7 +1447,7 @@ func installAcmeScript(args []string) {
 	}
 }
 
-// runCloudflare implements `vpn-ui cf verify` and `vpn-ui cf zones`, the two
+// runCloudflare implements `stargate-ui cf verify` and `stargate-ui cf zones`, the two
 // Cloudflare lookups the menu's DNS-01 SSL path needs before it hands a token to
 // acme.sh. Output is deliberately machine-readable (one zone per line, name TAB
 // status) so the menu never parses JSON and no jq is required on the host.
@@ -1457,7 +1457,7 @@ func installAcmeScript(args []string) {
 // also the variable name acme.sh itself expects, so the menu exports it once.
 func runCloudflare(args []string) {
 	if len(args) == 0 || args[0] == "" {
-		fmt.Fprintln(os.Stderr, "usage: CF_Token=... vpn-ui cf {verify|zones}")
+		fmt.Fprintln(os.Stderr, "usage: CF_Token=... stargate-ui cf {verify|zones}")
 		os.Exit(2)
 	}
 	token := os.Getenv("CF_Token")
@@ -1496,8 +1496,8 @@ func runCloudflare(args []string) {
 	}
 }
 
-// installMenuScript implements `vpn-ui install-menu [path]`: write the embedded
-// menu to /usr/bin/vpn-ui (0755). deploy.sh runs it on both fresh install and
+// installMenuScript implements `stargate-ui install-menu [path]`: write the embedded
+// menu to /usr/bin/stargate-ui (0755). deploy.sh runs it on both fresh install and
 // update; `update` runs it again from the newly installed binary.
 func installMenuScript(args []string) {
 	dest := service.MenuScriptPath
@@ -1506,7 +1506,7 @@ func installMenuScript(args []string) {
 	}
 	// WriteFileAtomic (temp file + rename) rather than a plain write, because the
 	// target may be THE SCRIPT CURRENTLY RUNNING: the menu's own Update item calls
-	// this via `vpn-ui-amd64 update`. bash reads a script lazily by offset from an
+	// this via `stargate-ui-amd64 update`. bash reads a script lazily by offset from an
 	// open fd, so overwriting it in place would feed the running shell the tail of a
 	// different file. Renaming leaves the old inode intact for as long as bash holds
 	// it open.
@@ -1514,13 +1514,13 @@ func installMenuScript(args []string) {
 		fmt.Fprintln(os.Stderr, "Failed to install the management menu:", err)
 		os.Exit(1)
 	}
-	fmt.Printf("Installed the vpn-ui management menu -> %s (run: %s)\n", dest, filepath.Base(dest))
+	fmt.Printf("Installed the stargate-ui management menu -> %s (run: %s)\n", dest, filepath.Base(dest))
 }
 
-// ensureMenuInstalled writes the `vpn-ui` management menu to MenuScriptPath on panel
-// startup when it is missing or out of date, so the `vpn-ui` command exists no matter
+// ensureMenuInstalled writes the `stargate-ui` management menu to MenuScriptPath on panel
+// startup when it is missing or out of date, so the `stargate-ui` command exists no matter
 // how the panel was deployed. deploy.sh runs `install-menu` explicitly, but a manual
-// launch (scp the binary, `setsid ./vpn-ui-amd64 &`) never does, so the command was
+// launch (scp the binary, `setsid ./stargate-ui-amd64 &`) never does, so the command was
 // simply absent on hand-deployed boxes.
 //
 // Compare-then-write: it only writes when the on-disk script differs from the embedded
@@ -1535,10 +1535,10 @@ func ensureMenuInstalled() {
 		return
 	}
 	if err := backend.WriteFileAtomic(dest, menuScript, 0o755); err != nil {
-		logger.Warning("could not install the vpn-ui management menu at", dest, ":", err)
+		logger.Warning("could not install the stargate-ui management menu at", dest, ":", err)
 		return
 	}
-	logger.Info("installed the vpn-ui management menu at", dest)
+	logger.Info("installed the stargate-ui management menu at", dest)
 }
 
 // applyCredential updates the first user's login from the CLI: both fields set both;
@@ -1761,7 +1761,7 @@ func updateSetting(port int, username string, password string, webBasePath strin
 // generateSelfSignedPanelCert generates a self-signed TLS certificate for the
 // panel, writes it next to the binary/DB (config dir + /cert), and points the
 // panel's webCertFile/webKeyFile at it so the web server serves HTTPS. Invoked by
-// `vpn-ui cert -selfsign` (used by deploy.sh's fresh-install HTTPS option). The
+// `stargate-ui cert -selfsign` (used by deploy.sh's fresh-install HTTPS option). The
 // cert carries the server's public IP as a SAN; browsers still warn on the
 // self-signed issuer, which is expected.
 func generateSelfSignedPanelCert() {
@@ -1790,7 +1790,7 @@ func generateSelfSignedPanelCert() {
 //
 // The settings form already validates through AllSetting.CheckValid
 // (web/entity/entity.go:140-152); the CLI did not, and that asymmetry is the bug.
-// Without this, `vpn-ui cert -webCert ...` accepts a mismatched or unreadable pair
+// Without this, `stargate-ui cert -webCert ...` accepts a mismatched or unreadable pair
 // and the damage only surfaces at the NEXT restart, where web.go:541-556 logs one
 // line and silently comes up on plain HTTP. A silent downgrade to HTTP hours after
 // the command that caused it is not a failure anyone connects back to this command.
@@ -1822,13 +1822,13 @@ func certPairComplete(publicKey string, privateKey string) bool {
 	return false
 }
 
-// certRestartNote is the last line of every `vpn-ui cert` invocation. Both listeners
+// certRestartNote is the last line of every `stargate-ui cert` invocation. Both listeners
 // read their paths out of the settings once, when they are built, so a change made
 // here is invisible until the panel starts again. Saying so is the difference
 // between an operator who restarts and one who reports that the command did nothing.
 const certRestartNote = "Both listeners read these paths when they start, so this takes effect the next time the panel starts."
 
-// updateCert points the PANEL's listener at a certificate pair. `vpn-ui cert
+// updateCert points the PANEL's listener at a certificate pair. `stargate-ui cert
 // -webCert <cert> -webCertKey <key>`, and the empty pair clears it.
 func updateCert(publicKey string, privateKey string) {
 	if !certPairStorable(publicKey, privateKey) {
@@ -1855,7 +1855,7 @@ func updateCert(publicKey string, privateKey string) {
 	// used to count as one, and that is how a flag named -webCert came to switch a
 	// subscription server on: subCertFile is "" on every fresh install (its default
 	// in web/service/setting.go), and both installers run this command as part of
-	// one, vpn-ui.sh with `-webCert .../fullchain.pem` after acme.sh and deploy.sh
+	// one, stargate-ui.sh with `-webCert .../fullchain.pem` after acme.sh and deploy.sh
 	// with `-selfsign`. So every install mounted the panel's certificate on a
 	// subscription listener nobody had asked to serve TLS. Empty means the operator
 	// never gave that listener a certificate, and a flag named -webCert is not them
@@ -1889,7 +1889,7 @@ func updateCert(publicKey string, privateKey string) {
 	if !subFollowsPanel {
 		if subCert == "" {
 			fmt.Println("subscription server: NOT changed, it has no certificate of its own and keeps serving plain HTTP")
-			fmt.Println("  give it one with: vpn-ui cert -subCert <cert> -subCertKey <key>")
+			fmt.Println("  give it one with: stargate-ui cert -subCert <cert> -subCertKey <key>")
 		} else {
 			fmt.Printf("subscription server: NOT changed, it stays on its own certificate (%s)\n", subCert)
 		}
@@ -1914,10 +1914,10 @@ func updateCert(publicKey string, privateKey string) {
 	fmt.Println(certRestartNote)
 }
 
-// certCommandTargets decides which listeners a `vpn-ui cert` invocation moves, from
+// certCommandTargets decides which listeners a `stargate-ui cert` invocation moves, from
 // the set of flags that were actually typed rather than from their values.
 //
-// A bare `vpn-ui cert` keeps meaning "clear the panel's pair", which is what it has
+// A bare `stargate-ui cert` keeps meaning "clear the panel's pair", which is what it has
 // always meant and what -reset spells out. The one case that skips the panel is a
 // command that named a subscription flag and no panel flag: there, moving the panel
 // would mean clearing it, and nobody setting the subscription server's certificate
@@ -1929,7 +1929,7 @@ func certCommandTargets(typed map[string]bool) (panel bool, sub bool) {
 }
 
 // updateSubCert points the SUBSCRIPTION server's listener at a certificate pair,
-// and nothing else. `vpn-ui cert -subCert <cert> -subCertKey <key>`, and the empty
+// and nothing else. `stargate-ui cert -subCert <cert> -subCertKey <key>`, and the empty
 // pair clears it.
 //
 // It exists because the two listeners are separate (sub/sub.go builds its own from
@@ -2015,7 +2015,7 @@ func GetListenIP(getListen bool) {
 	}
 }
 
-// migrateDb performs database migration operations for the vpn-ui panel.
+// migrateDb performs database migration operations for the stargate-ui panel.
 // revertAccounts is the operator's way out of the accounts layer.
 //
 // Safe by construction for the panels that would want it: settings.clients is
@@ -2054,22 +2054,22 @@ func migrateDb() {
 	fmt.Println("Migration done!")
 }
 
-// importDb imports a stock 3x-ui (or vpn-ui) backup database over the current one,
+// importDb imports a stock 3x-ui (or stargate-ui) backup database over the current one,
 // keeping THIS panel's reachability/identity settings (port, path, TLS, session
 // secret, RADIUS secret, provisioning state). Everything else, the operator's
 // inbounds/clients/traffic/admins/subscription content, comes across from the
 // backup. deploy.sh calls this on a fresh install when the operator points it at a
-// 3x-ui backup; it is also available standalone. Usage: vpn-ui import --from <path>
+// 3x-ui backup; it is also available standalone. Usage: stargate-ui import --from <path>
 func importDb() {
 	importCmd := flag.NewFlagSet("import", flag.ExitOnError)
 	var from string
-	importCmd.StringVar(&from, "from", "", "path to the 3x-ui/vpn-ui backup .db to import")
+	importCmd.StringVar(&from, "from", "", "path to the 3x-ui/stargate-ui backup .db to import")
 	_ = importCmd.Parse(os.Args[2:])
 	if from == "" && importCmd.NArg() > 0 {
-		from = importCmd.Arg(0) // also accept `vpn-ui import <path>`
+		from = importCmd.Arg(0) // also accept `stargate-ui import <path>`
 	}
 	if from == "" {
-		fmt.Fprintln(os.Stderr, "usage: vpn-ui import --from <path-to-backup.db>")
+		fmt.Fprintln(os.Stderr, "usage: stargate-ui import --from <path-to-backup.db>")
 		os.Exit(1)
 	}
 	src, err := os.Open(from)
@@ -2128,11 +2128,11 @@ func readRadiusSecret() string {
 }
 
 // openvpnAuth handles OpenVPN auth-user-pass-verify via RADIUS PAP.
-// Usage: vpn-ui openvpn-auth {inbound_id} {credentials_file}
+// Usage: stargate-ui openvpn-auth {inbound_id} {credentials_file}
 // The credentials file has username on line 1, password on line 2.
 func openvpnAuth() {
 	if len(os.Args) < 4 {
-		fmt.Fprintln(os.Stderr, "usage: vpn-ui openvpn-auth <inbound_id> <cred_file>")
+		fmt.Fprintln(os.Stderr, "usage: stargate-ui openvpn-auth <inbound_id> <cred_file>")
 		os.Exit(1)
 	}
 
@@ -2591,7 +2591,7 @@ func ovpnSpawnEvict(inboundId int, proto, ip, raddr string) {
 // clients). The new client reuses the victim's VIRTUAL IP, but real addresses are
 // unique, so this hits the old device, not the one just admitted. Falls back to the
 // OLDEST client on <ip> when no real address was pre-captured.
-// Usage: vpn-ui openvpn-evict <id> <proto> <ip> [real-address]
+// Usage: stargate-ui openvpn-evict <id> <proto> <ip> [real-address]
 func openvpnEvict() {
 	if len(os.Args) < 5 {
 		return
@@ -2697,11 +2697,11 @@ func ovpnStatusIPs(statusPath string) map[string]bool {
 	return set
 }
 
-// Usage: vpn-ui openvpn-connect {inbound_id}
+// Usage: stargate-ui openvpn-connect {inbound_id}
 // Reads common_name and ifconfig_pool_remote_ip from environment.
 func openvpnConnect() {
 	if len(os.Args) < 3 {
-		fmt.Fprintln(os.Stderr, "usage: vpn-ui openvpn-connect <inbound_id>")
+		fmt.Fprintln(os.Stderr, "usage: stargate-ui openvpn-connect <inbound_id>")
 		os.Exit(1)
 	}
 
@@ -2756,11 +2756,11 @@ func openvpnConnect() {
 }
 
 // openvpnDisconnect handles OpenVPN client-disconnect via RADIUS Acct-Stop.
-// Usage: vpn-ui openvpn-disconnect {inbound_id}
+// Usage: stargate-ui openvpn-disconnect {inbound_id}
 // Reads common_name and ifconfig_pool_remote_ip from environment.
 func openvpnDisconnect() {
 	if len(os.Args) < 3 {
-		fmt.Fprintln(os.Stderr, "usage: vpn-ui openvpn-disconnect <inbound_id>")
+		fmt.Fprintln(os.Stderr, "usage: stargate-ui openvpn-disconnect <inbound_id>")
 		os.Exit(1)
 	}
 
@@ -2818,7 +2818,7 @@ func openvpnDisconnect() {
 	os.Exit(0)
 }
 
-// main is the entry point of the vpn-ui application.
+// main is the entry point of the stargate-ui application.
 // It parses command-line arguments to run the web server, migrate database, or update settings.
 func main() {
 	if len(os.Args) < 2 {
@@ -2836,8 +2836,8 @@ func main() {
 	}
 
 	// Standalone maintenance switches. They can be combined in any order, e.g.
-	//   vpn-ui --random --systemd
-	//   vpn-ui --user admin --pass s3cret --port 8443 --path panel --systemd
+	//   stargate-ui --random --systemd
+	//   stargate-ui --user admin --pass s3cret --port 8443 --path panel --systemd
 	// and are handled before flag parsing (they aren't top-level flags). Bare
 	// switches accept a `--` or bare form; the value switches take the next arg (or
 	// the `--key=value` form):
@@ -2995,8 +2995,8 @@ func main() {
 		fmt.Println()
 		fmt.Println("Commands:")
 		fmt.Println("    run            run web panel")
-		fmt.Println("    migrate        migrate form other/old vpn-ui")
-		fmt.Println("    import         import a 3x-ui/vpn-ui backup DB over the current one")
+		fmt.Println("    migrate        migrate form other/old stargate-ui")
+		fmt.Println("    import         import a 3x-ui/stargate-ui backup DB over the current one")
 		fmt.Println("                   (--from <path>; keeps this panel's port/path/cert/secret)")
 		fmt.Println("    setting        set settings")
 		fmt.Println("    cert           set the PANEL's TLS certificate:")
@@ -3010,7 +3010,7 @@ func main() {
 		fmt.Println("    ctl <cmd>      control the RUNNING panel over its socket:")
 		fmt.Println("                   " + strings.Join(service.ControlCommands, ", "))
 		fmt.Println("    update         install the latest release (backs the DB up first)")
-		fmt.Println("    install-menu   install the 'vpn-ui' management menu to " + service.MenuScriptPath)
+		fmt.Println("    install-menu   install the 'stargate-ui' management menu to " + service.MenuScriptPath)
 		fmt.Println("    --systemd      install+enable+start the panel as a systemd service")
 		fmt.Println("    --random       randomize panel port + username + password + web path")
 		fmt.Println("                   (combinable, e.g. --random --systemd)")
@@ -3094,7 +3094,7 @@ func main() {
 		// only the flags actually present on the command line, and that distinction
 		// is load-bearing twice over: it separates `-subCert ""` (clear the
 		// subscription listener) from an absent -subCert (leave it alone), and
-		// without it `vpn-ui cert -subCert c -subCertKey k` would fall through to
+		// without it `stargate-ui cert -subCert c -subCertKey k` would fall through to
 		// updateCert("", "") and CLEAR the panel's certificate as a side effect of
 		// setting the subscription server's, which is this bug wearing the other hat.
 		typed := map[string]bool{}

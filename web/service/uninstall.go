@@ -15,11 +15,11 @@ import (
 	"github.com/mhsanaei/3x-ui/v2/xray"
 )
 
-// MenuScriptPath is where the `vpn-ui` management menu is installed, by
-// `vpn-ui-amd64 install-menu` (which deploy.sh runs on every install and update).
+// MenuScriptPath is where the `stargate-ui` management menu is installed, by
+// `stargate-ui-amd64 install-menu` (which deploy.sh runs on every install and update).
 // Declared here, in the package that must REMOVE it, so the installer in main.go
 // and this teardown can never drift apart on the path.
-const MenuScriptPath = "/usr/bin/vpn-ui"
+const MenuScriptPath = "/usr/bin/stargate-ui"
 
 // UninstallOptions configures a host teardown.
 type UninstallOptions struct {
@@ -60,13 +60,13 @@ func (r *UninstallReport) fail(what string, err error) {
 // opts.KeepCores narrows the teardown to the panel itself: steps 3 and 5-10 are
 // skipped whole, so every installed core keeps its daemon, its config and the
 // data plane it needs. Each gate says why the step belongs to the cores, because
-// several of them (the nftables table, the policy routing, the /etc/vpn-ui and
+// several of them (the nftables table, the policy routing, the /etc/stargate-ui and
 // sysctl drop-ins) are panel-NAMED but core-owned.
 func Uninstall(opts UninstallOptions) *UninstallReport {
 	r := &UninstallReport{}
 	logger.Info("uninstall: starting host teardown")
 
-	// 1. The panel's own systemd unit (default "vpn-ui"). disable --now stops it
+	// 1. The panel's own systemd unit (default "stargate-ui"). disable --now stops it
 	//    without self-killing: this process was started outside that unit's PID.
 	var sd SystemdService
 	name := sd.GetServiceName()
@@ -76,7 +76,7 @@ func Uninstall(opts UninstallOptions) *UninstallReport {
 		r.Removed = append(r.Removed, unitPath(name))
 	}
 
-	// 1b. The `vpn-ui` management menu. Unlinking it while it is the very script
+	// 1b. The `stargate-ui` management menu. Unlinking it while it is the very script
 	//     running this uninstall is safe on Linux: bash holds an open fd on it, so
 	//     the inode outlives the directory entry (same reason main.runUninstall can
 	//     remove the running binary).
@@ -199,12 +199,12 @@ func Uninstall(opts UninstallOptions) *UninstallReport {
 		// 8. /etc configs, runtime dirs, seq files, logs.
 		//
 		//    The panel-NAMED entries are gated with the rest, not split out: they
-		//    are named after the panel but owned by the cores. modules-load.d/vpn-ui.conf
-		//    is what loads ppp/l2tp/gre at boot, sysctl.d/99-vpn-ui.conf turns on
+		//    are named after the panel but owned by the cores. modules-load.d/stargate-ui.conf
+		//    is what loads ppp/l2tp/gre at boot, sysctl.d/99-stargate-ui.conf turns on
 		//    forwarding, and the log folder is where a surviving Xray keeps writing
 		//    its access and IP-limit logs. A kept core needs every one of them.
 		//
-		//    /etc/vpn-ui is NOT in either list here. It holds ownership.json and
+		//    /etc/stargate-ui is NOT in either list here. It holds ownership.json and
 		//    backups/, which every restore below reads from, so it goes last inside
 		//    this gate. See the end of the block.
 		//
@@ -213,7 +213,7 @@ func Uninstall(opts UninstallOptions) *UninstallReport {
 		for _, p := range []string{
 			"/etc/ppp/radius", // panel-owned subdir of the host /etc/ppp
 			"/etc/swanctl/conf.d/l2tp.conf",
-			"/etc/modules-load.d/vpn-ui.conf",
+			"/etc/modules-load.d/stargate-ui.conf",
 		} {
 			removePath(r, p)
 		}
@@ -235,7 +235,7 @@ func Uninstall(opts UninstallOptions) *UninstallReport {
 			"/etc/ipsec.secrets",
 			"/etc/pptpd.conf",
 			"/etc/ppp/pptpd-options",
-			"/etc/sysctl.d/99-vpn-ui.conf",
+			"/etc/sysctl.d/99-stargate-ui.conf",
 			"/etc/strongswan.conf",
 			"/etc/swanctl/swanctl.conf",
 			"/etc/default/grub",
@@ -256,7 +256,7 @@ func Uninstall(opts UninstallOptions) *UninstallReport {
 				removePath(r, m)
 			}
 		}
-		removePath(r, config.GetLogFolder()) // /var/log/vpn-ui
+		removePath(r, config.GetLogFolder()) // /var/log/stargate-ui
 		removePath(r, "/var/log/pluto.log")
 
 		// 9. Bundled daemon trees + their host symlinks. Remove the outward symlinks
@@ -264,7 +264,7 @@ func Uninstall(opts UninstallOptions) *UninstallReport {
 		//    unlinked; then remove the bundle root itself (pptpctrl link lives inside).
 		removeSymlinkIfTarget(r, backend.PppdSystem, backend.PppdBundled)
 		removeSymlinkIfTarget(r, backend.PppdPluginDir, backend.PppdBundleRoot+"/lib/pppd")
-		removePath(r, backend.PppdBundleRoot) // /usr/libexec/vpn-ui (incl. libreswan/, pptpctrl)
+		removePath(r, backend.PppdBundleRoot) // /usr/libexec/stargate-ui (incl. libreswan/, pptpctrl)
 		if usingBundledIpsec() {
 			removePath(r, backend.LibreswanNssDir) // /etc/ipsec.d — only ours on the bundled path
 		}
@@ -277,7 +277,7 @@ func Uninstall(opts UninstallOptions) *UninstallReport {
 		//     shipped after that (openconnect, sstp, ikev2, wgc, awg, mtproto, ssh),
 		//     each declaring its own paths/globs/feats in coreCatalog, and none of it
 		//     reached here — a verified uninstall on Ubuntu 24.04 left /etc/ocserv,
-		//     /etc/vpn-ui-ikev2, /etc/strongswan.conf, /var/run/{ocserv,charon.vici}
+		//     /etc/stargate-ui-ikev2, /etc/strongswan.conf, /var/run/{ocserv,charon.vici}
 		//     and both bundle trees behind. Iterating the catalog means core #11 is
 		//     covered the day it is added, with no second list to remember.
 		//
@@ -349,14 +349,14 @@ func Uninstall(opts UninstallOptions) *UninstallReport {
 			releaseOwned(r, p, allCores)
 		}
 
-		// LAST inside this gate, and it must stay last: /etc/vpn-ui holds
+		// LAST inside this gate, and it must stay last: /etc/stargate-ui holds
 		// ownership.json and backups/, which every restore above reads from. Removed
 		// any earlier and those restores silently find their backup gone (they fail
 		// safe and report "kept: its backup is missing", so the operator simply
 		// never gets their config back). It is also why nothing below may call into
 		// the manifest again: ownSaveLocked MkdirAlls this directory, so a later
 		// write would resurrect it on a fully uninstalled host.
-		removePath(r, "/etc/vpn-ui") // nft config dir (vpn.nft) + ownership manifest
+		removePath(r, "/etc/stargate-ui") // nft config dir (vpn.nft) + ownership manifest
 	}
 
 	// The install dir and the bin/ dir under it, resolved once: a relative bin/
@@ -401,7 +401,7 @@ func Uninstall(opts UninstallOptions) *UninstallReport {
 	// What the manifest recorded as NOT ours, so the operator can see the things
 	// this uninstall deliberately walked past. Surfacing this is the operator-facing
 	// point of the whole manifest. Read-only, and the manifest is cached in memory
-	// after its first read, so this still works once /etc/vpn-ui is gone.
+	// after its first read, so this still works once /etc/stargate-ui is gone.
 	for _, a := range OwnershipReport() {
 		if a.PreExisting != "no" {
 			r.Kept = append(r.Kept, a.Kind+" "+a.ID+" ("+a.Note+")")
@@ -412,8 +412,8 @@ func Uninstall(opts UninstallOptions) *UninstallReport {
 	if opts.KeepCores {
 		r.Kept = append(r.Kept,
 			"the installed VPN cores (--cores keep): daemons left running, plus their /etc configs, bundled trees and "+binDir,
-			"the data plane they need: nftables 'ip vpn' table, firewalld trust, fwmark-1/table-100 routing, /etc/vpn-ui, the modules-load.d and sysctl.d drop-ins, "+config.GetLogFolder(),
-			"the host state provisioning changed for them: the GRUB boot-default pin, the /etc/modprobe.d un-blacklists, the relaxed rp_filter, any host units it disabled and any NIC offload it turned off. The originals are in /etc/vpn-ui/backups/ with /etc/vpn-ui/ownership.json listing them, so this is reversible by hand once the cores are gone too",
+			"the data plane they need: nftables 'ip vpn' table, firewalld trust, fwmark-1/table-100 routing, /etc/stargate-ui, the modules-load.d and sysctl.d drop-ins, "+config.GetLogFolder(),
+			"the host state provisioning changed for them: the GRUB boot-default pin, the /etc/modprobe.d un-blacklists, the relaxed rp_filter, any host units it disabled and any NIC offload it turned off. The originals are in /etc/stargate-ui/backups/ with /etc/stargate-ui/ownership.json listing them, so this is reversible by hand once the cores are gone too",
 			"NOTE: RADIUS ran INSIDE this binary, so kept L2TP, PPTP, OpenVPN, OpenConnect, SSTP and IKEv2 cores can no longer authenticate new logins. WireGuard, AmneziaWG, GRE and MTProto are unaffected",
 		)
 	}

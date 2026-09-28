@@ -63,7 +63,7 @@ var defaultValueMap = map[string]string{
 	"tgRenewalPlans":              "[{\"id\":\"10gb-30d\",\"name\":\"10 GB / 30 days\",\"gb\":10,\"days\":30,\"price\":\"\"},{\"id\":\"30gb-30d\",\"name\":\"30 GB / 30 days\",\"gb\":30,\"days\":30,\"price\":\"\"},{\"id\":\"unlimited-30d\",\"name\":\"Unlimited / 30 days\",\"gb\":0,\"days\":30,\"price\":\"\"}]",
 	"twoFactorEnable":             "false",
 	"twoFactorToken":              "",
-	"systemdServiceName":          "vpn-ui",
+	"systemdServiceName":          "stargate-ui",
 	"subEnable":                   "false",
 	"subJsonEnable":               "false",
 	"subTitle":                    "",

@@ -25,7 +25,7 @@ import "os"
 const (
 	// SstpcBundleRoot is where the tree unpacks; its own subdir under the shared
 	// /usr/libexec prefix so it never collides with the other bundles.
-	SstpcBundleRoot = "/usr/libexec/vpn-ui-sstpc" // must equal the bundle build PREFIX
+	SstpcBundleRoot = "/usr/libexec/stargate-ui-sstpc" // must equal the bundle build PREFIX
 
 	// SstpcBundled is the launcher the SSTP outbound driver hands to pppd as its
 	// `pty` command.
@@ -54,7 +54,7 @@ func SstpcBundleReady() bool {
 }
 
 // ExtractSstpcBundle untars the embedded bundle to the filesystem root (its entries
-// are rooted at usr/libexec/vpn-ui-sstpc). Idempotent; no-op if the bundle is absent.
+// are rooted at usr/libexec/stargate-ui-sstpc). Idempotent; no-op if the bundle is absent.
 func ExtractSstpcBundle() error {
 	if !HasSstpcBundle() {
 		return nil

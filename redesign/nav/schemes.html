@@ -505,7 +505,7 @@ body{
   <div class="masthead">
     <div class="mast-row">
       <div>
-        <div class="stamp">vpn-ui / navigation / five schemes</div>
+        <div class="stamp">stargate-ui / navigation / five schemes</div>
         <h1>Every sub-category under its section</h1>
         <p>
           Five ways to replace the tab strip on Settings, Xray and Core. Each one is live: click it.
@@ -1035,7 +1035,7 @@ const RAIL = [
 
 const rail = () => `
   <aside class="ui-rail">
-    <div class="ui-brand">VPN-UI</div>
+    <div class="ui-brand">STARGATE-UI</div>
     <div class="ui-rail-nav">
       ${RAIL.map(r => `<button class="ui-rail-item ${r.active?'is-active':''}">${svg(r.icon)}<span>${r.label}</span></button>`).join('')}
     </div>
@@ -1173,7 +1173,7 @@ const pip = on => on ? '<span class="pip" title="unsaved changes"></span>' : '';
     root.innerHTML = `
       <div class="frame-body">
         <aside class="ui-rail rail-wide">
-          <div class="ui-brand">VPN-UI</div>
+          <div class="ui-brand">STARGATE-UI</div>
           <div class="ui-rail-nav">
             ${PAGES.map(p => {
               const isOpen = p.label === openPage;

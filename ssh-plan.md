@@ -417,7 +417,7 @@ Ordered, tagged [SI]=shape-independent, [R]=relay-specific. This is the mtproto 
     and `KillDisabledSessions()`. No `sweeper.Register` (SSH enforces in-process, not via the rbridge Sink).
 16. `web/service/core.go` [SI]: `sshStatus()` (installed = `Available()`; running = listener bound,
     the radius/wgc archetype) + `GetCoresStatus` + RestartCore/StopCore/CoreLogs arms. `core.html`
-    `coreTitle: 'SSH'` + `coreBackend: 'Built-in (vpn-ui)'`. `index.html` `vpnCoreStatuses` + `coreLabel`.
+    `coreTitle: 'SSH'` + `coreBackend: 'Built-in (stargate-ui)'`. `index.html` `vpnCoreStatuses` + `coreLabel`.
 17. i18n [SI, optional]: ship English-inline like mtproto/wg-c, or add keys to all 13
     `translate.*.toml` (parity ratchet `i18n_toml_test.go:125`).
 18. `web/template_parse_test.go` [SI]: it asserts each protocol form is defined; `form/ssh` must parse.

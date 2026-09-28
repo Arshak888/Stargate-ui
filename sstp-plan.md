@@ -71,7 +71,7 @@ UserLimit int; UserLimitStrategy string
 ```
 
 ### Config/process conventions (G1)
-- config dir: `/etc/vpn-ui-sstp/server-<id>/` holding `accel-ppp.conf`, `server.crt`,
+- config dir: `/etc/stargate-ui-sstp/server-<id>/` holding `accel-ppp.conf`, `server.crt`,
   `server.key`, optional `ca.crt`, and the accel-cmd control socket `cli.sock`.
 - proc name: `sstp-server-<id>` (per enabled inbound); reconcile/stop by prefix
   `sstp-server-` (mirror ocserv). `daemonBin("accel-pppd")`. Pass `pppdEnv()`? NO —
@@ -140,7 +140,7 @@ Files (NEW/edit; nobody else touches these):
 - NEW `backend/accel.go` — clone `backend/pppd.go`: `HasAccelBundle()`,
   `ExtractAccelBundle()` (untar `accel-ppp-bundle.tgz` to `/`), and a link helper if the
   module dir needs a fixed path (accel-ppp `libtriton` module search path). Constants for
-  the bundle root (e.g. `/usr/libexec/vpn-ui-accel`), the `accel-pppd`/`accel-cmd` paths.
+  the bundle root (e.g. `/usr/libexec/stargate-ui-accel`), the `accel-pppd`/`accel-cmd` paths.
 - EDIT `database/model/model.go` — add `SSTP Protocol = "sstp"` to the const block
   (`:24-27`).
 - EDIT `backend/backend.go` — the `.tgz` rides the existing `//go:embed all:bin`; Extract
@@ -331,7 +331,7 @@ the load-bearing fact for the whole approach).
 - [x] **Phase-0 build gate PASSED** — `podman ... accel-ppp-bundle.sh` built
       accel-ppp-bundle.tgz (3.2M): libsstp.so + all modules + libtriton + musl loader +
       libssl/crypto/pcre + RADIUS dicts + wrappers; dict-path assertion passed.
-- [x] `./build.sh` canonical build embeds the bundle → build/out/vpn-ui (174M); cache
+- [x] `./build.sh` canonical build embeds the bundle → build/out/stargate-ui (174M); cache
       guard correctly skips daemon rebuild. Staged to test_unit/test_subject/.
 - [x] Local accel-pppd sanity: musl binary EXECUTES on glibc host via loader wrapper;
       starts with an sstp.go-format accel-ppp.conf and runs stably (exit 124 = ran till
@@ -381,12 +381,12 @@ the load-bearing fact for the whole approach).
   Enable}` struct (exactly like `ocservClient`) so unmarshal drops the UI's extra fields
   (tgId/totalGB/expiryTime/…). web/service/sstp.go. Rebuilt, deployed, verified: log now
   `SSTP: initializing services for 1 inbound(s)`, accel-pppd running, :443 bound.
-- **Deploy gotcha (not a code bug):** the box was running a MANUAL `./vpn-ui` (retitled proc
-  "vpn-ui", /opt/vpn-ui/vpn-ui) holding :35816 alongside the systemd `vpn-ui-amd64` unit →
+- **Deploy gotcha (not a code bug):** the box was running a MANUAL `./stargate-ui` (retitled proc
+  "stargate-ui", /opt/stargate-ui/stargate-ui) holding :35816 alongside the systemd `stargate-ui-amd64` unit →
   new binary crash-looped `bind: address already in use`. Killing it orphaned its xray
   (held :21111 = x-ui-coexist API port) → xray crash-loop. Reaped both by PID → clean.
-  Deploy = gzip→scp→gunzip→replace /opt/vpn-ui/vpn-ui-amd64→chmod755→systemctl restart, AND
-  ensure no stray `./vpn-ui` / orphan xray remain.
+  Deploy = gzip→scp→gunzip→replace /opt/stargate-ui/stargate-ui-amd64→chmod755→systemctl restart, AND
+  ensure no stray `./stargate-ui` / orphan xray remain.
 - Also carried the modal fix (setupRequiredForProtocol now a window prompt) in this deploy.
 
 ## STATUS: COMPLETE & E2E-VERIFIED (ubuntu-24) + live-box core running. Client test in progress. Not committed.
@@ -396,8 +396,8 @@ the load-bearing fact for the whole approach).
   dropped post-auth ("IP is out of client-ip-range"). Whitelist the protocol /16.
 - accel-pppd runs foreground with just `-c` (no daemonize); binds the SSTP port (443) +
   the [cli] tcp control port (13300+id). Musl loader-wrapper runs fine on the glibc VM.
-- accel.log lives at the per-inbound configDir (`/etc/vpn-ui-sstp/server-<id>/accel.log`),
-  level=3. RADIUS auth/acct logs are in the panel log `/var/log/vpn-ui/vpn-ui.log`.
+- accel.log lives at the per-inbound configDir (`/etc/stargate-ui-sstp/server-<id>/accel.log`),
+  level=3. RADIUS auth/acct logs are in the panel log `/var/log/stargate-ui/stargate-ui.log`.
 
 ## Runtime-UNVERIFIED (nail down at live-verify, like ocserv Phase 7)
 - accel-ppp.conf exact syntax vs accel-ppp 1.13.0 (Alpine): module `path=` fallback via
@@ -409,6 +409,6 @@ the load-bearing fact for the whole approach).
   docker/podman host and staged before the SSTP daemon can run.
 
 # Build/test commands
-- Quick compile: `CGO_ENABLED=1 go build -o /tmp/vpn-ui-sstp main.go`
+- Quick compile: `CGO_ENABLED=1 go build -o /tmp/stargate-ui-sstp main.go`
 - Unit: `CGO_ENABLED=1 go test ./web/... -count=1`
-- Full bundled binary: `./build.sh` → `build/out/vpn-ui-amd64` (rebuilds daemons incl. accel-ppp)
+- Full bundled binary: `./build.sh` → `build/out/stargate-ui-amd64` (rebuilds daemons incl. accel-ppp)

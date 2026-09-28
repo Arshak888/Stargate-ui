@@ -433,10 +433,10 @@
     </article>
     {{ end }}
 
-    <!-- ===== VPN-UI panel + updater ===== -->
-    <article class="bo-tile bo-t-vpnui" aria-label="VPN-UI">
+    <!-- ===== STARGATE-UI panel + updater ===== -->
+    <article class="bo-tile bo-t-vpnui" aria-label="STARGATE-UI">
       <div class="bo-tile-head">
-        <h3 class="bo-tile-title">VPN-UI</h3>
+        <h3 class="bo-tile-title">STARGATE-UI</h3>
         <button type="button" class="bo-icon-btn bo-icon-btn--accent"
           :disabled="panelUpdate.checking" @click="checkForUpdate(true)">
           <svg class="bo-icon bo-icon-14" aria-hidden="true"><use href="#bo-i-refresh"></use></svg>
@@ -445,7 +445,7 @@
       </div>
       <div class="bo-vpnui-body">
         <div>
-          <a rel="noopener" href="https://github.com/Sir-MmD/vpn-ui" target="_blank"
+          <a rel="noopener" href="https://github.com/Sir-MmD/stargate-ui" target="_blank"
             :style="{ color: 'inherit', textDecoration: 'none' }">
             <div class="bo-vpnui-version num">v{{ .cur_ver }}</div>
           </a>
@@ -618,7 +618,7 @@
     @ok="fetchPanelBinaryFromUrl">
     <p :style="{ color: 'var(--text-3)' }">{{ i18n "pages.index.updateFromUrlIntro" }}</p>
     <a-input v-model="urlModal.url" :disabled="urlModal.fetching"
-      placeholder="https://example.com/vpn-ui-amd64"
+      placeholder="https://example.com/stargate-ui-amd64"
       @pressEnter="urlModal.url.trim() && !urlModal.fetching && fetchPanelBinaryFromUrl()"></a-input>
   </a-modal>
 
@@ -692,7 +692,7 @@
     </div>
   </a-modal>
 
-  <!-- Donate dialog (VPN-UI tile). The addresses are rendered server-side from
+  <!-- Donate dialog (STARGATE-UI tile). The addresses are rendered server-side from
        web/controller/donate.go, which a test pins to README.md's Donate section
        so the panel can never show an address the README has moved on from.
        Each row is a copy target: these are pasted into a wallet, so the address
@@ -934,7 +934,7 @@
       </a-form-item>
 
       <a-form-item style="float: right;">
-        <a-button type="primary" icon="download" @click="FileManager.downloadTextFile(logModal.plain, 'vpn-ui.log')"></a-button>
+        <a-button type="primary" icon="download" @click="FileManager.downloadTextFile(logModal.plain, 'stargate-ui.log')"></a-button>
       </a-form-item>
     </a-form>
     <!-- Core filter. Client-side over the already-fetched lines, so ticking a
@@ -1025,7 +1025,7 @@
        ticks have to reach the server as query params.
 
        The preview is the point of the dialog, not decoration: unticking every box
-       is a legitimate choice and it produces a bare vpn-ui.db, which reads as a
+       is a legitimate choice and it produces a bare stargate-ui.db, which reads as a
        bug unless the resulting name is on screen while you tick. -->
   <a-modal id="backup-name-modal" v-model="backupNameModal.visible"
     title='{{ i18n "pages.index.backupNameTitle" }}' :closable="true"
@@ -1082,7 +1082,7 @@
     </template>
     <div style="padding:4px 2px">
       <p style="margin-bottom:10px">
-        <b>[[ distroModal.pretty ]]</b> is not on vpn-ui's officially tested distro list.
+        <b>[[ distroModal.pretty ]]</b> is not on stargate-ui's officially tested distro list.
         The panel may still run, but <b style="color:#cf1322">expect errors</b>.
       </p>
       <p style="margin-bottom:0;opacity:0.7;font-size:12px;line-height:1.5">
@@ -1570,7 +1570,7 @@
       this.visible = true;
       this.mode = 'panel';
       this.logs = logs;
-      this.render([{ source: 'vpn-ui', text: (logs || []).join('\n') }]);
+      this.render([{ source: 'stargate-ui', text: (logs || []).join('\n') }]);
     },
     // Every log the panel shows goes through LogFormatter, so the panel's own
     // lines, Xray's and each daemon's are coloured and laid out identically.
@@ -1928,7 +1928,7 @@
       // and time are the browser's clock while the file carries the server's, so
       // those digits can differ by a timezone. That is fine for what this is for:
       // showing WHICH parts appear, and above all that unticking every box is a
-      // real choice that really does yield a bare vpn-ui.db.
+      // real choice that really does yield a bare stargate-ui.db.
       backupFilename() {
         const now = new Date();
         const pad = n => String(n).padStart(2, '0');
@@ -1942,7 +1942,7 @@
           .filter(part => this.backupNameModal.parts.includes(part))
           .map(part => values[part])
           .filter(Boolean);
-        return 'vpn-ui' + (picked.length ? '_' + picked.join('_') : '') + '.db';
+        return 'stargate-ui' + (picked.length ? '_' + picked.join('_') : '') + '.db';
       },
       // "Ubuntu 24.04 - kernel 6.8.0-31-generic", degrading gracefully when the
       // backend has not supplied a field.
@@ -2335,7 +2335,7 @@
         const panel = await HttpUtil.post('/panel/api/server/logs/' + logModal.rows,
           { level: logModal.level, syslog: logModal.syslog });
         if (panel && panel.success) {
-          sections.push({ name: 'VPN-UI', text: (panel.obj || []).join('\n') });
+          sections.push({ name: 'STARGATE-UI', text: (panel.obj || []).join('\n') });
         }
 
         // Core logs sit behind PermCoreSettings, which someone looking at
@@ -2427,7 +2427,7 @@
           this.updatedModal.visible = true;
         } catch (e) { /* nothing to announce */ }
       },
-      // --- Panel self-update (VPN-UI card) ------------------------------
+      // --- Panel self-update (STARGATE-UI card) ------------------------------
       // Runs automatically on every overview load (manual=false, silent) and on
       // the "Check for Update" button (manual=true, surfaces errors in the card).
       async checkForUpdate(manual) {
@@ -3350,7 +3350,7 @@
       },
       downloadXrayLogs() {
         if (!Array.isArray(this.xraylogModal.logs) || this.xraylogModal.logs.length === 0) {
-          FileManager.downloadTextFile('', 'vpn-ui.log');
+          FileManager.downloadTextFile('', 'stargate-ui.log');
           return;
         }
         const lines = this.xraylogModal.logs.map(l => {
@@ -3365,7 +3365,7 @@
             return JSON.stringify(l);
           }
         }).join('\n');
-        FileManager.downloadTextFile(lines, 'vpn-ui.log');
+        FileManager.downloadTextFile(lines, 'stargate-ui.log');
       },
       async openConfig() {
         this.loading(true);
@@ -3428,7 +3428,7 @@
         });
         fileInput.click();
       },
-      // Import a stock 3x-ui (or vpn-ui) backup over the current data, keeping this
+      // Import a stock 3x-ui (or stargate-ui) backup over the current data, keeping this
       // panel's own address/cert/secret. Distinct from importDatabase (a like-for-like
       // restore): the admin accounts come from the backup, so the operator re-logs-in
       // with the imported panel's credentials afterwards.

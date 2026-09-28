@@ -577,7 +577,7 @@ func (s *SSLService) run(store *SSLStore, req SSLOperationRequest, emit func(Pro
 
 	// THE GATE. On the fullchain FILE, never on the domain directory: acme.sh
 	// creates the directory (with a domain key in it) even when validation fails,
-	// so its presence proves nothing. vpn-ui.sh:663-681 records what gating on the
+	// so its presence proves nothing. stargate-ui.sh:663-681 records what gating on the
 	// directory cost.
 	if chain == "" {
 		msg := sslExplainFailure(req.SSLIssueRequest, out, runErr)

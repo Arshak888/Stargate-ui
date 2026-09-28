@@ -1,5 +1,5 @@
 // Package database provides database initialization, migration, and management utilities
-// for the vpn-ui panel using GORM with SQLite.
+// for the stargate-ui panel using GORM with SQLite.
 package database
 
 import (
@@ -432,7 +432,7 @@ func InitDB(dbPath string) error {
 
 // GetSettingValue opens the DB and returns a single `settings` value via a plain
 // read-only SELECT — NO AutoMigrate and NO seeders (unlike InitDB). This lets a
-// short-lived hook process (e.g. `vpn-ui openvpn-auth`, which runs on every login
+// short-lived hook process (e.g. `stargate-ui openvpn-auth`, which runs on every login
 // alongside the live panel) read a setting without migrating/seeding/locking the DB
 // the panel owns. A busy timeout tolerates the panel writing concurrently; a missing
 // key yields ("", nil).

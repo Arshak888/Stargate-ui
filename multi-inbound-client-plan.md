@@ -776,7 +776,7 @@ four. Do not.
 Reuse the shape of `backupPanelDBForUpdate` (`main.go:1188-1234`), which already does the
 right things: `PRAGMA wal_checkpoint(TRUNCATE)` first so the copy is as close to a
 point-in-time snapshot as a file copy gets, then copies the `-wal`/`-shm` sidecars
-alongside, into `<dbdir>/backups/vpn-ui_<version>_<timestamp>.db`.
+alongside, into `<dbdir>/backups/stargate-ui_<version>_<timestamp>.db`.
 
 Take one tagged `pre-accounts` snapshot before the **first** migration run only, guarded by
 the settings key from 6.5. Adopt the update path's rule verbatim (`main.go:1135`):
@@ -787,7 +787,7 @@ If the backup fails, **skip the migration** and log at error. The panel starts n
 the legacy path; the operator fixes the disk and restarts.
 
 Do **not** reuse `service.backupPanelDB` - `main.go:1193-1195` records why: it is
-best-effort and single-slot (`vpn-ui_<version>.db`), so a second upgrade from the same
+best-effort and single-slot (`stargate-ui_<version>.db`), so a second upgrade from the same
 version silently overwrites the only copy you would want back.
 
 ### 6.3 The pass
@@ -891,7 +891,7 @@ explicitly *"ADVICE, never authorization."*
    account is created; lossy after that, because the non-home inbounds lose quota
    enforcement (Part 5.1). State this plainly in the release notes rather than implying the
    rollback is unconditional.
-2. **`vpn-ui --revert-accounts`.** Drops the two tables. Refuses when any account holds more
+2. **`stargate-ui --revert-accounts`.** Drops the two tables. Refuses when any account holds more
    than one membership, because there is no non-destructive answer there - the operator must
    choose explicitly between splitting into renamed accounts and dropping the extra
    memberships.
@@ -1062,7 +1062,7 @@ data, long before anything depends on it.
 6. Subscription: account-backed quota/expiry instead of the summing loop (Part 5.2), and
    remark disambiguation (Part 5.3).
 7. UI: the checklist, the membership badge, i18n across 13 locales.
-8. `vpn-ui --revert-accounts` and the standalone "reset all accounts" action (Part 6.8).
+8. `stargate-ui --revert-accounts` and the standalone "reset all accounts" action (Part 6.8).
 9. Lift the reseller `copyClients` refusal; consider replacing copyClients with
    "add memberships" entirely.
 

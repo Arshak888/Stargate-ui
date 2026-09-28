@@ -30,7 +30,7 @@ The existing feature does nothing on a default install:
    `GetIpLimitEnable` is false and the whole UI is hidden.
 2. **No jail ships.** Zero hits for `failregex` / `filter.d` / `jail.local`
    anywhere in the repo outside a Go comment. Upstream's `x-ui.sh iplimit`
-   installer does not exist in `vpn-ui.sh`. So even with the log enabled, the
+   installer does not exist in `stargate-ui.sh`. So even with the log enabled, the
    log line at `check_client_ip_job.go` is read by nothing.
 3. **It cannot disconnect anyone.** `disconnectClientTemporarily` calls
    `RemoveUser` -> `validator.Del`, but the VLESS validator is consulted exactly

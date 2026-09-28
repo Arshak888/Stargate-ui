@@ -718,7 +718,7 @@ def _run_mtproto_adtag(cA: Client, sc, result, panel, server_exec) -> None:
     # tag, which would quietly turn every assertion below into a test of nothing.
     tag = "0123456789abcdef0123456789abcdef"
     email = ib.accounts["A"].email
-    conf = f"/etc/vpn-ui-mtproto/server-{ib.inbound_id}/config.toml"
+    conf = f"/etc/stargate-ui-mtproto/server-{ib.inbound_id}/config.toml"
 
     # The paired socks inbound lands on the panel-wide "Xray port for inbound N is
     # 12300+N" convention (GetSocksPort), which is stable and inbound-unique.
@@ -1885,7 +1885,7 @@ def _strategy_check(proto, cA, cB, cC, sc, ib, panel, log, phase, server_exec=No
             if server_exec is not None:
                 try:
                     _, rlog, _ = server_exec(
-                        "journalctl -u vpn-ui-panel --no-pager 2>/dev/null | "
+                        "journalctl -u stargate-ui-panel --no-pager 2>/dev/null | "
                         "grep 'user-limit reached' | tail -1")
                     refused = "user-limit reached" in (rlog or "")
                 except Exception:  # noqa: BLE001
@@ -1956,7 +1956,7 @@ def _strategy_check(proto, cA, cB, cC, sc, ib, panel, log, phase, server_exec=No
             if server_exec is not None:
                 try:
                     _, ev, _ = server_exec(
-                        "journalctl -u vpn-ui-panel --no-pager 2>/dev/null | "
+                        "journalctl -u stargate-ui-panel --no-pager 2>/dev/null | "
                         "grep 'evicted oldest device' | grep 'proto=%s' | tail -1" % proto)
                     server_evicted = "evicted oldest device" in (ev or "")
                 except Exception:  # noqa: BLE001
@@ -2133,7 +2133,7 @@ def _oc_same_nat_check(cA, sc, ib, log, phase, server_exec=None):
         if server_exec is not None:
             try:
                 _, srv, _ = server_exec(
-                    "journalctl -u vpn-ui-panel --no-pager 2>/dev/null | "
+                    "journalctl -u stargate-ui-panel --no-pager 2>/dev/null | "
                     "grep 'auth accepted (PAP)' | grep 'nas=openconnect' | tail -4")
             except Exception:  # noqa: BLE001
                 pass
@@ -2183,7 +2183,7 @@ def _gre_mode_checks(cA, sc, ib, panel, log, server_exec=None) -> list:
     # Server-side evidence, so an IPsec failure is attributable instead of a bare "no SA".
     # The first run of this test could not distinguish "the panel never configured charon"
     # from "charon is configured but never answered", which are opposite bugs.
-    SWANCTL = "/usr/libexec/vpn-ui-strongswan/sbin/swanctl"
+    SWANCTL = "/usr/libexec/stargate-ui-strongswan/sbin/swanctl"
 
     def _server_ipsec_state():
         if server_exec is None:

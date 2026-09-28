@@ -462,7 +462,7 @@ Build/verify gate at each step: `./build.sh` (never bare `go build`) + `go test 
 ip link add dev wgvpn0 type wireguard        # kernel; OR: boringtun-cli -f wgvpn0 (fallback)
 ip address add dev wgvpn0 10.7.0.1/24
 # private key + listen port + peers via wgctrl ConfigureDevice (preferred), or:
-#   wg set wgvpn0 listen-port 51820 private-key /run/vpn-ui/wgvpn0.key
+#   wg set wgvpn0 listen-port 51820 private-key /run/stargate-ui/wgvpn0.key
 ip link set up dev wgvpn0
 # per-peer add (wgctrl PeerConfig, or):
 #   wg set wgvpn0 peer <client-pub> allowed-ips 10.7.0.2/32 persistent-keepalive 25

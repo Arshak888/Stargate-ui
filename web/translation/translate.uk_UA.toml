@@ -142,8 +142,8 @@
 
 [pages.index]
 "donate" = "Підтримати"
-"donateTitle" = "Підтримати VPN-UI"
-"donateIntro" = "Якщо VPN-UI вам корисний, пожертва на будь-яку з цих адрес допоможе його підтримувати."
+"donateTitle" = "Підтримати STARGATE-UI"
+"donateIntro" = "Якщо STARGATE-UI вам корисний, пожертва на будь-яку з цих адрес допоможе його підтримувати."
 "restore" = "Відновити"
 "systemStatus" = "Стан системи"
 "title" = "Огляд"
@@ -210,7 +210,7 @@
 "exportDatabase" = "Резервна копія"
 "exportDatabaseDesc" = "Натисніть, щоб завантажити файл .db, що містить резервну копію вашої поточної бази даних на ваш пристрій."
 "backupNameTitle" = "Ім'я файлу резервної копії"
-"backupNameDesc" = "Виберіть, з чого складається ім'я завантаженого файлу. Якщо нічого не позначено, файл зберігається як vpn-ui.db."
+"backupNameDesc" = "Виберіть, з чого складається ім'я завантаженого файлу. Якщо нічого не позначено, файл зберігається як stargate-ui.db."
 "backupNamePanel" = "Назва панелі"
 "backupNameDomain" = "Домен"
 "backupNameDate" = "Дата"
@@ -1105,7 +1105,7 @@
 "report" = "🕰 Заплановані звіти: {{ .RunTime }}\r\n"
 "datetime" = "⏰ Дата й час: {{ .DateTime }}\r\n"
 "hostname" = "💻 Хост: {{ .Hostname }}\r\n"
-"version" = "🚀 VPN-UI Версія: {{ .Version }}\r\n"
+"version" = "🚀 STARGATE-UI Версія: {{ .Version }}\r\n"
 "xrayVersion" = "📡 Xray Версія: {{ .XrayVersion }}\r\n"
 "ipv6" = "🌐 IPv6: {{ .IPv6 }}\r\n"
 "ipv4" = "🌐 IPv4: {{ .IPv4 }}\r\n"

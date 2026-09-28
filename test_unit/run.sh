@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# vpn-ui test unit — root entrypoint.
+# stargate-ui test unit — root entrypoint.
 # Usage: sudo ./run.sh [--only ubuntu-24,arch] [--concurrency N] [-c config.toml]
 # On start it auto-checks the backend (incus + python) and installs/inits
 # anything missing via setup.sh, sets host net prerequisites (IPv4 forwarding),
@@ -43,7 +43,7 @@ for arg in "$@"; do
   case "$arg" in
     -h|--help)
       cat <<'EOF'
-vpn-ui test unit — parallel incus E2E matrix over server distros.
+stargate-ui test unit — parallel incus E2E matrix over server distros.
 
 Usage: sudo ./run.sh [--only d1,d2] [--concurrency N] [--tests t1,t2] [-c config.toml]
 
@@ -150,8 +150,8 @@ if ! backend_ready; then
 fi
 
 # --- binary must sit in the test_subject/ folder (with its bin/ dir) ---
-if [[ ! -f "$SCRIPT_DIR/test_subject/vpn-ui" ]]; then
-  echo "FATAL: '$SCRIPT_DIR/test_subject/vpn-ui' not found. Place the prebuilt vpn-ui binary (and its bin/ dir) in test_subject/." >&2
+if [[ ! -f "$SCRIPT_DIR/test_subject/stargate-ui" ]]; then
+  echo "FATAL: '$SCRIPT_DIR/test_subject/stargate-ui' not found. Place the prebuilt stargate-ui binary (and its bin/ dir) in test_subject/." >&2
   exit 1
 fi
 

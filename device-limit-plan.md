@@ -17,7 +17,7 @@ object to, and there is one real per-device field in VLESS nobody uses.
   So `GetIpLimitEnable` is FALSE on a default install and the whole UI is off.
 - **No fail2ban jail ships.** Zero hits for `failregex` / `filter.d` /
   `jail.local` anywhere outside a Go comment. Upstream's `x-ui.sh iplimit`
-  installer does not exist in `vpn-ui.sh`.
+  installer does not exist in `stargate-ui.sh`.
 - **The kill path cannot kill.** `disconnectClientTemporarily`
   (`web/job/check_client_ip_job.go:451`) calls `RemoveUser` -> `validator.Del`,
   but the validator is consulted exactly once per connection, at handshake

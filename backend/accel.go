@@ -19,7 +19,7 @@ import (
 // must match. The tree is tarred to backend/bin/<arch>/accel-ppp-bundle.tgz and
 // rides the same //go:embed all:bin as the flat daemons (Extract skips *.tgz).
 const (
-	AccelBundleRoot = "/usr/libexec/vpn-ui-accel" // must equal the bundle build PREFIX
+	AccelBundleRoot = "/usr/libexec/stargate-ui-accel" // must equal the bundle build PREFIX
 	AccelPppdBin    = AccelBundleRoot + "/sbin/accel-pppd"
 	AccelCmdBin     = AccelBundleRoot + "/bin/accel-cmd"
 
@@ -54,7 +54,7 @@ func HasAccelBundle() bool {
 }
 
 // ExtractAccelBundle untars the embedded accel-ppp bundle to the filesystem root
-// (its entries are rooted at usr/libexec/vpn-ui-accel). Idempotent; no-op if the
+// (its entries are rooted at usr/libexec/stargate-ui-accel). Idempotent; no-op if the
 // bundle is absent. Mirrors ExtractPppdBundle.
 func ExtractAccelBundle() error {
 	if !HasAccelBundle() {

@@ -34,7 +34,7 @@
 ### Building & Running
 ```bash
 # Build (CGO required for sqlite)
-CGO_ENABLED=1 go build -o vpn-ui main.go
+CGO_ENABLED=1 go build -o stargate-ui main.go
 
 # Run with debug logging
 XUI_DEBUG=true go run ./main.go

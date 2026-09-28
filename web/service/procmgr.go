@@ -483,7 +483,7 @@ func migrateFromSystemd() {
 		// EVERY disable below is now SCOPED and RECORDED, and both halves matter.
 		//
 		// These are not only OUR units. openvpn-server@, xl2tpd, pptpd and ipsec are
-		// the distro's own units on a host that had those daemons before vpn-ui, and
+		// the distro's own units on a host that had those daemons before stargate-ui, and
 		// this ran unconditionally on every provisioning pass. A host that installed
 		// nothing but WireGuard still had its working xl2tpd stopped and disabled, and
 		// nothing ever gave it back.

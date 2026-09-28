@@ -87,7 +87,7 @@ def mint(server_ip: str, client_id: str, server_id: str = "") -> Ikev2TlsCerts:
 
     # ---- CA (self-signed root) ----
     ca_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    ca_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "vpn-ui E2E IKEv2 CA")])
+    ca_name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "stargate-ui E2E IKEv2 CA")])
     ca_cert = (
         x509.CertificateBuilder()
         .subject_name(ca_name)
@@ -116,7 +116,7 @@ def mint(server_ip: str, client_id: str, server_id: str = "") -> Ikev2TlsCerts:
     except ValueError:
         pass
     server_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    server_cert = _leaf(server_key, server_name or "vpn-ui", server_sans,
+    server_cert = _leaf(server_key, server_name or "stargate-ui", server_sans,
                         ExtendedKeyUsageOID.SERVER_AUTH, ca_name, ca_key)
 
     # ---- client leaf: SAN rfc822 = client_id, so the client's `local id = <client_id>`

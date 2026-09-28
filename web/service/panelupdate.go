@@ -42,18 +42,18 @@ var (
 )
 
 // Panel self-update. The panel binary ships as a single GitHub release asset
-// (Sir-MmD/vpn-ui, "vpn-ui-amd64") — the same source deploy.sh installs from — so
+// (Sir-MmD/stargate-ui, "stargate-ui-amd64") — the same source deploy.sh installs from — so
 // the overview can both check for and apply updates in place.
 //
-// PanelAsset and PanelDownloadURL are exported because `vpn-ui-amd64 update` (the
+// PanelAsset and PanelDownloadURL are exported because `stargate-ui-amd64 update` (the
 // CLI/menu updater in main.go) installs from the very same release asset. It
 // reuses these plus DownloadPanelBinary/IsCompatibleBinary rather than reaching
 // for UpdatePanel: that path ends in restartPanel, whose no-systemd branch
 // syscall.Exec's os.Args back into itself. That is harmless for the panel, but from
 // a CLI process it would re-exec the CLI with its own `update` arguments, in a loop.
 const (
-	panelRepo      = "Sir-MmD/vpn-ui"
-	PanelAsset     = "vpn-ui-amd64"
+	panelRepo      = "Sir-MmD/stargate-ui"
+	PanelAsset     = "stargate-ui-amd64"
 	panelLatestAPI = "https://api.github.com/repos/" + panelRepo + "/releases/latest"
 	// PanelDownloadURL is the release asset both the in-panel updater and the CLI
 	// `update` subcommand download.
@@ -94,7 +94,7 @@ func (s *ServerService) CheckPanelUpdate() (*PanelUpdateInfo, error) {
 	if err != nil {
 		return info, err
 	}
-	req.Header.Set("User-Agent", "vpn-ui") // GitHub API rejects requests without a UA
+	req.Header.Set("User-Agent", "stargate-ui") // GitHub API rejects requests without a UA
 	req.Header.Set("Accept", "application/vnd.github+json")
 
 	resp, err := client.Do(req)
@@ -404,7 +404,7 @@ func installPanelBinary(staged, exe string) error {
 	backupPath, _ := backupPanelDB()
 
 	// Keep a copy of the current binary next to it so a bad update can be rolled
-	// back manually (mv vpn-ui.bak vpn-ui): once renamed, the old inode is gone.
+	// back manually (mv stargate-ui.bak stargate-ui): once renamed, the old inode is gone.
 	if err := CopyFile(exe, exe+".bak"); err == nil {
 		_ = os.Chmod(exe+".bak", 0o755)
 	} else {
@@ -471,7 +471,7 @@ func DownloadPanelBinary(ctx context.Context, dst, url string) error {
 	if err != nil {
 		return err
 	}
-	req.Header.Set("User-Agent", "vpn-ui")
+	req.Header.Set("User-Agent", "stargate-ui")
 	resp, err := client.Do(req)
 	if err != nil {
 		return err

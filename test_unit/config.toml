@@ -1,6 +1,6 @@
-# vpn-ui test unit config. Paths are relative to test_unit/ unless absolute.
+# stargate-ui test unit config. Paths are relative to test_unit/ unless absolute.
 
-binary = "test_subject/vpn-ui"              # panel binary in test_subject/ (+ its bin/)
+binary = "test_subject/stargate-ui"              # panel binary in test_subject/ (+ its bin/)
 concurrency = 2                            # distros at once; 2 safe on 31Gi, 5+ oversubscribes
 client_image = "images:ubuntu/24.04/cloud"  # all client VMs (ubuntu-24 for the AmneziaWG DKMS-on-client build; was 26.04)
 keep_failed_vms = false                     # keep a failed job's VMs for post-mortem

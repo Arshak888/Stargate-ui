@@ -795,7 +795,7 @@ func sslCheckWebrootServed(root, identifier string, res sslWebrootProbeResult) P
 // sslWebrootProbeFile is the name of the file the probe writes. Distinctive on
 // purpose: it lands in a directory an operator may go looking at, and a stray one
 // left behind by a killed process should say what wrote it.
-const sslWebrootProbeFile = "vpn-ui-preflight-"
+const sslWebrootProbeFile = "stargate-ui-preflight-"
 
 // sslWebrootProbe performs EXACTLY the write acme.sh performs, then fetches the
 // result over loopback.
@@ -827,7 +827,7 @@ func sslWebrootProbe(root, identifier string) sslWebrootProbeResult {
 	}
 
 	token := sslWebrootProbeFile + strconv.FormatInt(time.Now().UnixNano(), 36)
-	body := "vpn-ui webroot preflight " + token
+	body := "stargate-ui webroot preflight " + token
 	file := filepath.Join(dir, token)
 	if err := os.WriteFile(file, []byte(body), 0o644); err != nil {
 		return sslWebrootProbeResult{WriteErr: err}
@@ -962,7 +962,7 @@ func sslJoinIPs(ips []net.IP) string {
 }
 
 // ---------------------------------------------------------------------------
-// The IP validator, ported from ssl_ip_valid / _v4 / _v6 in vpn-ui.sh:289-346.
+// The IP validator, ported from ssl_ip_valid / _v4 / _v6 in stargate-ui.sh:289-346.
 //
 // Ported rather than shelled out to, so the panel and the installer cannot drift
 // apart on what counts as an address worth spending a validation attempt on.

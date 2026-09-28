@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# build/lib/log.sh — shared colored logging for the vpn-ui build scripts.
+# build/lib/log.sh — shared colored logging for the stargate-ui build scripts.
 # Sourced by build.sh + build/*/build.sh. Colors auto-disable when stdout is not
 # a TTY or when NO_COLOR is set (https://no-color.org), so piped/CI logs stay clean.
 #

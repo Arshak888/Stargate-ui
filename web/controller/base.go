@@ -1,4 +1,4 @@
-// Package controller provides HTTP request handlers and controllers for the vpn-ui web management panel.
+// Package controller provides HTTP request handlers and controllers for the stargate-ui web management panel.
 // It handles routing, authentication, and API endpoints for managing Xray inbounds, settings, and more.
 package controller
 

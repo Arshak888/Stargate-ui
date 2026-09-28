@@ -18,7 +18,7 @@ import (
 // not. Found on a live panel: deleting a client removed it from
 // settings.clients (so the data plane was correct) while leaving its account row
 // and every membership behind. The tables drifted, InboundIdsForEmail reported
-// inbounds the account was no longer served on, and `vpn-ui revert-accounts` was
+// inbounds the account was no longer served on, and `stargate-ui revert-accounts` was
 // blocked forever by a phantom multi-membership account that existed nowhere in
 // settings.
 func TestDeletingAClientPrunesItsAccount(t *testing.T) {

@@ -28,7 +28,7 @@ In order, on every start (not only the first):
 1. `MigrationSubIds` and `MigrationAccountSlots`, which already ran in previous
    versions.
 2. **A tagged database backup**, once, to
-   `<db dir>/backups/vpn-ui_pre-accounts_<timestamp>.db` (with its `-wal`/`-shm`
+   `<db dir>/backups/stargate-ui_pre-accounts_<timestamp>.db` (with its `-wal`/`-shm`
    sidecars). The WAL is checkpointed first so the copy is as close to a
    point-in-time snapshot as a file copy gets.
    **If this fails, the migration does not run at all.** The panel starts
@@ -224,7 +224,7 @@ The two tables are additive, so an older binary ignores them and reads
 multi-inbound account; lossy after that, because the non-home inbounds lose quota
 enforcement again.
 
-### 6.2 `vpn-ui revert-accounts`
+### 6.2 `stargate-ui revert-accounts`
 
 Drops the accounts layer and clears the migrated flag.
 
@@ -240,7 +240,7 @@ single inbound first (edit the client, untick the extras), then re-run it.
 
 ### 6.3 The pre-accounts backup
 
-`<db dir>/backups/vpn-ui_pre-accounts_<timestamp>.db`, taken before the first
+`<db dir>/backups/stargate-ui_pre-accounts_<timestamp>.db`, taken before the first
 pass. Stop the panel, put the file back, start it.
 
 ---
