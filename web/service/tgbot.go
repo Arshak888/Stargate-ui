@@ -1448,7 +1448,7 @@ func (t *Tgbot) createResellerClient(user *model.User, inboundIDs []int, email s
 	}
 	if err := t.syncResellerAccount(inbound.Id); err != nil {
 		logger.Warning("reseller create: account projection sync failed:", err)
-		_ = t.inboundService.DelInboundClientByEmail(inbound.Id, email)
+		_, _ = t.inboundService.DelInboundClientByEmail(inbound.Id, email)
 		_ = t.resellerService.Rollback(ticket)
 		return "Account synchronization failed.", err
 	}
