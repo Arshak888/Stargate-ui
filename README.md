@@ -300,3 +300,19 @@ sudo ./run.sh --only ubuntu-24
 🔹BTC: ```bc1qjnedhmc4x85uwqn5zvh25f697n2pmn7etu69pg```
 
 🔹ETH: ```0xd955379bE5813F066Cb81870bfcEA6f4bb862c24```
+
+Additional donation wallets:
+
+🔹USDT-BEP20: ```0x068e3F9B46ffB7449E5b761764ebe2C3fA8A3292```
+
+🔹USDT-TRC20: ```TUXtcWyh5WjZBWZ1TEPLDEcZuKSZixsNX5```
+
+🔹USDT-ERC20: ```0x068e3F9B46ffB7449E5b761764ebe2C3fA8A3292```
+
+🔹TRX: ```TUXtcWyh5WjZBWZ1TEPLDEcZuKSZixsNX5```
+
+🔹LTC: ```ltc1qh34v0fky7dh940df4nrjwjh0nzdw3h0xdetulv```
+
+🔹BTC: ```bc1qyde5v9v8csenvwvardpr66u6pzlal4652kqvmv```
+
+🔹ETH: ```0x068e3F9B46ffB7449E5b761764ebe2C3fA8A3292```
