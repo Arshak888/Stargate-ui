@@ -1023,17 +1023,25 @@ func (t *Tgbot) handleResellerCallback(q *telego.CallbackQuery) bool {
 			return true
 		}
 		v, _ := resellerFlows.Load(chatID)
-		flow := &resellerFlow{Stage: "create_inbounds", InboundIDs: []int{id}}
+		flow := &resellerFlow{Stage: "create_inbounds"}
 		if existing, ok := v.(*resellerFlow); ok && existing.Stage == "create_inbounds" {
 			flow = existing
-			found := false
-			for _, selected := range flow.InboundIDs {
-				if selected == id { found = true; break }
-			}
-			if !found { flow.InboundIDs = append(flow.InboundIDs, id) }
 		}
+		found := false
+		kept := make([]int, 0, len(flow.InboundIDs))
+		for _, selected := range flow.InboundIDs {
+			if selected == id {
+				found = true
+				continue
+			}
+			kept = append(kept, selected)
+		}
+		if !found {
+			kept = append(kept, id)
+		}
+		flow.InboundIDs = kept
 		resellerFlows.Store(chatID, flow)
-		t.sendCallbackAnswerTgBot(q.ID, "Inbound selected")
+		t.sendCallbackAnswerTgBot(q.ID, "Inbound selection updated")
 		t.sendResellerInboundKeyboard(chatID, user.Id, true)
 		return true
 	}
