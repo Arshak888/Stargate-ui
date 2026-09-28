@@ -921,7 +921,7 @@ func (t *Tgbot) answerResellerCommand(chatID, tgID int64, command string, args [
 			t.SendMsgToTgbot(chatID, "Invalid arguments.")
 			return true
 		}
-		msg, _ := t.createResellerClient(user, inboundID, strings.TrimSpace(args[1]), gb, days)
+		msg, _ := t.createResellerClient(user, []int{inboundID}, strings.TrimSpace(args[1]), gb, days)
 		t.SendMsgToTgbot(chatID, msg)
 		return true
 	case "renew":
