@@ -1217,7 +1217,7 @@ func (t *Tgbot) handleResellerText(message *telego.Message) bool {
 		if e != nil || n < 0 || n > 36500 {
 			t.SendMsgToTgbot(message.Chat.ID, "Enter days from 0 to 36500:")
 		} else {
-			m, _ := t.createResellerClient(user, f.InboundID, f.Email, f.GB, n)
+			m, _ := t.createResellerClient(user, f.InboundIDs, f.Email, f.GB, n)
 			resellerFlows.Delete(message.Chat.ID)
 			t.SendMsgToTgbot(message.Chat.ID, m, t.resellerKeyboard())
 		}
@@ -1400,14 +1400,19 @@ func (t *Tgbot) buildResellerClient(protocol model.Protocol, email string) model
 	return c
 }
 
-func (t *Tgbot) createResellerClient(user *model.User, inboundID int, email string, gb int, days int) (string, error) {
+func (t *Tgbot) createResellerClient(user *model.User, inboundIDs []int, email string, gb int, days int) (string, error) {
 	if email == "" {
 		return "Email is required.", errors.New("email required")
 	}
-	if !t.resellerInboundAllowed(user.Id, inboundID) {
-		return "You do not have access to this inbound.", errors.New("inbound not assigned")
+	if len(inboundIDs) == 0 {
+		return "At least one inbound is required.", errors.New("no inbound")
 	}
-	inbound, err := t.inboundService.GetInbound(inboundID)
+	for _, inboundID := range inboundIDs {
+		if !t.resellerInboundAllowed(user.Id, inboundID) {
+			return "You do not have access to one of the selected inbounds.", errors.New("inbound not assigned")
+		}
+	}
+	inbound, err := t.inboundService.GetInbound(inboundIDs[0])
 	if err != nil || inbound == nil {
 		return "Inbound not found.", err
 	}
@@ -1420,7 +1425,7 @@ func (t *Tgbot) createResellerClient(user *model.User, inboundID int, email stri
 	if err != nil {
 		return "Failed to build client.", err
 	}
-	data := &model.Inbound{Id: inboundID, Settings: string(payload)}
+	data := &model.Inbound{Id: inbound.Id, Settings: string(payload)}
 	ticket, err := t.resellerService.PrepareClientCreate(user, data)
 	if err != nil {
 		return err.Error(), err
@@ -1433,24 +1438,33 @@ func (t *Tgbot) createResellerClient(user *model.User, inboundID int, email stri
 	if needRestart {
 		t.xrayService.SetToNeedRestart()
 	}
-	// The legacy client write is the data-plane operation; immediately mirror it into
-	// the account layer so this newly sold identity becomes the source of truth for
-	// every later protocol membership. Without this call a Telegram-created account
-	// existed only in settings.clients until the next reconciliation, so the shared
-	// VPN username/password was not durable across protocols.
-	if err := t.syncResellerAccount(inboundID); err != nil {
+	if err := t.syncResellerAccount(inbound.Id); err != nil {
 		logger.Warning("reseller create: account projection sync failed:", err)
+		_ = t.inboundService.DelInboundClientByEmail(inbound.Id, email)
+		_ = t.resellerService.Rollback(ticket)
+		return "Account synchronization failed.", err
+	}
+	accounts := AccountService{}
+	changed, err := accounts.ApplyMemberships(email, inboundIDs, inboundIDs, true)
+	if err != nil {
+		_, _ = t.inboundService.DelInboundClientByEmail(inbound.Id, email)
+		_ = t.resellerService.Rollback(ticket)
+		return "Failed to attach the account to all selected inbounds.", err
+	}
+	if len(changed) > 0 {
+		t.xrayService.SetToNeedRestart()
 	}
 	message := t.resellerCredentialMessage(client, inbound.Protocol, email, gb, client.ExpiryTime)
+	message += fmt.Sprintf("\n\nInbounds: %d", len(inboundIDs))
 	if subURL, subJSON, err := t.buildSubscriptionURLs(email); err == nil && subURL != "" {
 		message += "\n\nSubscription:\nBase: " + subURL
 		if subJSON != "" {
 			message += "\nJSON: " + subJSON
 		}
 	}
+	t.notifyResellerAction(user, "created", email, inboundIDs, gb, client.ExpiryTime)
 	return message, nil
 }
-
 func (t *Tgbot) resellerSubscriptionLinks(subID string) string {
 	if strings.TrimSpace(subID) == "" {
 		return ""
