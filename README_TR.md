@@ -278,16 +278,16 @@ sudo ./run.sh --only ubuntu-24
 
 ## Bağış
 
-🔹USDC-Polygon: ```0xd955379bE5813F066Cb81870bfcEA6f4bb862c24```
+🔹USDT-BEP20: ```0x068e3F9B46ffB7449E5b761764ebe2C3fA8A3292```
 
-🔹USDT-BEP20: ```0xd955379bE5813F066Cb81870bfcEA6f4bb862c24```
+USDT-TRC20: ```TUXtcWyh5WjZBWZ1TEPLDEcZuKSZixsNX5```
 
-🔹USDT-TRC20: ```TE5BGUuRce6vF3F4fXSkYY635oUt3M3hzd```
+USDT-ERC20: ```0x068e3F9B46ffB7449E5b761764ebe2C3fA8A3292```
 
-🔹TRX: ```TE5BGUuRce6vF3F4fXSkYY635oUt3M3hzd```
+TRX: ```TUXtcWyh5WjZBWZ1TEPLDEcZuKSZixsNX5```
 
-🔹LTC: ```LTbdsmqt38o9bfa3pvcHTbDz6kKzQJzSLn```
+LTC: ```ltc1qh34v0fky7dh940df4nrjwjh0nzdw3h0xdetulv```
 
-🔹BTC: ```bc1qjnedhmc4x85uwqn5zvh25f697n2pmn7etu69pg```
+BTC: ```bc1qyde5v9v8csenvwvardpr66u6pzlal4652kqvmv```
 
-🔹ETH: ```0xd955379bE5813F066Cb81870bfcEA6f4bb862c24```
+ETH: ```0x068e3F9B46ffB7449E5b761764ebe2C3fA8A3292```

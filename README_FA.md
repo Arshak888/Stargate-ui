@@ -277,4 +277,18 @@ sudo ./run.sh --only ubuntu-24
 
 ## دونیت
 
+USDT-BEP20: ```0x068e3F9B46ffB7449E5b761764ebe2C3fA8A3292```
+
+USDT-TRC20: ```TUXtcWyh5WjZBWZ1TEPLDEcZuKSZixsNX5```
+
+USDT-ERC20: ```0x068e3F9B46ffB7449E5b761764ebe2C3fA8A3292```
+
+TRX: ```TUXtcWyh5WjZBWZ1TEPLDEcZuKSZixsNX5```
+
+LTC: ```ltc1qh34v0fky7dh940df4nrjwjh0nzdw3h0xdetulv```
+
+BTC: ```bc1qyde5v9v8csenvwvardpr66u6pzlal4652kqvmv```
+
+ETH: ```0x068e3F9B46ffB7449E5b761764ebe2C3fA8A3292```
+
 
