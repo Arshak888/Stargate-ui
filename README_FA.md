@@ -1,4 +1,4 @@
-[English](/README.md) | [فارسی](/README_FA.md) | [العربية](/README_AR.md) | [中文](/README_ZH.md) | [Español](/README_ES.md) | [Русский](/README_RU.md) | [Türkçe](/README_TR.md)
+ [English](/README.md) | [فارسی](/README_FA.md) | [العربية](/README_AR.md) | [中文](/README_ZH.md) | [Español](/README_ES.md) | [Русский](/README_RU.md) | [Türkçe](/README_TR.md)
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/Sir-MmD/vpn-ui/refs/heads/main/media/logo.png" alt="VPN-UI Logo" width="260">
@@ -277,16 +277,4 @@ sudo ./run.sh --only ubuntu-24
 
 ## دونیت
 
-🔹USDC-Polygon: ```0xd955379bE5813F066Cb81870bfcEA6f4bb862c24```
 
-🔹USDT-BEP20: ```0xd955379bE5813F066Cb81870bfcEA6f4bb862c24```
-
-🔹USDT-TRC20: ```TE5BGUuRce6vF3F4fXSkYY635oUt3M3hzd```
-
-🔹TRX: ```TE5BGUuRce6vF3F4fXSkYY635oUt3M3hzd```
-
-🔹LTC: ```LTbdsmqt38o9bfa3pvcHTbDz6kKzQJzSLn```
-
-🔹BTC: ```bc1qjnedhmc4x85uwqn5zvh25f697n2pmn7etu69pg```
-
-🔹ETH: ```0xd955379bE5813F066Cb81870bfcEA6f4bb862c24```
