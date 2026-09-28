@@ -236,21 +236,6 @@ type TelegramReminderState struct {
 }
 
 // Inbound represents an Xray inbound configuration with traffic statistics and settings.
-// TelegramRenewalRequest stores a customer self-service renewal request awaiting admin review.
-type TelegramRenewalRequest struct {
-	Id             int64  `json:"id" gorm:"primaryKey;autoIncrement"`
-	Email          string `json:"email" gorm:"index"`
-	TgID           int64  `json:"tgId" gorm:"index"`
-	TotalGB        int64  `json:"totalGB" gorm:"column:total_gb"`
-	Days           int    `json:"days"`
-	Status         string `json:"status" gorm:"index"`
-	ReceiptChatID  int64  `json:"receiptChatId"`
-	ReceiptMessage int    `json:"receiptMessageId"`
-	CreatedAt      int64  `json:"createdAt"`
-	ReviewedAt     int64  `json:"reviewedAt"`
-	ReviewedBy     int64  `json:"reviewedBy"`
-	AdminNote      string `json:"adminNote"`
-}
 type Inbound struct {
 	Id                   int    `json:"id" form:"id" gorm:"primaryKey;autoIncrement"`                                                    // Unique identifier
 	UserId               int    `json:"-"`                                                                                               // Associated user ID
