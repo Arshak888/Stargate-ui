@@ -60,7 +60,7 @@ var defaultValueMap = map[string]string{
 	"tgExpiryReminderOnExpire":    "true",
 	"tgRenewalEnable":             "false",
 	"tgRenewalPaymentInfo":        "",
-	"tgRenewalPlans":              "[{\"id\":\"10gb-30d\",\"name\":\"10 GB / 30 days\",\"gb\":10,\"days\":30,\"price\":\"\"},{\"id\":\"30gb-30d\",\"name\":\"30 GB / 30 days\",\"gb\":30,\"days\":30,\"price\":\"\"},{\"id\":\"unlimited-30d\",\"name\":\"Unlimited / 30 days\",\"gb\":0,\"days\":30,\"price\":\"\"}]",
+	"tgRenewalPlans":              "[{\"id\":\"20gb-30d\",\"name\":\"20 GB / 30 days\",\"gb\":20,\"days\":30,\"price\":\"240000\"},{\"id\":\"30gb-30d\",\"name\":\"30 GB / 30 days\",\"gb\":30,\"days\":30,\"price\":\"360000\"},{\"id\":\"40gb-30d\",\"name\":\"40 GB / 30 days\",\"gb\":40,\"days\":30,\"price\":\"480000\"},{\"id\":\"50gb-30d\",\"name\":\"50 GB / 30 days\",\"gb\":50,\"days\":30,\"price\":\"600000\"},{\"id\":\"unlimited-30d\",\"name\":\"Unlimited / 30 days\",\"gb\":0,\"days\":30,\"price\":\"600000\"}]",
 	"twoFactorEnable":             "false",
 	"twoFactorToken":              "",
 	"systemdServiceName":          "stargate-ui",
@@ -186,6 +186,19 @@ func (s *SettingService) GetAllSetting() (*entity.AllSetting, error) {
 				err = errors.New(fmt.Sprint(panicErr))
 			}
 		}()
+
+		// Older builds could create rows for newly introduced settings with an
+		// empty value before their defaults existed. Treat an empty stored value as
+		// "not initialized" only for settings where empty is never a useful default.
+		// This keeps legitimate empty fields such as logo URL and payment notes intact.
+		if value == "" {
+			switch key {
+			case "panelBrandName", "loginTitle", "loginSubtitle", "tgExpiryReminderRuntime", "tgRenewalPlans":
+				if fallback, ok := defaultValueMap[key]; ok {
+					value = fallback
+				}
+			}
+		}
 
 		var found bool
 		var field reflect.StructField
