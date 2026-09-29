@@ -7,6 +7,10 @@ class AllSetting {
         this.webCertFile = "";
         this.webKeyFile = "";
         this.webBasePath = "/";
+        this.panelBrandName = "Stargate UI";
+        this.loginLogoURL = "";
+        this.loginTitle = "Welcome back";
+        this.loginSubtitle = "Sign in to your panel";
         this.sessionMaxAge = 360;
         this.pageSize = 25;
         this.expireDiff = 0;
@@ -27,6 +31,9 @@ class AllSetting {
         this.tgExpiryReminder2Days = 2;
         this.tgExpiryReminder1Day = 1;
         this.tgExpiryReminderOnExpire = true;
+        this.tgRenewalEnable = false;
+        this.tgRenewalPaymentInfo = "";
+        this.tgRenewalPlans = "[]";
         this.twoFactorEnable = false;
         this.twoFactorToken = "";
         this.xrayTemplateConfig = "";

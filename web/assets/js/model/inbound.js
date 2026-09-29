@@ -6582,6 +6582,8 @@ Inbound.SshSettings = class extends Inbound.Settings {
     externalProxy = [],
     sshUsers = [new Inbound.SshSettings.SshUser()],
     hostKey = "",
+    loginMessageEnabled = false,
+    loginMessageTemplate = "",
   ) {
     super(protocol);
     // Inbound-level device cap, same convention as every other protocol: 0 = no limit
@@ -6597,6 +6599,8 @@ Inbound.SshSettings = class extends Inbound.Settings {
     // Backend-minted ed25519 host private key (PEM). Round-trips so it survives edits;
     // never shown or edited in the browser.
     this.hostKey = hostKey;
+    this.loginMessageEnabled = loginMessageEnabled;
+    this.loginMessageTemplate = loginMessageTemplate;
   }
 
   static fromJson(json = {}) {
@@ -6609,6 +6613,8 @@ Inbound.SshSettings = class extends Inbound.Settings {
       Array.isArray(json.externalProxy) ? json.externalProxy : [],
       Inbound.SshSettings.SshUser.fromJson(json.clients),
       json.hostKey ?? "",
+      json.loginMessageEnabled ?? false,
+      json.loginMessageTemplate ?? "",
     );
   }
 
@@ -6619,6 +6625,8 @@ Inbound.SshSettings = class extends Inbound.Settings {
       externalProxy: this.externalProxy || [],
       clients: Inbound.SshSettings.SshUser.toJsonArray(this.sshUsers),
       hostKey: this.hostKey,
+      loginMessageEnabled: this.loginMessageEnabled,
+      loginMessageTemplate: this.loginMessageTemplate,
     };
   }
 };
