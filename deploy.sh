@@ -2,7 +2,7 @@
 # Stargate UI
 set -euo pipefail
 
-REPO="Arshak888/vpn-ui-custom"
+REPO="Arshak888/Stargate-ui"
 ASSET="stargate-ui-amd64"
 DEST_DIR="/opt/stargate-ui"
 DEST="$DEST_DIR/$ASSET"
