@@ -100,7 +100,7 @@ This fork extends the upstream STARGATE-UI with additional account automation, s
 ## Installing the Panel
 
 ```bash
-curl -Ls https://raw.githubusercontent.com/Arshak888/stargate-ui-custom/refs/heads/main/deploy.sh | sudo bash
+curl -Ls https://raw.githubusercontent.com/Arshak888/Stargate-ui/refs/heads/main/deploy.sh | sudo bash
 ```
 
 ## Uninstalling the Panel
@@ -231,7 +231,7 @@ flowchart TB
 ## Building from Source
 
 ```bash
-git clone https://github.com/Arshak888/stargate-ui-custom.git && cd stargate-ui-custom
+git clone https://github.com/Arshak888/Stargate-ui.git && cd Stargate-ui
 ./build.sh
 ```
 

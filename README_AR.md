@@ -91,7 +91,7 @@
 ## تثبيت اللوحة
 
 ```bash
-curl -Ls https://raw.githubusercontent.com/Arshak888/stargate-ui-custom/refs/heads/main/deploy.sh | sudo bash
+curl -Ls https://raw.githubusercontent.com/Arshak888/Stargate-ui/refs/heads/main/deploy.sh | sudo bash
 ```
 
 ## إزالة اللوحة
@@ -222,7 +222,7 @@ flowchart TB
 ## البناء من المصدر
 
 ```bash
-git clone https://github.com/Arshak888/stargate-ui-custom.git && cd stargate-ui-custom
+git clone https://github.com/Arshak888/Stargate-ui.git && cd Stargate-ui
 ./build.sh
 ```
 
