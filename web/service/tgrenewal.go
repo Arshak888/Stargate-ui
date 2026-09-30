@@ -120,7 +120,7 @@ func (t *Tgbot) handleRenewalCommand(chatID, tgID int64) {
 		if len(label) > 32 {
 			label = label[:32]
 		}
-		rows = append(rows, []telego.InlineKeyboardButton{Text: label}.WithCallbackData(fmt.Sprintf("tr:a:%d", account.Id)))
+		rows = append(rows, []telego.InlineKeyboardButton{telego.InlineKeyboardButton{Text: label}.WithCallbackData(fmt.Sprintf("tr:a:%d", account.Id))})
 	}
 	t.SendMsgToTgbot(chatID, "Select the account you want to renew:", tu.InlineKeyboard(rows...))
 }
