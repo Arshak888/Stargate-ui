@@ -475,7 +475,7 @@ func (m *sshManager) handleDirectTCPIP(srv *sshServer, sess *sshSession, nc ssh.
 
 	// UDP path: the client points its udpgw at the loopback udpgw port through the
 	// SOCKS proxy, so a channel to that port carries the udpgw protocol, not TCP.
-	if int(d.destPort) == sshUdpgwPort {
+	if int(d.destPort) == sshUdpgwPort || int(d.destPort) == sshLegacyUdpgwPort {
 		ch, chReqs, err := nc.Accept()
 		if err != nil {
 			return

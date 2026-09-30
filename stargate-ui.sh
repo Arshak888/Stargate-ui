@@ -726,7 +726,14 @@ obtain_letsencrypt_cert() {
 
 # 1) Update. The binary owns the whole flow (version check, DB backup, swap,
 #    restart), including refreshing THIS script from the release it installs.
-item_update() { "$BIN" update || warn "update did not complete."; }
+item_update() {
+    msg "Updating Stargate UI from the official fork release..."
+    if curl -fLs "https://raw.githubusercontent.com/Arshak888/Stargate-ui/refs/heads/main/deploy.sh" | bash; then
+        ok "update finished. The menu script was refreshed with the installed release."
+        exit 0
+    fi
+    warn "update did not complete."
+}
 
 # 2) Un-Install. The binary prompts for confirmation and removes /usr/bin/stargate-ui
 #    (this file) among everything else, so there is no menu to return to.

@@ -3569,8 +3569,24 @@ func (t *Tgbot) buildSubscriptionURLs(email string) (string, string, error) {
 			subID = strings.TrimSpace(discovered)
 		}
 	}
+	if account.Id == 0 {
+		_ = database.GetDB().Where("LOWER(TRIM(email)) = ?", strings.ToLower(strings.TrimSpace(email))).First(&account).Error
+	}
+	// Older accounts can have an empty Account.SubID even when the live inbound
+	// entry already has one. Persist the discovered value, and mint one as a final
+	// fallback, so Telegram/web subscription links never die with "client not found".
 	if subID == "" {
-		return "", "", errors.New("client not found")
+		subID = uuid.NewString()
+	}
+	if account.Id != 0 && account.SubID != subID {
+		account.SubID = subID
+		if err := database.GetDB().Save(&account).Error; err != nil {
+			return "", "", fmt.Errorf("could not persist subscription id: %w", err)
+		}
+		svc := AccountService{}
+		if _, err := svc.ProjectAccount(database.GetDB(), account.Id); err != nil {
+			return "", "", fmt.Errorf("could not project subscription id: %w", err)
+		}
 	}
 
 	// Gather settings to construct absolute URLs
@@ -3666,48 +3682,66 @@ func (t *Tgbot) buildSSHAppsURL(email string) (string, error) {
 }
 
 func (t *Tgbot) sendClientSSHAppLinks(chatId int64, email string) {
-	sshURL, err := t.buildSSHAppsURL(email)
-	if err != nil {
+	// Render SSH artifacts directly from the database instead of making the bot
+	// call its own HTTPS subscription endpoint. This works even when the subscription
+	// listener is disabled, uses a different certificate, or the legacy account has
+	// just received its first SubID.
+	var inbounds []model.Inbound
+	if err := database.GetDB().Where("protocol = ?", model.SSH).Order("id asc").Find(&inbounds).Error; err != nil {
+		t.SendMsgToTgbot(chatId, t.I18nBot("tgbot.answers.errorOperation")+"\r\n"+err.Error())
 		return
 	}
-	req, err := http.NewRequest("GET", sshURL, nil)
-	if err != nil {
-		return
+
+	endpointHost := hostname
+	if d, err := t.settingService.GetSubDomain(); err == nil && strings.TrimSpace(d) != "" {
+		endpointHost = strings.TrimSpace(d)
+	} else if d, err := t.settingService.GetWebDomain(); err == nil && strings.TrimSpace(d) != "" {
+		endpointHost = strings.TrimSpace(d)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	req = req.WithContext(ctx)
-	resp, err := optimizedHTTPClient.Do(req)
-	if err != nil {
-		return
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return
-	}
-	var payload map[string]any
-	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
-		return
-	}
-	items, _ := payload["items"].([]any)
-	for _, raw := range items {
-		item, _ := raw.(map[string]any)
-		label, _ := item["Label"].(string)
-		host, _ := item["Host"].(string)
-		port, _ := item["Port"].(float64)
-		rocket, _ := item["RocketLink"].(string)
-		npv, _ := item["NPVConfig"].(string)
-		msg := "🔐 <b>SSH</b> • <b>" + html.EscapeString(label) + "</b>\n"
-		msg += "🌐 <code>" + html.EscapeString(host) + ":" + strconv.Itoa(int(port)) + "</code>\n\n"
-		if rocket != "" {
-			msg += "🚀 <b>RocketTunnel</b>\n<a href=\"" + html.EscapeString(rocket) + "\">Open in RocketTunnel</a>\n"
-			msg += "<code>" + html.EscapeString(rocket) + "</code>\n\n"
+
+	found := false
+	for i := range inbounds {
+		clients, err := t.inboundService.GetClients(&inbounds[i])
+		if err != nil {
+			continue
 		}
-		if npv != "" {
-			msg += "📱 <b>NPV Tunnel</b>\n<code>" + html.EscapeString(npv) + "</code>"
+		for _, client := range clients {
+			if !strings.EqualFold(strings.TrimSpace(client.Email), strings.TrimSpace(email)) || !client.Enable {
+				continue
+			}
+			sshService := SshService{}
+			configs, err := sshService.RenderClientConfigs(&inbounds[i], client.Email, endpointHost)
+			if err != nil {
+				continue
+			}
+			for _, cfg := range configs {
+				found = true
+				label := cfg.Remark
+				if label == "" {
+					label = inbounds[i].Remark
+				}
+				if label == "" {
+					label = client.Email
+				}
+				msg := "🔐 <b>SSH</b> • <b>" + html.EscapeString(label) + "</b>\n"
+				msg += "🌐 <code>" + html.EscapeString(cfg.Host) + ":" + strconv.Itoa(cfg.Port) + "</code>\n\n"
+				if cfg.RocketLink != "" {
+					msg += "🚀 <b>RocketTunnel</b>\n<a href=\"" + html.EscapeString(cfg.RocketLink) + "\">Open in RocketTunnel</a>\n<code>" + html.EscapeString(cfg.RocketLink) + "</code>\n\n"
+				}
+				if cfg.NPVConfig != "" {
+					msg += "📱 <b>NPV Tunnel</b>\n<code>" + html.EscapeString(cfg.NPVConfig) + "</code>\n\n"
+				}
+				msg += "👤 <code>" + html.EscapeString(client.ID) + "</code>\n🔑 <code>" + html.EscapeString(client.Password) + "</code>"
+				t.SendMsgToTgbot(chatId, msg)
+			}
 		}
-		t.SendMsgToTgbot(chatId, msg)
 	}
+	if !found {
+		t.SendMsgToTgbot(chatId, "No active SSH configuration was found for this account.")
+		return
+	}
+
+	t.SendMsgToTgbot(chatId, "📘 <b>SSH app guide</b>\n\n📱 <b>NPV Tunnel</b>: copy the <code>npvt-ssh://...</code> link above → NPV Tunnel → Configs → + → <b>Import config from Clipboard</b>.\n\n🚀 <b>RocketTunnel</b>: tap the RocketTunnel link above, or copy it and open it in RocketTunnel.\n\nIf several SSH endpoints are shown, import the endpoint you want to use.")
 }
 
 // sendClientSubLinks sends the subscription links for the client to the chat.

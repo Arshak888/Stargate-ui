@@ -285,18 +285,33 @@ func (t *Tgbot) approveTelegramRenewal(adminChatID int64, q *telego.CallbackQuer
 			return err
 		}
 		var account model.Account
-		accountQuery := tx.Where("email = ?", req.Email)
-		if req.TgID != 0 {
-			accountQuery = accountQuery.Where("tg_id = ?", req.TgID)
-		}
-		if err := accountQuery.First(&account).Error; err != nil {
+		if err := tx.Where("LOWER(TRIM(email)) = ?", strings.ToLower(strings.TrimSpace(req.Email))).First(&account).Error; err != nil {
 			return fmt.Errorf("linked account not found")
 		}
+		if account.TgID != 0 && req.TgID != 0 && account.TgID != req.TgID {
+			return fmt.Errorf("linked account belongs to another Telegram user")
+		}
+		account.TgID = req.TgID
+
+		var traffic xray.ClientTraffic
+		trafficErr := tx.Where("LOWER(TRIM(email)) = ?", strings.ToLower(strings.TrimSpace(account.Email))).First(&traffic).Error
+		if trafficErr != nil && !errors.Is(trafficErr, gorm.ErrRecordNotFound) {
+			return trafficErr
+		}
+		if errors.Is(trafficErr, gorm.ErrRecordNotFound) {
+			traffic = xray.ClientTraffic{InboundId: 0, Email: account.Email}
+		}
 		now := time.Now()
+		currentTotal := account.TotalGB
+		if trafficErr == nil && traffic.Total > 0 {
+			currentTotal = traffic.Total
+		}
 		if req.TotalGB == 0 {
 			account.TotalGB = 0
-		} else if account.TotalGB > 0 {
-			account.TotalGB += req.TotalGB * oneGB
+		} else if currentTotal > 0 {
+			account.TotalGB = currentTotal + req.TotalGB*oneGB
+		} else {
+			account.TotalGB = req.TotalGB * oneGB
 		}
 		if req.Days > 0 {
 			base := now
@@ -314,22 +329,15 @@ func (t *Tgbot) approveTelegramRenewal(adminChatID int64, q *telego.CallbackQuer
 		}
 		// ClientTraffic is the enforcement/usage source of truth. Projecting the
 		// Account into inbound settings alone does not change its quota there.
-		var traffic xray.ClientTraffic
-		trafficErr := tx.Where("LOWER(TRIM(email)) = ?", strings.ToLower(strings.TrimSpace(account.Email))).First(&traffic).Error
-		if trafficErr != nil && !errors.Is(trafficErr, gorm.ErrRecordNotFound) {
-			return trafficErr
-		}
-		if errors.Is(trafficErr, gorm.ErrRecordNotFound) {
-			var membership model.AccountInbound
-			_ = tx.Where("account_id = ?", account.Id).Order("inbound_id ASC").First(&membership).Error
-			traffic = xray.ClientTraffic{InboundId: membership.InboundId, Email: account.Email}
-		}
 		traffic.Email = account.Email
 		traffic.Total = account.TotalGB
 		traffic.ExpiryTime = account.ExpiryTime
 		traffic.Enable = account.Enable
 		traffic.Reset = account.Reset
 		if err := tx.Save(&traffic).Error; err != nil {
+			return err
+		}
+		if err := tx.Model(&model.AccountInbound{}).Where("account_id = ?", account.Id).Update("enable", true).Error; err != nil {
 			return err
 		}
 		svc := AccountService{}
