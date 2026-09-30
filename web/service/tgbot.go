@@ -1875,13 +1875,82 @@ func (t *Tgbot) randomShadowSocksPassword() string {
 }
 
 // answerCallback processes callback queries from inline keyboards.
+func (t *Tgbot) handleCustomerCallback(q *telego.CallbackQuery) bool {
+	if q == nil || q.Data == "" || bot == nil {
+		return false
+	}
+	decoded, err := t.decodeQuery(q.Data)
+	if err != nil {
+		return false
+	}
+	parts := strings.Fields(decoded)
+	if len(parts) == 0 {
+		return false
+	}
+	chatID := q.Message.GetChat().ID
+	if parts[0] == "client_commands" {
+		t.SendMsgToTgbot(chatID, "Customer commands:\n/usage <email>\n/renew")
+		t.sendCallbackAnswerTgBot(q.ID, "Done")
+		return true
+	}
+	if parts[0] == "client_traffic" && len(parts) == 1 {
+		t.getClientUsage(chatID, q.From.ID)
+		t.sendCallbackAnswerTgBot(q.ID, "Done")
+		return true
+	}
+	if len(parts) < 2 {
+		return false
+	}
+	email := strings.TrimSpace(parts[1])
+	var account model.Account
+	if err := database.GetDB().Where("LOWER(TRIM(email)) = ? AND tg_id = ?", strings.ToLower(email), q.From.ID).First(&account).Error; err != nil {
+		traffics, terr := t.inboundService.GetClientTrafficTgBot(q.From.ID)
+		owned := false
+		if terr == nil {
+			for _, tr := range traffics {
+				if tr != nil && strings.EqualFold(strings.TrimSpace(tr.Email), email) {
+					owned = true
+					break
+				}
+			}
+		}
+		if !owned {
+			t.sendCallbackAnswerTgBot(q.ID, "Account not found.")
+			return true
+		}
+	}
+	switch parts[0] {
+	case "client_sub_links":
+		t.sendClientSubLinks(chatID, email)
+	case "client_individual_links":
+		t.sendClientIndividualLinks(chatID, email)
+	case "client_qr_links":
+		t.sendClientQRLinks(chatID, email)
+	case "client_traffic", "client_get_usage":
+		t.getClientUsage(chatID, q.From.ID, email)
+	case "client_renew":
+		t.handleRenewalCommand(chatID, q.From.ID)
+	case "client_commands":
+		t.SendMsgToTgbot(chatID, "Customer commands:\n/usage <email>\n/renew")
+	default:
+		return false
+	}
+	t.sendCallbackAnswerTgBot(q.ID, "Done")
+	return true
+}
+
 func (t *Tgbot) answerCallback(callbackQuery *telego.CallbackQuery, isAdmin bool) {
 	chatId := callbackQuery.Message.GetChat().ID
 	if t.handleRenewalCallback(callbackQuery, isAdmin) {
 		return
 	}
-	if !isAdmin && t.handleResellerCallback(callbackQuery) {
-		return
+	if !isAdmin {
+		if t.handleCustomerCallback(callbackQuery) {
+			return
+		}
+		if t.handleResellerCallback(callbackQuery) {
+			return
+		}
 	}
 
 	if isAdmin {
@@ -3488,6 +3557,16 @@ func (t *Tgbot) buildSubscriptionURLs(email string) (string, string, error) {
 		_, client, err := t.inboundService.GetClientByEmail(email)
 		if err == nil && client != nil {
 			subID = strings.TrimSpace(client.SubID)
+		}
+	}
+	if subID == "" {
+		// Final fallback for legacy/account-backed clients: resolve the subscription id directly from served client entries.
+		var discovered string
+		key := strings.ToLower(strings.TrimSpace(email))
+		query := "SELECT json_extract(client.value, '$.subId') FROM inbounds, json_each(CASE WHEN JSON_VALID(inbounds.settings) THEN JSON_EXTRACT(inbounds.settings, '$.clients') ELSE '[]' END) AS client WHERE lower(json_extract(client.value, '$.email')) = ? AND coalesce(json_extract(client.value, '$.subId'), '') <> '' LIMIT 1"
+		err := database.GetDB().Raw(query, key).Scan(&discovered).Error
+		if err == nil {
+			subID = strings.TrimSpace(discovered)
 		}
 	}
 	if subID == "" {

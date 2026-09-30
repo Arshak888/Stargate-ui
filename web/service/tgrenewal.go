@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html"
 	"strconv"
@@ -13,6 +14,7 @@ import (
 	"github.com/mhsanaei/3x-ui/v2/database"
 	"github.com/mhsanaei/3x-ui/v2/database/model"
 	"github.com/mhsanaei/3x-ui/v2/logger"
+	"github.com/mhsanaei/3x-ui/v2/xray"
 	"github.com/mymmrac/telego"
 	tu "github.com/mymmrac/telego/telegoutil"
 	"gorm.io/gorm"
@@ -292,6 +294,24 @@ func (t *Tgbot) approveTelegramRenewal(adminChatID int64, q *telego.CallbackQuer
 			account.ExpiryTime = base.Add(time.Duration(req.Days) * 24 * time.Hour).UnixMilli()
 		}
 		if err := tx.Save(&account).Error; err != nil {
+			return err
+		}
+		// ClientTraffic is the enforcement/usage source of truth. Projecting the
+		// Account into inbound settings alone does not change its quota there.
+		var traffic xray.ClientTraffic
+		trafficErr := tx.Where("LOWER(TRIM(email)) = ?", strings.ToLower(strings.TrimSpace(account.Email))).First(&traffic).Error
+		if trafficErr != nil && !errors.Is(trafficErr, gorm.ErrRecordNotFound) {
+			return trafficErr
+		}
+		if errors.Is(trafficErr, gorm.ErrRecordNotFound) {
+			traffic = xray.ClientTraffic{InboundId: 0, Email: account.Email}
+		}
+		traffic.Email = account.Email
+		traffic.Total = account.TotalGB
+		traffic.ExpiryTime = account.ExpiryTime
+		traffic.Enable = account.Enable
+		traffic.Reset = account.Reset
+		if err := tx.Save(&traffic).Error; err != nil {
 			return err
 		}
 		svc := AccountService{}

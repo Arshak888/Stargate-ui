@@ -457,7 +457,7 @@ func (s *SubService) SSHAppLinks(subID, endpointHost string) []SSHAppLink {
 				}
 				out = append(out, SSHAppLink{
 					Label: label, Host: cfg.Host, Port: cfg.Port,
-					RocketLink: cfg.RocketLink, NPVConfig: cfg.Plain,
+					RocketLink: cfg.RocketLink, NPVConfig: cfg.NPVConfig,
 				})
 			}
 		}

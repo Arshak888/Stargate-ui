@@ -443,6 +443,7 @@ type SshClientConfig struct {
 	Plain      string `json:"plain"`      // plaintext host/port/user/pass block
 	Link       string `json:"link"`       // an ssh:// share link (Shadowrocket-importable, QR-friendly)
 	RocketLink string `json:"rocketLink"` // RocketTunnel universal import link
+	NPVConfig  string `json:"npvConfig"`  // exact npvt-ssh clipboard URI
 }
 
 // sshShareLink builds an ssh:// share link that mobile proxy clients (Shadowrocket)
@@ -471,6 +472,42 @@ func rocketTunnelLink(user, password, host string, port int, label string) strin
 		return ""
 	}
 	return "https://rcktnl.site/c/" + base64.StdEncoding.EncodeToString(encoded)
+}
+
+// npvTunnelLink builds the exact npvt-ssh clipboard URI used by NPV Tunnel.
+func npvTunnelLink(user, password, host string, port int, label string) string {
+	encode := func(value string) string {
+		return "npvs1:" + base64.StdEncoding.EncodeToString([]byte(value))
+	}
+	payload := map[string]any{
+		"sshConfigType":           encode("SSH-Direct"),
+		"remarks":                 encode(label),
+		"sshHost":                 encode(host),
+		"sshPort":                 port,
+		"sshUsername":             encode(user),
+		"sshPassword":             encode(password),
+		"sshAuthMethod":           encode("PASSWORD"),
+		"sshPrivateKey":           "",
+		"sshPrivateKeyPassphrase": "",
+		"sni":                     "",
+		"tlsVersion":              encode("DEFAULT"),
+		"httpProxy":               "",
+		"authenticateProxy":       false,
+		"proxyUsername":           "",
+		"proxyPassword":           "",
+		"payload":                 "",
+		"dnsTTMode":               encode("UDP"),
+		"dnsServer":               "",
+		"nameserver":              "",
+		"publicKey":               "",
+		"udpgwPort":               sshUdpgwPort,
+		"udpgwTransparentDNS":     true,
+	}
+	encoded, err := json.Marshal(payload)
+	if err != nil {
+		return ""
+	}
+	return "npvt-ssh://" + base64.StdEncoding.EncodeToString(encoded)
 }
 
 // RenderClientConfigs returns the client artifacts for the account with the given
@@ -550,6 +587,7 @@ func (s *SshService) RenderClientConfigs(inbound *model.Inbound, email, endpoint
 			Plain:      plain,
 			Link:       sshShareLink(acct.ID, acct.Password, t.host, t.port, label),
 			RocketLink: rocketTunnelLink(acct.ID, acct.Password, t.host, t.port, label),
+			NPVConfig:  npvTunnelLink(acct.ID, acct.Password, t.host, t.port, label),
 		})
 	}
 	return out, nil
