@@ -3473,10 +3473,24 @@ func (t *Tgbot) SendMsgToTgbot(chatId int64, msg string, replyMarkup ...telego.R
 
 // buildSubscriptionURLs builds the HTML sub page URL and JSON subscription URL for a client email
 func (t *Tgbot) buildSubscriptionURLs(email string) (string, string, error) {
-	// Resolve subId from client email
-	traffic, client, err := t.inboundService.GetClientByEmail(email)
-	_ = traffic
-	if err != nil || client == nil {
+	// Resolve the subscription key from the canonical Account row first.
+	// Telegram usage can still work for legacy clients even when the old
+	// inbound client parser cannot reconstruct the client object, so do not
+	// make subscription links depend on GetClientByEmail alone.
+	var subID string
+	var account model.Account
+	if err := database.GetDB().
+		Where("LOWER(TRIM(email)) = ?", strings.ToLower(strings.TrimSpace(email))).
+		First(&account).Error; err == nil {
+		subID = strings.TrimSpace(account.SubID)
+	}
+	if subID == "" {
+		_, client, err := t.inboundService.GetClientByEmail(email)
+		if err == nil && client != nil {
+			subID = strings.TrimSpace(client.SubID)
+		}
+	}
+	if subID == "" {
 		return "", "", errors.New("client not found")
 	}
 
@@ -3538,19 +3552,19 @@ func (t *Tgbot) buildSubscriptionURLs(email string) (string, string, error) {
 		if !strings.HasSuffix(subURI, "/") {
 			subURI = subURI + "/"
 		}
-		subURL = fmt.Sprintf("%s%s", subURI, client.SubID)
+		subURL = fmt.Sprintf("%s%s", subURI, subID)
 	} else {
-		subURL = fmt.Sprintf("%s://%s%s%s", scheme, host, subPath, client.SubID)
+		subURL = fmt.Sprintf("%s://%s%s%s", scheme, host, subPath, subID)
 	}
 
 	if subJsonURI != "" {
 		if !strings.HasSuffix(subJsonURI, "/") {
 			subJsonURI = subJsonURI + "/"
 		}
-		subJsonURL = fmt.Sprintf("%s%s", subJsonURI, client.SubID)
+		subJsonURL = fmt.Sprintf("%s%s", subJsonURI, subID)
 	} else {
 
-		subJsonURL = fmt.Sprintf("%s://%s%s%s", scheme, host, subJsonPath, client.SubID)
+		subJsonURL = fmt.Sprintf("%s://%s%s%s", scheme, host, subJsonPath, subID)
 	}
 
 	if !subJsonEnable {
