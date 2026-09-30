@@ -277,7 +277,11 @@ func (t *Tgbot) approveTelegramRenewal(adminChatID int64, q *telego.CallbackQuer
 			return err
 		}
 		var account model.Account
-		if err := tx.Where("email = ? AND tg_id = ?", req.Email, req.TgID).First(&account).Error; err != nil {
+		accountQuery := tx.Where("email = ?", req.Email)
+		if req.TgID != 0 {
+			accountQuery = accountQuery.Where("tg_id = ?", req.TgID)
+		}
+		if err := accountQuery.First(&account).Error; err != nil {
 			return fmt.Errorf("linked account not found")
 		}
 		now := time.Now()
@@ -293,6 +297,10 @@ func (t *Tgbot) approveTelegramRenewal(adminChatID int64, q *telego.CallbackQuer
 			}
 			account.ExpiryTime = base.Add(time.Duration(req.Days) * 24 * time.Hour).UnixMilli()
 		}
+		// A successful paid renewal reactivates an account that was disabled because
+		// it expired or exhausted its traffic. The projection and traffic row below
+		// carry the live state to every inbound.
+		account.Enable = true
 		if err := tx.Save(&account).Error; err != nil {
 			return err
 		}
@@ -304,7 +312,9 @@ func (t *Tgbot) approveTelegramRenewal(adminChatID int64, q *telego.CallbackQuer
 			return trafficErr
 		}
 		if errors.Is(trafficErr, gorm.ErrRecordNotFound) {
-			traffic = xray.ClientTraffic{InboundId: 0, Email: account.Email}
+			var membership model.AccountInbound
+			_ = tx.Where("account_id = ?", account.Id).Order("inbound_id ASC").First(&membership).Error
+			traffic = xray.ClientTraffic{InboundId: membership.InboundId, Email: account.Email}
 		}
 		traffic.Email = account.Email
 		traffic.Total = account.TotalGB
