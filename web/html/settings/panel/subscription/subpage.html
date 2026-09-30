@@ -369,6 +369,31 @@
 {{ end }}</textarea>
 
 {{template "component/aThemeSwitch" .}}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var form = document.getElementById('renewal-form');
+    if (!form) return;
+    form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var button = form.querySelector('button[type="submit"]');
+        button.disabled = true;
+        try {
+            var response = await fetch('{{ .renewalEndpoint }}', { method: 'POST', body: new FormData(form) });
+            var result = await response.json();
+            if (response.ok && result.success) {
+                alert(result.message || 'Receipt sent.');
+                form.reset();
+            } else {
+                alert(result.message || 'Could not submit renewal.');
+            }
+        } catch (err) {
+            alert('Could not submit renewal request.');
+        } finally {
+            button.disabled = false;
+        }
+    });
+});
+</script>
 <script src="{{ .base_path }}assets/js/subscription.js?{{ .asset_ver }}"></script>
 
 {{ template "page/body_end" .}}

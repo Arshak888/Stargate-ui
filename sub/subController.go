@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/mhsanaei/3x-ui/v2/config"
+	"github.com/mhsanaei/3x-ui/v2/config"\n\t"github.com/mhsanaei/3x-ui/v2/database"\n\t"github.com/mhsanaei/3x-ui/v2/database/model"\n\t"github.com/mhsanaei/3x-ui/v2/web/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -280,4 +280,66 @@ func (a *SUBController) ApplyCommonHeaders(
 	if profileRoutingRules != "" {
 		c.Writer.Header().Set("Routing", profileRoutingRules)
 	}
+}
+
+
+// renew accepts a receipt from the public subscription page. The uploaded bytes are
+// held in memory and handed directly to Telegram, so no receipt is persisted on disk.
+func (a *SUBController) renew(c *gin.Context) {
+	if !a.renewalEnable {
+		c.JSON(http.StatusForbidden, gin.H{"success": false, "message": "Renewal is currently disabled."})
+		return
+	}
+	subID := strings.TrimSpace(c.Param("subid"))
+	planID := strings.TrimSpace(c.PostForm("plan"))
+	if subID == "" || planID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "Subscription and plan are required."})
+		return
+	}
+	allowed := false
+	for _, p := range a.renewalPlans {
+		if p.ID == planID {
+			allowed = true
+			break
+		}
+	}
+	if !allowed {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "Selected renewal plan is unavailable."})
+		return
+	}
+	var account model.Account
+	if err := database.GetDB().Where("sub_id = ?", subID).First(&account).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"success": false, "message": "Subscription account not found."})
+		return
+	}
+	var pending model.TelegramRenewalRequest
+	if err := database.GetDB().Where("email = ? AND status = ?", account.Email, "pending").First(&pending).Error; err == nil {
+		c.JSON(http.StatusConflict, gin.H{"success": false, "message": "A renewal request is already waiting for admin review."})
+		return
+	}
+	file, header, err := c.Request.FormFile("receipt")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "Please upload the payment receipt."})
+		return
+	}
+	defer file.Close()
+	const maxReceipt = 10 << 20
+	data, err := io.ReadAll(io.LimitReader(file, maxReceipt+1))
+	if err != nil || len(data) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"success": false, "message": "Could not read the receipt."})
+		return
+	}
+	if len(data) > maxReceipt {
+		c.JSON(http.StatusRequestEntityTooLarge, gin.H{"success": false, "message": "Receipt must be 10 MB or smaller."})
+		return
+	}
+	receiptType := "document"
+	if strings.HasPrefix(strings.ToLower(header.Header.Get("Content-Type")), "image/") {
+		receiptType = "photo"
+	}
+	if err := service.SubmitWebRenewalRequest(account.Email, planID, receiptType, header.Filename, data); err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Receipt sent to the administrator for review."})
 }

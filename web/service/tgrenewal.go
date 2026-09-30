@@ -34,7 +34,15 @@ type telegramRenewalFlow struct {
 	Plan      telegramRenewalPlan
 }
 
+// TelegramRenewalPlan is the public view of a configured renewal plan used by the subscription page. The internal alias keeps the Telegram flow implementation unchanged.
+type TelegramRenewalPlan = telegramRenewalPlan
+
 var telegramRenewalFlows sync.Map
+
+func GetTelegramRenewalSettings() (bool, string, []TelegramRenewalPlan, error) {
+	t := &Tgbot{settingService: SettingService{}}
+	return t.telegramRenewalSettings()
+}
 
 func (t *Tgbot) telegramRenewalSettings() (bool, string, []telegramRenewalPlan, error) {
 	s, err := t.settingService.GetAllSetting()
