@@ -33,7 +33,7 @@ class AllSetting {
         this.tgExpiryReminderOnExpire = true;
         this.tgRenewalEnable = false;
         this.tgRenewalPaymentInfo = "";
-        this.tgRenewalPlans = "[]";
+        this.tgRenewalPlans = '[{"id":"20gb-30d","name":"20 GB / 30 days","gb":20,"days":30,"price":"240000"},{"id":"30gb-30d","name":"30 GB / 30 days","gb":30,"days":30,"price":"360000"},{"id":"40gb-30d","name":"40 GB / 30 days","gb":40,"days":30,"price":"480000"},{"id":"50gb-30d","name":"50 GB / 30 days","gb":50,"days":30,"price":"600000"},{"id":"unlimited-30d","name":"Unlimited / 30 days","gb":0,"days":30,"price":"600000"}]';
         this.twoFactorEnable = false;
         this.twoFactorToken = "";
         this.xrayTemplateConfig = "";
