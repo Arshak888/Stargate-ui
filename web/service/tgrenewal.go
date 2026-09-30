@@ -60,11 +60,48 @@ func (t *Tgbot) handleRenewalCommand(chatID, tgID int64) {
 		t.SendMsgToTgbot(chatID, "Customer self-service renewal is currently disabled.")
 		return
 	}
+
+	// Prefer the canonical Account projection, but also recover accounts from the
+	// legacy inbound client tgId. This matters for clients created before the account
+	// migration or linked to Telegram before the Account row was projected.
 	var accounts []model.Account
 	if err := database.GetDB().Where("tg_id = ?", tgID).Order("id asc").Find(&accounts).Error; err != nil {
 		t.SendMsgToTgbot(chatID, "Could not load your linked accounts.")
 		return
 	}
+
+	seen := make(map[string]bool, len(accounts))
+	for _, account := range accounts {
+		seen[strings.ToLower(strings.TrimSpace(account.Email))] = true
+	}
+	if traffics, trafficErr := t.inboundService.GetClientTrafficTgBot(tgID); trafficErr == nil {
+		for _, traffic := range traffics {
+			if traffic == nil || strings.TrimSpace(traffic.Email) == "" {
+				continue
+			}
+			var account model.Account
+			if err := database.GetDB().
+				Where("LOWER(TRIM(email)) = ?", strings.ToLower(strings.TrimSpace(traffic.Email))).
+				First(&account).Error; err != nil {
+				continue
+			}
+			key := strings.ToLower(strings.TrimSpace(account.Email))
+			if seen[key] {
+				continue
+			}
+			// Keep the Account projection aligned with the Telegram binding that the
+			// user is already using successfully for usage/subscription actions.
+			if account.TgID != tgID {
+				account.TgID = tgID
+				if err := database.GetDB().Save(&account).Error; err != nil {
+					logger.Warning("telegram renewal: failed to sync account Telegram ID:", err)
+				}
+			}
+			accounts = append(accounts, account)
+			seen[key] = true
+		}
+	}
+
 	if len(accounts) == 0 {
 		t.SendMsgToTgbot(chatID, "No VPN account is linked to this Telegram ID. Ask the admin to link your Telegram ID first.")
 		return
@@ -83,7 +120,7 @@ func (t *Tgbot) handleRenewalCommand(chatID, tgID int64) {
 		if len(label) > 32 {
 			label = label[:32]
 		}
-		rows = append(rows, []telego.InlineKeyboardButton{telego.InlineKeyboardButton{Text: label}.WithCallbackData(fmt.Sprintf("tr:a:%d", account.Id))})
+		rows = append(rows, []telego.InlineKeyboardButton{Text: label}.WithCallbackData(fmt.Sprintf("tr:a:%d", account.Id)))
 	}
 	t.SendMsgToTgbot(chatID, "Select the account you want to renew:", tu.InlineKeyboard(rows...))
 }
