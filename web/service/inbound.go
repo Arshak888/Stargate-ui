@@ -4331,47 +4331,58 @@ func (s *InboundService) GetClientInboundByTrafficID(trafficId int) (traffic *xr
 
 func (s *InboundService) GetClientInboundByEmail(email string) (traffic *xray.ClientTraffic, inbound *model.Inbound, err error) {
 	db := database.GetDB()
+
+	// Accounts are the canonical identity layer now. Resolve every membership first
+	// instead of trusting client_traffics.inbound_id, which is a legacy single-inbound
+	// pointer and can point at a different member when one account is attached to
+	// multiple inbounds.
+	ids, membershipErr := (&AccountService{}).InboundIdsForEmail(email)
+	if membershipErr != nil {
+		logger.Warningf("Error resolving account memberships for email %s: %v", email, membershipErr)
+	} else if len(ids) > 0 {
+		for _, id := range ids {
+			candidate, candidateErr := s.GetInbound(id)
+			if candidateErr != nil || candidate == nil {
+				continue
+			}
+			if s.inboundHasClientEmail(candidate, email) {
+				_ = db.Model(xray.ClientTraffic{}).Where("email = ?", email).First(&traffic).Error
+				return traffic, candidate, nil
+			}
+		}
+	}
+
+	// Legacy fallback for panels that have not been migrated yet, or where an older
+	// binary wrote the traffic row before the membership projection existed.
 	var traffics []*xray.ClientTraffic
-	err = db.Model(xray.ClientTraffic{}).Where("email = ?", email).Find(&traffics).Error
-	if err != nil {
+	if err = db.Model(xray.ClientTraffic{}).Where("email = ?", email).Find(&traffics).Error; err != nil {
 		logger.Warningf("Error retrieving ClientTraffic with email %s: %v", email, err)
 		return nil, nil, err
 	}
 	if len(traffics) > 0 {
 		traffic = traffics[0]
 		inbound, err = s.GetInbound(traffic.InboundId)
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// The legacy traffic row may point at an inbound that was deleted or
-			// recreated. Resolve through the account membership projection.
-			ids, idErr := (&AccountService{}).InboundIdsForEmail(email)
-			if idErr != nil {
-				return traffic, nil, idErr
-			}
-			for _, id := range ids {
-				if candidate, candidateErr := s.GetInbound(id); candidateErr == nil && s.inboundHasClientEmail(candidate, email) {
-					inbound, err = candidate, nil
-					break
-				}
-			}
-		} else if err == nil && inbound != nil && !s.inboundHasClientEmail(inbound, email) {
-			// The client can legitimately be attached to multiple inbounds.
-			// client_traffics.inbound_id is only one legacy pointer, so do not
-			// make Telegram/subscription lookups fail when it points elsewhere.
-			if ids, idErr := (&AccountService{}).InboundIdsForEmail(email); idErr == nil {
-				for _, id := range ids {
-					if id == inbound.Id {
-						continue
-					}
-					if candidate, candidateErr := s.GetInbound(id); candidateErr == nil && s.inboundHasClientEmail(candidate, email) {
-						inbound = candidate
-						break
-					}
-				}
-			}
+		if err == nil && inbound != nil && s.inboundHasClientEmail(inbound, email) {
+			return traffic, inbound, nil
 		}
-		return traffic, inbound, err
 	}
-	return nil, nil, nil
+
+	// Last-resort recovery: find a live inbound whose settings actually contain this
+	// email. This repairs the transition state where the account/membership table and
+	// the legacy traffic pointer were created by different versions of the panel.
+	var candidates []*model.Inbound
+	if err := db.Model(model.Inbound{}).
+		Where("settings LIKE ?", "%"+email+"%").
+		Find(&candidates).Error; err != nil {
+		return traffic, nil, err
+	}
+	for _, candidate := range candidates {
+		if s.inboundHasClientEmail(candidate, email) {
+			return traffic, candidate, nil
+		}
+	}
+
+	return traffic, nil, nil
 }
 
 func (s *InboundService) inboundHasClientEmail(inbound *model.Inbound, email string) bool {
