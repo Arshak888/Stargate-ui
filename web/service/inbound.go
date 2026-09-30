@@ -4338,10 +4338,53 @@ func (s *InboundService) GetClientInboundByEmail(email string) (traffic *xray.Cl
 		return nil, nil, err
 	}
 	if len(traffics) > 0 {
-		inbound, err = s.GetInbound(traffics[0].InboundId)
-		return traffics[0], inbound, err
+		traffic = traffics[0]
+		inbound, err = s.GetInbound(traffic.InboundId)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// The legacy traffic row may point at an inbound that was deleted or
+			// recreated. Resolve through the account membership projection.
+			ids, idErr := (&AccountService{}).InboundIdsForEmail(email)
+			if idErr != nil {
+				return traffic, nil, idErr
+			}
+			for _, id := range ids {
+				if candidate, candidateErr := s.GetInbound(id); candidateErr == nil && s.inboundHasClientEmail(candidate, email) {
+					inbound, err = candidate, nil
+					break
+				}
+			}
+		} else if err == nil && inbound != nil && !s.inboundHasClientEmail(inbound, email) {
+			// The client can legitimately be attached to multiple inbounds.
+			// client_traffics.inbound_id is only one legacy pointer, so do not
+			// make Telegram/subscription lookups fail when it points elsewhere.
+			if ids, idErr := (&AccountService{}).InboundIdsForEmail(email); idErr == nil {
+				for _, id := range ids {
+					if id == inbound.Id {
+						continue
+					}
+					if candidate, candidateErr := s.GetInbound(id); candidateErr == nil && s.inboundHasClientEmail(candidate, email) {
+						inbound = candidate
+						break
+					}
+				}
+			}
+		}
+		return traffic, inbound, err
 	}
 	return nil, nil, nil
+}
+
+func (s *InboundService) inboundHasClientEmail(inbound *model.Inbound, email string) bool {
+	clients, err := s.GetClients(inbound)
+	if err != nil {
+		return false
+	}
+	for _, client := range clients {
+		if client.Email == email {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *InboundService) GetClientByEmail(clientEmail string) (*xray.ClientTraffic, *model.Client, error) {
