@@ -72,14 +72,14 @@ func SubmitWebRenewalRequest(email, planID, receiptType, filename string, receip
 	}
 
 	req := &model.TelegramRenewalRequest{
-		Email: account.Email,
-		TgID: account.TgID,
-		PlanID: plan.ID,
-		PlanName: plan.Name,
-		TotalGB: plan.GB,
-		Days: plan.Days,
-		Status: "pending",
-		CreatedAt: time.Now().UnixMilli(),
+		Email:       account.Email,
+		TgID:        account.TgID,
+		PlanID:      plan.ID,
+		PlanName:    plan.Name,
+		TotalGB:     plan.GB,
+		Days:        plan.Days,
+		Status:      "pending",
+		CreatedAt:   time.Now().UnixMilli(),
 		ReceiptType: receiptType,
 	}
 	if err := database.GetDB().Create(req).Error; err != nil {
@@ -88,13 +88,9 @@ func SubmitWebRenewalRequest(email, planID, receiptType, filename string, receip
 
 	price := ""
 	if plan.Price != "" {
-		price = "
-Price: " + html.EscapeString(plan.Price)
+		price = "\nPrice: " + html.EscapeString(plan.Price)
 	}
-	summary := fmt.Sprintf("🌐 <b>Web renewal request #%d</b>
-Account: <code>%s</code>
-Plan: <b>%s</b>%s
-Source: public subscription page",
+	summary := fmt.Sprintf("🌐 <b>Web renewal request #%d</b>\nAccount: <code>%s</code>\nPlan: <b>%s</b>%s\nSource: public subscription page",
 		req.Id, html.EscapeString(req.Email), html.EscapeString(req.PlanName), price)
 	kb := tu.InlineKeyboard(tu.InlineKeyboardRow(
 		telego.InlineKeyboardButton{Text: "✅ Approve"}.WithCallbackData(fmt.Sprintf("tr:approve:%d", req.Id)),

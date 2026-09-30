@@ -287,6 +287,27 @@
                          delivery). Rendered server-side (the list depends on inbound
                          settings and external proxies), plain <a download> so the browser
                          saves the file. -->
+                    {{ if .renewalEnable }}
+                    <a-divider>🔄 تمدید اشتراک</a-divider>
+                    <a-card size="small" style="margin-bottom:16px;">
+                        <p style="white-space:pre-wrap;">{{ .renewalPayment }}</p>
+                        <form id="renewal-form" enctype="multipart/form-data">
+                            <input type="hidden" name="plan" value="">
+                            <a-form-item label="پلن تمدید">
+                                <select id="renewal-plan" class="ant-input" style="width:100%;">
+                                    {{ range .renewalPlans }}
+                                    <option value="{{ .ID }}">{{ .Name }}{{ if .Price }} • {{ .Price }}{{ end }}</option>
+                                    {{ end }}
+                                </select>
+                            </a-form-item>
+                            <a-form-item label="رسید پرداخت">
+                                <input name="receipt" type="file" accept="image/*,.pdf" required />
+                            </a-form-item>
+                            <button type="submit" class="ant-btn ant-btn-primary">ارسال رسید برای تأیید</button>
+                        </form>
+                    </a-card>
+                    {{ end }}
+
                     {{ if .configs }}
                     <a-divider>{{ i18n "subscription.configFiles" }}</a-divider>
                     <a-row type="flex" justify="center" :gutter="[8,8]" style="width:100%; margin-bottom: 16px;">
@@ -373,8 +394,16 @@
 document.addEventListener('DOMContentLoaded', function () {
     var form = document.getElementById('renewal-form');
     if (!form) return;
+    var planSelect = document.getElementById('renewal-plan');
+    if (planSelect) {
+        form.querySelector('input[name="plan"]').value = planSelect.value;
+        planSelect.addEventListener('change', function () {
+            form.querySelector('input[name="plan"]').value = planSelect.value;
+        });
+    }
     form.addEventListener('submit', async function (e) {
         e.preventDefault();
+        if (planSelect) form.querySelector('input[name="plan"]').value = planSelect.value;
         var button = form.querySelector('button[type="submit"]');
         button.disabled = true;
         try {

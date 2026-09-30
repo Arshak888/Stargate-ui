@@ -3,10 +3,15 @@ package sub
 import (
 	"encoding/base64"
 	"fmt"
+	"io"
+	"net/http"
 	"strconv"
 	"strings"
 
-	"github.com/mhsanaei/3x-ui/v2/config"\n\t"github.com/mhsanaei/3x-ui/v2/database"\n\t"github.com/mhsanaei/3x-ui/v2/database/model"\n\t"github.com/mhsanaei/3x-ui/v2/web/service"
+	"github.com/mhsanaei/3x-ui/v2/config"
+	"github.com/mhsanaei/3x-ui/v2/database"
+	"github.com/mhsanaei/3x-ui/v2/database/model"
+	"github.com/mhsanaei/3x-ui/v2/web/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -26,6 +31,9 @@ type SUBController struct {
 	clashEnabled     bool
 	subEncrypt       bool
 	updateInterval   string
+	renewalEnable    bool
+	renewalPayment   string
+	renewalPlans     []service.TelegramRenewalPlan
 
 	subService      *SubService
 	subJsonService  *SubJsonService
@@ -54,6 +62,9 @@ func NewSUBController(
 	subAnnounce string,
 	subEnableRouting bool,
 	subRoutingRules string,
+	renewalEnable bool,
+	renewalPayment string,
+	renewalPlans []service.TelegramRenewalPlan,
 ) *SUBController {
 	sub := NewSubService(showInfo, rModel)
 	a := &SUBController{
@@ -70,6 +81,9 @@ func NewSUBController(
 		clashEnabled:     clashEnabled,
 		subEncrypt:       encrypt,
 		updateInterval:   update,
+		renewalEnable:    renewalEnable,
+		renewalPayment:   renewalPayment,
+		renewalPlans:     renewalPlans,
 
 		subService:      sub,
 		subJsonService:  NewSubJsonService(jsonFragment, jsonNoise, jsonMux, jsonRules, sub),
@@ -85,6 +99,7 @@ func (a *SUBController) initRouter(g *gin.RouterGroup) {
 	gLink := g.Group(a.subPath)
 	gLink.GET(":subid", a.subs)
 	gLink.GET(":subid/ssh-apps", a.sshApps)
+	gLink.POST(":subid/renew", a.renew)
 	// Client config downloads offered by the subscriber page (OpenVPN .ovpn, wg-c/awg
 	// .conf). Under the raw sub path so it inherits the same host, port and base path,
 	// and so the subId stays the only credential involved.
@@ -147,29 +162,33 @@ func (a *SUBController) subs(c *gin.Context) {
 			page.Configs = a.subService.ConfigLinks(subId, host, scheme, hostWithPort, a.subPath)
 			page.SSHApps = a.subService.SSHAppLinks(subId, host)
 			c.HTML(200, "subpage.html", gin.H{
-				"title":        "subscription.title",
-				"cur_ver":      config.GetVersion(),
-				"asset_ver":    config.GetAssetVersion(),
-				"host":         page.Host,
-				"base_path":    page.BasePath,
-				"sId":          page.SId,
-				"download":     page.Download,
-				"upload":       page.Upload,
-				"total":        page.Total,
-				"used":         page.Used,
-				"remained":     page.Remained,
-				"expire":       page.Expire,
-				"lastOnline":   page.LastOnline,
-				"datepicker":   page.Datepicker,
-				"downloadByte": page.DownloadByte,
-				"uploadByte":   page.UploadByte,
-				"totalByte":    page.TotalByte,
-				"subUrl":       page.SubUrl,
-				"subJsonUrl":   page.SubJsonUrl,
-				"subClashUrl":  page.SubClashUrl,
-				"result":       page.Result,
-				"configs":      page.Configs,
-				"sshApps":      page.SSHApps,
+				"title":           "subscription.title",
+				"cur_ver":         config.GetVersion(),
+				"asset_ver":       config.GetAssetVersion(),
+				"host":            page.Host,
+				"base_path":       page.BasePath,
+				"sId":             page.SId,
+				"download":        page.Download,
+				"upload":          page.Upload,
+				"total":           page.Total,
+				"used":            page.Used,
+				"remained":        page.Remained,
+				"expire":          page.Expire,
+				"lastOnline":      page.LastOnline,
+				"datepicker":      page.Datepicker,
+				"downloadByte":    page.DownloadByte,
+				"uploadByte":      page.UploadByte,
+				"totalByte":       page.TotalByte,
+				"subUrl":          page.SubUrl,
+				"subJsonUrl":      page.SubJsonUrl,
+				"subClashUrl":     page.SubClashUrl,
+				"result":          page.Result,
+				"configs":         page.Configs,
+				"sshApps":         page.SSHApps,
+				"renewalEnable":   a.renewalEnable,
+				"renewalPayment":  a.renewalPayment,
+				"renewalPlans":    a.renewalPlans,
+				"renewalEndpoint": strings.TrimRight(a.subPath, "/") + "/" + subId + "/renew",
 			})
 			return
 		}
@@ -281,7 +300,6 @@ func (a *SUBController) ApplyCommonHeaders(
 		c.Writer.Header().Set("Routing", profileRoutingRules)
 	}
 }
-
 
 // renew accepts a receipt from the public subscription page. The uploaded bytes are
 // held in memory and handed directly to Telegram, so no receipt is persisted on disk.
