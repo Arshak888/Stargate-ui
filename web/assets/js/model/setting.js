@@ -66,6 +66,8 @@ class AllSetting {
         this.subJsonNoises = "";
         this.subJsonMux = "";
         this.subJsonRules = "";
+        this.subGuideEnable = true;
+        this.subGuideText = "راهنمای ورود کانفیگ‌ها";
 
         this.timeLocation = "Local";
 

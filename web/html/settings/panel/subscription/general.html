@@ -146,6 +146,22 @@
             </template>
         </a-setting-list-item>
     </a-collapse-panel>
+    <a-collapse-panel key="5" header="Subscriber page">
+        <a-setting-list-item paddings="small">
+            <template #title>Enable subscriber guide</template>
+            <template #description>Show or hide the custom instructions section on the public subscription page.</template>
+            <template #control>
+                <a-switch v-model="allSetting.subGuideEnable"></a-switch>
+            </template>
+        </a-setting-list-item>
+        <a-setting-list-item paddings="small">
+            <template #title>Subscriber guide text</template>
+            <template #description>Plain text shown on the public subscription page. Line breaks are preserved.</template>
+            <template #control>
+                <a-textarea v-model="allSetting.subGuideText" :auto-size="{ minRows: 6, maxRows: 20 }"></a-textarea>
+            </template>
+        </a-setting-list-item>
+    </a-collapse-panel>
     <a-collapse-panel key="3" header='{{ i18n "pages.settings.certs" }}'>
         <a-setting-list-item paddings="small">
             <template #title>{{ i18n "pages.settings.subCertPath"}}</template>
