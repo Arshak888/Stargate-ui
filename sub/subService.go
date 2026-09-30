@@ -417,6 +417,54 @@ func (s *SubService) genMtprotoLink(inbound *model.Inbound, email string) string
 // genSshLink reuses the SSH service's own config renderer so a subscription entry is
 // identical to the per-client config modal by construction (SSH external proxies are
 // inbound-level, not on model.Client, so the link cannot be rebuilt from the client).
+type SSHAppLink struct {
+	Label      string
+	Host       string
+	Port       int
+	RocketLink string
+	NPVConfig  string
+}
+
+func (s *SubService) SSHAppLinks(subID, endpointHost string) []SSHAppLink {
+	inbounds, err := s.getInboundsBySubId(subID)
+	if err != nil {
+		return nil
+	}
+	var out []SSHAppLink
+	for _, inbound := range inbounds {
+		if inbound.Protocol != model.SSH {
+			continue
+		}
+		clients, err := s.inboundService.GetClients(inbound)
+		if err != nil {
+			continue
+		}
+		for _, client := range clients {
+			if !client.Enable || client.SubID != subID {
+				continue
+			}
+			cfgs, err := s.sshService.RenderClientConfigs(inbound, client.Email, endpointHost)
+			if err != nil {
+				continue
+			}
+			for _, cfg := range cfgs {
+				label := cfg.Remark
+				if label == "" {
+					label = inbound.Remark
+				}
+				if label == "" {
+					label = client.Email
+				}
+				out = append(out, SSHAppLink{
+					Label: label, Host: cfg.Host, Port: cfg.Port,
+					RocketLink: cfg.RocketLink, NPVConfig: cfg.Plain,
+				})
+			}
+		}
+	}
+	return out
+}
+
 func (s *SubService) genSshLink(inbound *model.Inbound, email string) string {
 	if inbound.Protocol != model.SSH {
 		return ""
@@ -2224,6 +2272,7 @@ type PageData struct {
 	SubClashUrl  string
 	Result       []string
 	Configs      []SubConfigLink
+	SSHApps      []SSHAppLink
 }
 
 // ResolveRequest extracts scheme and host info from request/headers consistently.

@@ -84,6 +84,7 @@ func NewSUBController(
 func (a *SUBController) initRouter(g *gin.RouterGroup) {
 	gLink := g.Group(a.subPath)
 	gLink.GET(":subid", a.subs)
+	gLink.GET(":subid/ssh-apps", a.sshApps)
 	// Client config downloads offered by the subscriber page (OpenVPN .ovpn, wg-c/awg
 	// .conf). Under the raw sub path so it inherits the same host, port and base path,
 	// and so the subId stays the only credential involved.
@@ -144,6 +145,7 @@ func (a *SUBController) subs(c *gin.Context) {
 			// config files as downloads. Rendered only for the browser view, since a
 			// subscription client has no use for them.
 			page.Configs = a.subService.ConfigLinks(subId, host, scheme, hostWithPort, a.subPath)
+			page.SSHApps = a.subService.SSHAppLinks(subId, host)
 			c.HTML(200, "subpage.html", gin.H{
 				"title":        "subscription.title",
 				"cur_ver":      config.GetVersion(),
@@ -167,6 +169,7 @@ func (a *SUBController) subs(c *gin.Context) {
 				"subClashUrl":  page.SubClashUrl,
 				"result":       page.Result,
 				"configs":      page.Configs,
+				"sshApps":      page.SSHApps,
 			})
 			return
 		}
@@ -185,6 +188,12 @@ func (a *SUBController) subs(c *gin.Context) {
 			c.String(200, result)
 		}
 	}
+}
+
+func (a *SUBController) sshApps(c *gin.Context) {
+	subID := c.Param("subid")
+	_, host, _, _ := a.subService.ResolveRequest(c)
+	c.JSON(200, gin.H{"items": a.subService.SSHAppLinks(subID, host)})
 }
 
 // subConfig serves one client config file (an OpenVPN .ovpn or a WireGuard/AmneziaWG

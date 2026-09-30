@@ -250,6 +250,37 @@
                     </div>
                     <br />
 
+                    {{ if .sshApps }}
+                    <a-divider>SSH • NPV Tunnel / RocketTunnel</a-divider>
+                    <div class="ssh-app-help">
+                        <p><strong>NPV Tunnel:</strong> for each SSH server below, use Configs → + → Add Config manually → SSH Config, or copy the fields with the button.</p>
+                        <p><strong>RocketTunnel:</strong> tap the one-click link below. If the app does not open automatically, copy the link and use <em>Import Config From Link</em>.</p>
+                        {{ range .sshApps }}
+                        <a-card size="small" style="margin-bottom:12px;">
+                            <template #title>[[ "{{ .Label }}" ]] <a-tag>SSH</a-tag></template>
+                            <a-space direction="vertical" style="width:100%;">
+                                <div><strong>Host:</strong> {{ .Host }} &nbsp; <strong>Port:</strong> {{ .Port }}</div>
+                                <a-button block @click="copy($event.currentTarget.dataset.config)"
+                                    data-config="{{ .NPVConfig }}">Copy NPV Tunnel config</a-button>
+                                {{ if .RocketLink }}
+                                <a-button block type="primary" href="{{ .RocketLink }}" target="_blank">Open in RocketTunnel</a-button>
+                                <a-button block @click="copy('{{ .RocketLink }}')">Copy RocketTunnel link</a-button>
+                                {{ end }}
+                            </a-space>
+                        </a-card>
+                        {{ end }}
+                    </div>
+                    {{ end }}
+
+                    <a-divider>راهنمای ورود کانفیگ‌ها</a-divider>
+                    <div class="ssh-app-help">
+                        <p><strong>SSH:</strong> در NPV Tunnel از مسیر Configs → + → Add Config manually → SSH Config، پروتکل را روی SSH-Direct بگذارید و Host، Port، Username، Password و UDPGW Port را وارد کنید. در RocketTunnel می‌توانید لینک اختصاصی بالا را باز کنید.</p>
+                        <p><strong>VLESS / VMess / Trojan / Shadowsocks:</strong> لینک Base Subscription را در بخش Subscription/Import from URL کلاینت سازگار وارد کنید، یا لینک تکی را از Individual Links بردارید.</p>
+                        <p><strong>Hysteria / Hysteria2 / TUIC / AnyTLS:</strong> از Subscription یا لینک تکی استفاده کنید و کلاینتی را انتخاب کنید که همان پروتکل را پشتیبانی کند.</p>
+                        <p><strong>WireGuard / AmneziaWG / OpenVPN:</strong> برای این موارد از فایل کانفیگ ارائه‌شده در همین صفحه استفاده کنید. لینک Base برای این پروتکل‌ها لزوماً جایگزین فایل native نیست.</p>
+                        <p><strong>نکته:</strong> لینک اشتراک و اطلاعات SSH شامل اطلاعات دسترسی هستند. آن‌ها را در گروه یا برای افراد دیگر ارسال نکنید.</p>
+                    </div>
+
                     <!-- Config files: OpenVPN, WireGuard/AmneziaWG and GRE cannot be set
                          up from a link, so their profiles are offered as downloads (GRE
                          has no link at all: one file per peer per platform is its only

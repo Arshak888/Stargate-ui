@@ -436,12 +436,13 @@ func (s *SshService) accountLimit(inboundId int, email string) (int, string) {
 
 // SshClientConfig is one rendered client artifact for an account/endpoint.
 type SshClientConfig struct {
-	Remark  string `json:"remark"`  // endpoint remark (external proxy), empty for the default
-	Host    string `json:"host"`    // endpoint host the client dials
-	Port    int    `json:"port"`    // endpoint port
-	Singbox string `json:"singbox"` // a sing-box "ssh" outbound JSON (Hiddify-consumable)
-	Plain   string `json:"plain"`   // plaintext host/port/user/pass block
-	Link    string `json:"link"`    // an ssh:// share link (Shadowrocket-importable, QR-friendly)
+	Remark     string `json:"remark"`     // endpoint remark (external proxy), empty for the default
+	Host       string `json:"host"`       // endpoint host the client dials
+	Port       int    `json:"port"`       // endpoint port
+	Singbox    string `json:"singbox"`    // a sing-box "ssh" outbound JSON (Hiddify-consumable)
+	Plain      string `json:"plain"`      // plaintext host/port/user/pass block
+	Link       string `json:"link"`       // an ssh:// share link (Shadowrocket-importable, QR-friendly)
+	RocketLink string `json:"rocketLink"` // RocketTunnel universal import link
 }
 
 // sshShareLink builds an ssh:// share link that mobile proxy clients (Shadowrocket)
@@ -457,6 +458,19 @@ func sshShareLink(user, password, host string, port int, label string) string {
 		link += "#" + url.QueryEscape(label)
 	}
 	return link
+}
+
+// rocketTunnelLink builds RocketTunnel's universal-link payload for an SSH-Direct config.
+func rocketTunnelLink(user, password, host string, port int, label string) string {
+	payload := map[string]any{
+		"host": host, "port": port, "username": user, "password": password,
+		"udpPort": sshUdpgwPort, "proto": "SSH-Direct", "name": label,
+	}
+	encoded, err := json.Marshal(payload)
+	if err != nil {
+		return ""
+	}
+	return "https://rcktnl.site/c/" + base64.StdEncoding.EncodeToString(encoded)
 }
 
 // RenderClientConfigs returns the client artifacts for the account with the given
@@ -519,24 +533,23 @@ func (s *SshService) RenderClientConfigs(inbound *model.Inbound, email, endpoint
 		if err != nil {
 			continue
 		}
-		// The UDPGW line is not decoration: clients that tunnel UDP (HTTP Injector,
-		// NapsternetV and friends) ask for a udpgw endpoint, and users read its
-		// absence as "this server has no UDP support". It does — handleDirectTCPIP
-		// terminates the udpgw protocol in-process on this loopback port — so the
-		// address to enter is published alongside the credentials.
-		plain := fmt.Sprintf("Host: %s\nPort: %d\nUsername: %s\nPassword: %s\nUDPGW: 127.0.0.1:%d\n",
-			t.host, t.port, acct.ID, acct.Password, sshUdpgwPort)
+		// The UDPGW endpoint is a fixed logical port carried through the SSH tunnel.
+		// NPV Tunnel asks for the port number separately; RocketTunnel embeds it in
+		// its universal-link payload.
 		label := t.remark
 		if label == "" {
 			label = email
 		}
+		plain := fmt.Sprintf("Protocol: SSH-Direct\nRemark: %s\nSSH Host: %s\nSSH Port: %d\nUDPGW Port: %d\nSSH Username: %s\nSSH Password: %s\n",
+			label, t.host, t.port, sshUdpgwPort, acct.ID, acct.Password)
 		out = append(out, SshClientConfig{
-			Remark:  t.remark,
-			Host:    t.host,
-			Port:    t.port,
-			Singbox: string(singbox),
-			Plain:   plain,
-			Link:    sshShareLink(acct.ID, acct.Password, t.host, t.port, label),
+			Remark:     t.remark,
+			Host:       t.host,
+			Port:       t.port,
+			Singbox:    string(singbox),
+			Plain:      plain,
+			Link:       sshShareLink(acct.ID, acct.Password, t.host, t.port, label),
+			RocketLink: rocketTunnelLink(acct.ID, acct.Password, t.host, t.port, label),
 		})
 	}
 	return out, nil

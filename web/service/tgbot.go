@@ -3573,6 +3573,64 @@ func (t *Tgbot) buildSubscriptionURLs(email string) (string, string, error) {
 	return subURL, subJsonURL, nil
 }
 
+func (t *Tgbot) buildSSHAppsURL(email string) (string, error) {
+	subURL, _, err := t.buildSubscriptionURLs(email)
+	if err != nil {
+		return "", err
+	}
+	u, err := url.Parse(subURL)
+	if err != nil {
+		return "", err
+	}
+	u.Path = strings.TrimRight(u.Path, "/") + "/ssh-apps"
+	return u.String(), nil
+}
+
+func (t *Tgbot) sendClientSSHAppLinks(chatId int64, email string) {
+	sshURL, err := t.buildSSHAppsURL(email)
+	if err != nil {
+		return
+	}
+	req, err := http.NewRequest("GET", sshURL, nil)
+	if err != nil {
+		return
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	req = req.WithContext(ctx)
+	resp, err := optimizedHTTPClient.Do(req)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return
+	}
+	var payload map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+		return
+	}
+	items, _ := payload["items"].([]any)
+	for _, raw := range items {
+		item, _ := raw.(map[string]any)
+		label, _ := item["Label"].(string)
+		host, _ := item["Host"].(string)
+		port, _ := item["Port"].(float64)
+		rocket, _ := item["RocketLink"].(string)
+		npv, _ := item["NPVConfig"].(string)
+		msg := "🔐 <b>SSH</b> • <b>" + html.EscapeString(label) + "</b>\n"
+		msg += "🌐 <code>" + html.EscapeString(host) + ":" + strconv.Itoa(int(port)) + "</code>\n\n"
+		if rocket != "" {
+			msg += "🚀 <b>RocketTunnel</b>\n<a href=\"" + html.EscapeString(rocket) + "\">Open in RocketTunnel</a>\n"
+			msg += "<code>" + html.EscapeString(rocket) + "</code>\n\n"
+		}
+		if npv != "" {
+			msg += "📱 <b>NPV Tunnel</b>\n<code>" + html.EscapeString(npv) + "</code>"
+		}
+		t.SendMsgToTgbot(chatId, msg)
+	}
+}
+
 // sendClientSubLinks sends the subscription links for the client to the chat.
 func (t *Tgbot) sendClientSubLinks(chatId int64, email string) {
 	subURL, subJsonURL, err := t.buildSubscriptionURLs(email)
@@ -3597,6 +3655,9 @@ func (t *Tgbot) sendClientSubLinks(chatId int64, email string) {
 
 // sendClientIndividualLinks fetches the subscription content (individual links) and sends it to the user
 func (t *Tgbot) sendClientIndividualLinks(chatId int64, email string) {
+	// SSH gets dedicated app outputs in addition to the ordinary subscription lines.
+	t.sendClientSSHAppLinks(chatId, email)
+
 	// Build the HTML sub page URL; we'll call it with header Accept to get raw content
 	subURL, _, err := t.buildSubscriptionURLs(email)
 	if err != nil {
