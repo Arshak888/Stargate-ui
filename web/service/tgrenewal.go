@@ -335,8 +335,32 @@ func (t *Tgbot) approveTelegramRenewal(adminChatID int64, q *telego.CallbackQuer
 		traffic.ExpiryTime = account.ExpiryTime
 		traffic.Enable = account.Enable
 		traffic.Reset = account.Reset
-		if err := tx.Save(&traffic).Error; err != nil {
-			return err
+		// Renewal has three live representations of the same account state:
+		// accounts, the single panel-wide client_traffics row, and every
+		// settings.clients projection. Update all three explicitly before the
+		// subscription endpoint can be polled again. In particular, do not rely on
+		// ProjectAccount for quota/expiry: it only rewrites settings.clients.
+		result := tx.Model(&xray.ClientTraffic{}).
+			Where("LOWER(TRIM(email)) = ?", strings.ToLower(strings.TrimSpace(account.Email))).
+			Updates(map[string]any{
+				"email":       account.Email,
+				"total":       account.TotalGB,
+				"expiry_time": account.ExpiryTime,
+				"enable":      account.Enable,
+				"reset":       account.Reset,
+			})
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			traffic.Email = account.Email
+			traffic.Total = account.TotalGB
+			traffic.ExpiryTime = account.ExpiryTime
+			traffic.Enable = account.Enable
+			traffic.Reset = account.Reset
+			if err := tx.Create(&traffic).Error; err != nil {
+				return err
+			}
 		}
 		if err := tx.Model(&model.AccountInbound{}).Where("account_id = ?", account.Id).Update("enable", true).Error; err != nil {
 			return err
