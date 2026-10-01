@@ -116,6 +116,14 @@ func (a *SUBController) initRouter(g *gin.RouterGroup) {
 
 // subs handles HTTP requests for subscription links, returning either HTML page or base64-encoded subscription data.
 func (a *SUBController) subs(c *gin.Context) {
+	// The HTML subscription page contains live account quota/expiry and must never
+	// be replayed from a browser or intermediary cache after a renewal. Raw
+	// subscription responses get the same policy through ApplyCommonHeaders below,
+	// but the HTML branch returns before that helper is called.
+	c.Writer.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+	c.Writer.Header().Set("Pragma", "no-cache")
+	c.Writer.Header().Set("Expires", "0")
+
 	subId := c.Param("subid")
 	scheme, host, hostWithPort, hostHeader := a.subService.ResolveRequest(c)
 	subs, lastOnline, traffic, err := a.subService.GetSubs(subId, host)

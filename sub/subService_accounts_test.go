@@ -719,6 +719,54 @@ func TestGetInboundsBySubIdSurvivesEmptyAndClientlessSettings(t *testing.T) {
 
 // A subId matching nothing is an error rather than an empty page, which is what
 // stops a typo'd link rendering as a working but empty subscription.
+// A renewal changes the account after a subscription has already been fetched.
+// The next request must build a fresh response scope and read the new quota/expiry,
+// rather than retaining the first response's account snapshot.
+func TestGetSubsReflectsAccountChangesAfterRenewal(t *testing.T) {
+	newSubTestDB(t)
+	const email = "renew@example.com"
+	const subID = "sub-renew"
+	const oldExpiry = int64(1760000000000)
+	const newExpiry = int64(1770000000000)
+
+	inbound := seedSubInbound(t, model.VLESS, 42001, "Germany", subClient(email, subID))
+	seedTraffic(t, inbound.Id, email, 2*gb, 3*gb, 10*gb, oldExpiry)
+	seedAccount(t, email, 10*gb, oldExpiry, inbound.Id)
+
+	svc := subSvc()
+	_, _, first, err := svc.GetSubs(subID, "vpn.example.com")
+	if err != nil {
+		t.Fatalf("first GetSubs: %v", err)
+	}
+	if first.Total != 10*gb || first.ExpiryTime != oldExpiry {
+		t.Fatalf("first traffic = %+v, want 10GB/%d", first, oldExpiry)
+	}
+
+	var account model.Account
+	if err := database.GetDB().Where("email = ?", email).First(&account).Error; err != nil {
+		t.Fatalf("load account: %v", err)
+	}
+	account.TotalGB = 30 * gb
+	account.ExpiryTime = newExpiry
+	if err := database.GetDB().Save(&account).Error; err != nil {
+		t.Fatalf("save renewed account: %v", err)
+	}
+	if err := database.GetDB().Model(&xray.ClientTraffic{}).Where("email = ?", email).Updates(map[string]any{
+		"total":       30 * gb,
+		"expiry_time": newExpiry,
+	}).Error; err != nil {
+		t.Fatalf("save renewed traffic: %v", err)
+	}
+
+	_, _, second, err := svc.GetSubs(subID, "vpn.example.com")
+	if err != nil {
+		t.Fatalf("second GetSubs: %v", err)
+	}
+	if second.Total != 30*gb || second.ExpiryTime != newExpiry {
+		t.Fatalf("second traffic = %+v, want 30GB/%d", second, newExpiry)
+	}
+}
+
 func TestGetSubsErrorsOnUnknownSubId(t *testing.T) {
 	newSubTestDB(t)
 	seedSubInbound(t, model.VLESS, 41801, "Germany", subClient("alice@example.com", "sub-alice"))
