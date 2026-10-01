@@ -88,7 +88,7 @@ build_arch() {
         # pptpd execs pptpctrl at the compile-time SBINDIR path (no PATH lookup),
         # so pin it to a fixed sentinel that provisioning symlinks to the bundle.
         cd /tmp
-        wget -q "https://downloads.sourceforge.net/project/poptop/pptpd/pptpd-1.4.0/pptpd-1.4.0.tar.gz" -O pptpd.tar.gz
+        wget -q --show-progress "https://sourceforge.net/projects/poptop/files/pptpd/pptpd-1.4.0/pptpd-1.4.0.tar.gz/download" -O pptpd.tar.gz
         tar xf pptpd.tar.gz
         cd pptpd-1.4.0
         ./configure --sbindir=/usr/libexec/stargate-ui
@@ -107,7 +107,7 @@ build_arch() {
         # pppd is the parent and that path is never consulted.
         cd /tmp
         PPTP_VER=1.10.0
-        wget -q "https://downloads.sourceforge.net/project/pptpclient/pptp/pptp-${PPTP_VER}/pptp-${PPTP_VER}.tar.gz" -O pptp.tar.gz
+        wget -q --show-progress "https://sourceforge.net/projects/pptpclient/files/pptp/pptp-${PPTP_VER}/pptp-${PPTP_VER}.tar.gz/download" -O pptp.tar.gz
         tar xf pptp.tar.gz
         cd "pptp-${PPTP_VER}"
         make -j"$(nproc)" pptp LDFLAGS="-static"
