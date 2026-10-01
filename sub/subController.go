@@ -277,6 +277,12 @@ func (a *SUBController) ApplyCommonHeaders(
 	profileEnableRouting bool,
 	profileRoutingRules string,
 ) {
+	// Subscription data is account state, not a static asset. After a renewal the
+	// very next fetch must expose the new quota and expiry, so prevent browser/proxy
+	// caches from serving the pre-renewal response.
+	c.Writer.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+	c.Writer.Header().Set("Pragma", "no-cache")
+	c.Writer.Header().Set("Expires", "0")
 	c.Writer.Header().Set("Subscription-Userinfo", header)
 	c.Writer.Header().Set("Profile-Update-Interval", updateInterval)
 

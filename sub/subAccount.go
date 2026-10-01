@@ -93,9 +93,15 @@ func identityKey(email string) string {
 // the backfill has not completed, which is the same thing as far as every reader
 // here is concerned).
 func (sc *subScope) account(email string) *model.Account {
-	if sc == nil || !sc.migrated {
+	if sc == nil {
 		return nil
 	}
+	// If an Account row already exists, it is safe to use it immediately. The
+	// migration marker only tells us whether the whole legacy population has been
+	// backfilled; it must not make a newly-created or already-migrated account look
+	// legacy to the subscription endpoint. This is especially important after a
+	// renewal, because the renewal updates the Account first and the subscription
+	// must read the new quota/expiry on its very next request.
 	key := identityKey(email)
 	if key == "" {
 		return nil

@@ -302,10 +302,11 @@ func (t *Tgbot) approveTelegramRenewal(adminChatID int64, q *telego.CallbackQuer
 			traffic = xray.ClientTraffic{InboundId: 0, Email: account.Email}
 		}
 		now := time.Now()
+		// The Account row is the canonical quota. client_traffics is a usage
+		// projection and may still contain the previous quota while a renewal is
+		// being approved, so never let that row overwrite the account's current
+		// total here.
 		currentTotal := account.TotalGB
-		if trafficErr == nil && traffic.Total > 0 {
-			currentTotal = traffic.Total
-		}
 		if req.TotalGB == 0 {
 			account.TotalGB = 0
 		} else if currentTotal > 0 {
