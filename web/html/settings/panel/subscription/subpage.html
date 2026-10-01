@@ -61,6 +61,34 @@
         color: var(--accent);
     }
 
+    .subscription-page .sub-renewal-card {
+        margin: 8px 0 28px;
+    }
+
+    .subscription-page .sub-renewal-box {
+        margin-top: 8px;
+    }
+
+    .subscription-page .sub-renewal-payment {
+        white-space: pre-wrap;
+        line-height: 1.8;
+        margin: 0 0 20px;
+    }
+
+    .subscription-page .sub-renewal-submit {
+        margin-top: 8px;
+    }
+
+    .subscription-page .ssh-app-card {
+        margin-bottom: 14px;
+    }
+
+    .subscription-page .sub-custom-guide {
+        white-space: pre-wrap;
+        line-height: 1.9;
+        margin-bottom: 0;
+    }
+
     .subscription-page .subscription-link-box {
         cursor: pointer;
         border-radius: 12px;
@@ -235,6 +263,29 @@
                         </a-form-item>
                     </a-form>
 
+                    {{ if .renewalEnable }}
+                    <section class="sub-renewal-card">
+                        <a-divider>{{ i18n "pages.subscription.renewalTitle" }}</a-divider>
+                        <a-card size="small" class="sub-renewal-box">
+                            <p class="sub-renewal-payment">{{ .renewalPayment }}</p>
+                            <form id="renewal-form" enctype="multipart/form-data">
+                                <input type="hidden" name="plan" value="">
+                                <a-form-item label='{{ i18n "pages.subscription.renewalPlan" }}'>
+                                    <select id="renewal-plan" class="ant-input" style="width:100%;">
+                                        {{ range .renewalPlans }}
+                                        <option value="{{ .ID }}">{{ .Name }}{{ if .Price }} • {{ .Price }}{{ end }}</option>
+                                        {{ end }}
+                                    </select>
+                                </a-form-item>
+                                <a-form-item label='{{ i18n "pages.subscription.paymentReceipt" }}'>
+                                    <input name="receipt" type="file" accept="image/*,.pdf" required />
+                                </a-form-item>
+                                <button type="submit" class="ant-btn ant-btn-primary sub-renewal-submit">{{ i18n "pages.subscription.submitReceipt" }}</button>
+                            </form>
+                        </a-card>
+                    </section>
+                    {{ end }}
+
                     <br />
                     <div v-for="(link, idx) in links" :key="link"
                         style="position: relative; margin-bottom: 20px; text-align: center;">
@@ -250,21 +301,21 @@
                     </div>
                     <br />
 
+                    {{ if .subGuideEnable }}
                     {{ if .sshApps }}
-                    <a-divider>SSH • NPV Tunnel / RocketTunnel</a-divider>
+                    <a-divider>{{ i18n "pages.subscription.sshAppsTitle" }}</a-divider>
                     <div class="ssh-app-help">
-                        <p><strong>NPV Tunnel:</strong> copy the generated <code>npvt-ssh://...</code> link, then open NPV Tunnel → Configs → + → <em>Import config from Clipboard</em>. The copied value is a native NPV Tunnel SSH URI.</p>
-                        <p><strong>RocketTunnel:</strong> tap the one-click link below. If the app does not open automatically, copy it and use <em>Import Config From Link</em>.</p>
+                        <p><strong>{{ i18n "pages.subscription.npvTunnel" }}:</strong> {{ i18n "pages.subscription.npvTunnelGuide" }}</p>
+                        <p><strong>{{ i18n "pages.subscription.rocketTunnel" }}:</strong> {{ i18n "pages.subscription.rocketTunnelGuide" }}</p>
                         {{ range .sshApps }}
-                        <a-card size="small" style="margin-bottom:12px;">
+                        <a-card size="small" class="ssh-app-card">
                             <template #title>[[ "{{ .Label }}" ]] <a-tag>SSH</a-tag></template>
                             <a-space direction="vertical" style="width:100%;">
-                                <div><strong>Host:</strong> {{ .Host }} &nbsp; <strong>Port:</strong> {{ .Port }}</div>
-                                <a-button block @click="copy($event.currentTarget.dataset.config)"
-                                    data-config="{{ .NPVConfig }}">Copy NPV Tunnel import link</a-button>
+                                <div><strong>{{ i18n "host" }}:</strong> {{ .Host }} &nbsp; <strong>{{ i18n "pages.subscription.port" }}:</strong> {{ .Port }}</div>
+                                <a-button block @click="copy($event.currentTarget.dataset.config)" data-config="{{ .NPVConfig }}">{{ i18n "pages.subscription.copyNpv" }}</a-button>
                                 {{ if .RocketLink }}
-                                <a-button block type="primary" href="{{ .RocketLink }}" target="_blank">Open in RocketTunnel</a-button>
-                                <a-button block @click="copy('{{ .RocketLink }}')">Copy RocketTunnel link</a-button>
+                                <a-button block type="primary" href="{{ .RocketLink }}" target="_blank">{{ i18n "pages.subscription.openRocket" }}</a-button>
+                                <a-button block @click="copy('{{ .RocketLink }}')">{{ i18n "pages.subscription.copyRocket" }}</a-button>
                                 {{ end }}
                             </a-space>
                         </a-card>
@@ -272,40 +323,18 @@
                     </div>
                     {{ end }}
 
-                    <a-divider>راهنمای ورود کانفیگ‌ها</a-divider>
+                    <a-divider>{{ i18n "pages.subscription.connectionGuideTitle" }}</a-divider>
                     <div class="ssh-app-help">
-                        <p><strong>SSH:</strong> در NPV Tunnel از مسیر Configs → + → Add Config manually → SSH Config، پروتکل را روی SSH-Direct بگذارید و Host، Port، Username، Password و UDPGW Port را وارد کنید. در RocketTunnel می‌توانید لینک اختصاصی بالا را باز کنید.</p>
-                        <p><strong>VLESS / VMess / Trojan / Shadowsocks:</strong> لینک Base Subscription را در بخش Subscription/Import from URL کلاینت سازگار وارد کنید، یا لینک تکی را از Individual Links بردارید.</p>
-                        <p><strong>Hysteria / Hysteria2 / TUIC / AnyTLS:</strong> از Subscription یا لینک تکی استفاده کنید و کلاینتی را انتخاب کنید که همان پروتکل را پشتیبانی کند.</p>
-                        <p><strong>WireGuard / AmneziaWG / OpenVPN:</strong> برای این موارد از فایل کانفیگ ارائه‌شده در همین صفحه استفاده کنید. لینک Base برای این پروتکل‌ها لزوماً جایگزین فایل native نیست.</p>
-                        <p><strong>نکته:</strong> لینک اشتراک و اطلاعات SSH شامل اطلاعات دسترسی هستند. آن‌ها را در گروه یا برای افراد دیگر ارسال نکنید.</p>
+                        {{ if .subGuideText }}
+                        <p class="sub-custom-guide">{{ .subGuideText }}</p>
+                        {{ else }}
+                        <p><strong>SSH:</strong> {{ i18n "pages.subscription.sshGuide" }}</p>
+                        <p><strong>VLESS / VMess / Trojan / Shadowsocks:</strong> {{ i18n "pages.subscription.proxyGuide" }}</p>
+                        <p><strong>Hysteria / Hysteria2 / TUIC / AnyTLS:</strong> {{ i18n "pages.subscription.advancedGuide" }}</p>
+                        <p><strong>WireGuard / AmneziaWG / OpenVPN:</strong> {{ i18n "pages.subscription.fileGuide" }}</p>
+                        <p><strong>{{ i18n "pages.subscription.securityNoteTitle" }}:</strong> {{ i18n "pages.subscription.securityNote" }}</p>
+                        {{ end }}
                     </div>
-
-                    <!-- Config files: OpenVPN, WireGuard/AmneziaWG and GRE cannot be set
-                         up from a link, so their profiles are offered as downloads (GRE
-                         has no link at all: one file per peer per platform is its only
-                         delivery). Rendered server-side (the list depends on inbound
-                         settings and external proxies), plain <a download> so the browser
-                         saves the file. -->
-                    {{ if .renewalEnable }}
-                    <a-divider>🔄 تمدید اشتراک</a-divider>
-                    <a-card size="small" style="margin-bottom:16px;">
-                        <p style="white-space:pre-wrap;">{{ .renewalPayment }}</p>
-                        <form id="renewal-form" enctype="multipart/form-data">
-                            <input type="hidden" name="plan" value="">
-                            <a-form-item label="پلن تمدید">
-                                <select id="renewal-plan" class="ant-input" style="width:100%;">
-                                    {{ range .renewalPlans }}
-                                    <option value="{{ .ID }}">{{ .Name }}{{ if .Price }} • {{ .Price }}{{ end }}</option>
-                                    {{ end }}
-                                </select>
-                            </a-form-item>
-                            <a-form-item label="رسید پرداخت">
-                                <input name="receipt" type="file" accept="image/*,.pdf" required />
-                            </a-form-item>
-                            <button type="submit" class="ant-btn ant-btn-primary">ارسال رسید برای تأیید</button>
-                        </form>
-                    </a-card>
                     {{ end }}
 
                     {{ if .configs }}
@@ -410,13 +439,13 @@ document.addEventListener('DOMContentLoaded', function () {
             var response = await fetch('{{ .renewalEndpoint }}', { method: 'POST', body: new FormData(form) });
             var result = await response.json();
             if (response.ok && result.success) {
-                alert(result.message || 'Receipt sent.');
+                alert(result.message || '{{ i18n "pages.subscription.receiptSent" }}');
                 form.reset();
             } else {
-                alert(result.message || 'Could not submit renewal.');
+                alert(result.message || '{{ i18n "pages.subscription.renewalSubmitError" }}');
             }
         } catch (err) {
-            alert('Could not submit renewal request.');
+            alert('{{ i18n "pages.subscription.renewalSubmitError" }}');
         } finally {
             button.disabled = false;
         }

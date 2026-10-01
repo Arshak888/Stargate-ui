@@ -10,7 +10,7 @@
             </template>
         </a-setting-list-item>
         <a-setting-list-item paddings="small">
-            <template #title>JSON Subscription</template>
+            <template #title>{{ i18n "pages.settings.jsonSubscription" }}</template>
             <template #description>{{ i18n
                 "pages.settings.subJsonEnable"}}</template>
             <template #control>
@@ -18,9 +18,8 @@
             </template>
         </a-setting-list-item>
         <a-setting-list-item paddings="small">
-            <template #title>Clash / Mihomo Subscription</template>
-            <template #description>Enable direct Clash and Mihomo YAML
-                subscriptions.</template>
+            <template #title>{{ i18n "pages.settings.clashSubscription" }}</template>
+            <template #description>{{ i18n "pages.settings.clashSubscriptionDesc" }}</template>
             <template #control>
                 <a-switch v-model="allSetting.subClashEnable"></a-switch>
             </template>
@@ -146,17 +145,17 @@
             </template>
         </a-setting-list-item>
     </a-collapse-panel>
-    <a-collapse-panel key="5" header="Subscriber page">
+    <a-collapse-panel key="5" header='{{ i18n "pages.settings.subscriberPage" }}'>
         <a-setting-list-item paddings="small">
-            <template #title>Enable subscriber guide</template>
-            <template #description>Show or hide the custom instructions section on the public subscription page.</template>
+            <template #title>{{ i18n "pages.settings.enableSubscriberGuide" }}</template>
+            <template #description>{{ i18n "pages.settings.enableSubscriberGuideDesc" }}</template>
             <template #control>
                 <a-switch v-model="allSetting.subGuideEnable"></a-switch>
             </template>
         </a-setting-list-item>
         <a-setting-list-item paddings="small">
-            <template #title>Subscriber guide text</template>
-            <template #description>Plain text shown on the public subscription page. Line breaks are preserved.</template>
+            <template #title>{{ i18n "pages.settings.subscriberGuideText" }}</template>
+            <template #description>{{ i18n "pages.settings.subscriberGuideTextDesc" }}</template>
             <template #control>
                 <a-textarea v-model="allSetting.subGuideText" :auto-size="{ minRows: 6, maxRows: 20 }"></a-textarea>
             </template>

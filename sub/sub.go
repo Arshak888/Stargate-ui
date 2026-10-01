@@ -187,6 +187,15 @@ func (s *Server) initRouter() (*gin.Engine, error) {
 		SubRoutingRules = ""
 	}
 
+	SubGuideEnable, err := s.settingService.GetSubGuideEnable()
+	if err != nil {
+		SubGuideEnable = true
+	}
+	SubGuideText, err := s.settingService.GetSubGuideText()
+	if err != nil {
+		SubGuideText = ""
+	}
+
 	renewalEnable, renewalPayment, renewalPlans, err := service.GetTelegramRenewalSettings()
 	if err != nil {
 		renewalEnable = false
@@ -272,7 +281,8 @@ func (s *Server) initRouter() (*gin.Engine, error) {
 	s.sub = NewSUBController(
 		g, LinksPath, JsonPath, ClashPath, subJsonEnable, subClashEnable, Encrypt, ShowInfo, RemarkModel, SubUpdates,
 		SubJsonFragment, SubJsonNoises, SubJsonMux, SubJsonRules, SubTitle, SubSupportUrl,
-		SubProfileUrl, SubAnnounce, SubEnableRouting, SubRoutingRules, renewalEnable, renewalPayment, renewalPlans)
+		SubProfileUrl, SubAnnounce, SubEnableRouting, SubRoutingRules,
+		SubGuideEnable, SubGuideText, renewalEnable, renewalPayment, renewalPlans)
 
 	return engine, nil
 }

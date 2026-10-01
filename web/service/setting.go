@@ -92,7 +92,7 @@ var defaultValueMap = map[string]string{
 	"subJsonMux":                  "",
 	"subJsonRules":                "",
 	"subGuideEnable":              "true",
-	"subGuideText":                "راهنمای ورود کانفیگ‌ها\n\nSSH: در NPV Tunnel از مسیر Configs → + → Add Config manually → SSH Config، پروتکل را روی SSH-Direct بگذارید و Host، Port، Username، Password و UDPGW Port را وارد کنید. در RocketTunnel می‌توانید لینک اختصاصی را باز کنید.\n\nVLESS / VMess / Trojan / Shadowsocks: لینک Base Subscription را در بخش Subscription / Import from URL کلاینت سازگار وارد کنید، یا لینک تکی را از Individual Links بردارید.\n\nHysteria / Hysteria2 / TUIC / AnyTLS: از Subscription یا لینک تکی استفاده کنید و کلاینتی را انتخاب کنید که همان پروتکل را پشتیبانی کند.\n\nWireGuard / AmneziaWG / OpenVPN: برای این موارد از فایل کانفیگ ارائه‌شده در همین صفحه استفاده کنید.\n\nنکته: لینک اشتراک و اطلاعات SSH شامل اطلاعات دسترسی هستند. آن‌ها را در گروه یا برای افراد دیگر ارسال نکنید.",
+	"subGuideText":                "",
 	"datepicker":                  "gregorian",
 	"warp":                        "",
 	"nord":                        "",
@@ -715,6 +715,23 @@ func (s *SettingService) GetSubProfileUrl() (string, error) {
 
 func (s *SettingService) GetSubAnnounce() (string, error) {
 	return s.getString("subAnnounce")
+}
+
+func (s *SettingService) GetSubGuideEnable() (bool, error) {
+	return s.getBool("subGuideEnable")
+}
+
+func (s *SettingService) GetSubGuideText() (string, error) {
+	text, err := s.getString("subGuideText")
+	if err != nil {
+		return "", err
+	}
+	// Older builds stored the built-in Persian guide as the setting default.
+	// Treat that legacy value as empty so the public page can use the active locale.
+	if strings.HasPrefix(strings.TrimSpace(text), "راهنمای ورود کانفیگ‌ها\n\nSSH:") {
+		return "", nil
+	}
+	return text, nil
 }
 
 func (s *SettingService) GetSubEnableRouting() (bool, error) {

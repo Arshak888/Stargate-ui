@@ -24,6 +24,8 @@ type SUBController struct {
 	subAnnounce      string
 	subEnableRouting bool
 	subRoutingRules  string
+	subGuideEnable   bool
+	subGuideText     string
 	subPath          string
 	subJsonPath      string
 	subClashPath     string
@@ -62,6 +64,8 @@ func NewSUBController(
 	subAnnounce string,
 	subEnableRouting bool,
 	subRoutingRules string,
+	subGuideEnable bool,
+	subGuideText string,
 	renewalEnable bool,
 	renewalPayment string,
 	renewalPlans []service.TelegramRenewalPlan,
@@ -74,6 +78,8 @@ func NewSUBController(
 		subAnnounce:      subAnnounce,
 		subEnableRouting: subEnableRouting,
 		subRoutingRules:  subRoutingRules,
+		subGuideEnable:   subGuideEnable,
+		subGuideText:     subGuideText,
 		subPath:          subPath,
 		subJsonPath:      jsonPath,
 		subClashPath:     clashPath,
@@ -193,6 +199,8 @@ func (a *SUBController) subs(c *gin.Context) {
 				"result":          page.Result,
 				"configs":         page.Configs,
 				"sshApps":         page.SSHApps,
+				"subGuideEnable":  a.subGuideEnable,
+				"subGuideText":    a.subGuideText,
 				"renewalEnable":   a.renewalEnable,
 				"renewalPayment":  a.renewalPayment,
 				"renewalPlans":    a.renewalPlans,
