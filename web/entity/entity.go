@@ -58,6 +58,20 @@ type AllSetting struct {
 	TgRenewalEnable          bool   `json:"tgRenewalEnable" form:"tgRenewalEnable"`
 	TgRenewalPaymentInfo     string `json:"tgRenewalPaymentInfo" form:"tgRenewalPaymentInfo"`
 	TgRenewalPlans           string `json:"tgRenewalPlans" form:"tgRenewalPlans"`
+	WaEnable                 bool   `json:"waEnable" form:"waEnable"`
+	WaAccessToken            string `json:"waAccessToken" form:"waAccessToken"`
+	WaPhoneNumberID          string `json:"waPhoneNumberId" form:"waPhoneNumberId"`
+	WaVerifyToken            string `json:"waVerifyToken" form:"waVerifyToken"`
+	WaAppSecret              string `json:"waAppSecret" form:"waAppSecret"`
+	WaGraphVersion           string `json:"waGraphVersion" form:"waGraphVersion"`
+	WaExpiryReminderRuntime  string `json:"waExpiryReminderRuntime" form:"waExpiryReminderRuntime"`
+	WaExpiryTemplate2Days    string `json:"waExpiryTemplate2Days" form:"waExpiryTemplate2Days"`
+	WaExpiryTemplate1Day     string `json:"waExpiryTemplate1Day" form:"waExpiryTemplate1Day"`
+	WaExpiryTemplateExpired  string `json:"waExpiryTemplateExpired" form:"waExpiryTemplateExpired"`
+	WaTemplateLanguage       string `json:"waTemplateLanguage" form:"waTemplateLanguage"`
+	WaExpiryText2Days        string `json:"waExpiryText2Days" form:"waExpiryText2Days"`
+	WaExpiryText1Day         string `json:"waExpiryText1Day" form:"waExpiryText1Day"`
+	WaExpiryTextExpired      string `json:"waExpiryTextExpired" form:"waExpiryTextExpired"`
 
 	// Security settings
 	TimeLocation    string `json:"timeLocation" form:"timeLocation"`       // Time zone location
