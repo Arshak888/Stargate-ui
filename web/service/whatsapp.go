@@ -19,7 +19,7 @@ import (
 )
 
 type WhatsAppService struct {
-	settingService SettingService
+	settingService *SettingService
 	client         *http.Client
 }
 
