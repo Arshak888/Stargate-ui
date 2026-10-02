@@ -552,6 +552,15 @@ func (s *Server) startTask() {
 		s.cron.Remove(entry)
 		s.cron.Remove(reminderEntry)
 	}
+	// WhatsApp expiry reminders use Meta-approved templates for business-initiated messages.
+	if enabled, err := s.settingService.GetAllSetting(); err == nil && enabled != nil && enabled.WaEnable {
+		runtime := enabled.WaExpiryReminderRuntime
+		if strings.TrimSpace(runtime) == "" { runtime = "@every 10m" }
+		if _, err := s.cron.AddJob(runtime, job.NewWhatsAppExpiryReminderJob()); err != nil {
+			logger.Warningf("Add WhatsAppExpiryReminderJob: failed to schedule runtime %q: %v", runtime, err)
+		}
+	}
+
 }
 
 // Start initializes and starts the web server with configured settings, routes, and background jobs.
