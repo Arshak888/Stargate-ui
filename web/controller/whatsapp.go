@@ -3,8 +3,8 @@ package controller
 import (
 	"net/http"
 
-	"github.com/mhsanaei/3x-ui/v2/web/service"
 	"github.com/gin-gonic/gin"
+	"github.com/mhsanaei/3x-ui/v2/web/service"
 )
 
 type WhatsAppController struct {
