@@ -38,6 +38,7 @@ func initModels() error {
 		&model.ResellerClient{},
 		&model.TelegramReminderState{},
 		&model.TelegramRenewalRequest{},
+		&model.WhatsAppReminderState{},
 		// The accounts layer. Creating these is purely additive: an old binary rolled
 		// back onto a migrated database ignores both tables (AutoMigrate never drops
 		// what it does not know) and keeps reading settings.clients exactly as before.
