@@ -143,6 +143,12 @@ func (s *WhatsAppService) SendExpiryReminders() {
 	}
 }
 
+func (s *WhatsAppService) WebhookVerifyToken() (string, error) {
+	cfg, err := s.settings()
+	if err != nil { return "", err }
+	return cfg.VerifyToken, nil
+}
+
 func (s *WhatsAppService) VerifyWebhook(signature string, body []byte) bool {
 	cfg, err := s.settings()
 	if err != nil || cfg.AppSecret == "" || !strings.HasPrefix(signature, "sha256=") { return false }
