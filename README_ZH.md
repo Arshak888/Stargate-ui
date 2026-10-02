@@ -31,7 +31,9 @@
 - 为 **Shadowsocks** 协议新增了 **AES-256-GCM** 和 **AES-128-GCM** 两种 **Encryption**
 - 在 **Inbound** 和 **Outbound** 中支持 **XHTTP Object**
 - **[WARP-CLI](https://github.com/Sir-MmD/warp-cli)**（Cloudflare 官方版本）自动安装脚本
-- 经过[补丁修复的 **Xray-core**](https://github.com/Sir-MmD/Xray-core) 内核，用于修复 **Shadowsocks** 协议中的「Unsupported Cipher」错误
+- 经过[补丁修复的 **Xray-core**](https://github.com/Sir-MmD/Xray-core) 修复 **Shadowsocks** 的「Unsupported Cipher」错误，并将 **AnyTLS**、**TUIC (v5)** 和 **NaiveProxy** 作为原生协议加入，使它们无需第二个核心即可使用按账户流量统计、速度限制、设备数量限制和在线连接检测
+- 支持**服务器裸 IP 的真实 SSL**，即使没有域名也可以使用；Let's Encrypt 可以签发名称直接为该 IP 地址的证书
+- 证书续期会在**不重启面板**的情况下生效，因此证书更新过程中不会导致用户连接中断
 - 将所有文件（Geofile、Xray-core 以及 Backend 内核）打包进单个二进制文件中
 - 以 **TXT** 和 **PDF** 格式导出账户链接
 - 支持**冻结（Freeze）**账户
@@ -44,6 +46,12 @@
     * 批量删除 Inbound
     * 批量**冻结/解冻**账户
 
+
+- AnyTLS
+- TUIC (v5)
+- NaiveProxy
+
+此外，以下三个协议直接加入了补丁版 Xray-core，因此由核心本身提供服务，而不是依赖独立 daemon，并且同时支持作为 **Inbound** 和 **Outbound**：
 
 ## 本 Fork 的新增功能
 
