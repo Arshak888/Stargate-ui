@@ -48,7 +48,7 @@ import (
 // owns depends on the protocol, so they are applied by applyAccountCredential.
 var accountOwnedKeys = []string{
 	"email", "subId", "totalGB", "expiryTime", "enable",
-	"reset", "limitIp", "tgId", "comment",
+	"reset", "limitIp", "tgId", "whatsappPhone", "comment",
 }
 
 // applyAccountCredential writes the credential fields the given protocol keys on.
@@ -207,6 +207,7 @@ func renderClientEntry(account *model.Account, membership *model.AccountInbound,
 	entry["reset"] = account.Reset
 	entry["limitIp"] = account.LimitIP
 	entry["tgId"] = account.TgID
+	entry["whatsappPhone"] = account.WhatsAppPhone
 	entry["comment"] = account.Comment
 
 	// The three nullable limit overrides, projected onto the entry because THE ENTRY
