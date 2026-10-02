@@ -61,6 +61,20 @@ var defaultValueMap = map[string]string{
 	"tgRenewalEnable":             "false",
 	"tgRenewalPaymentInfo":        "",
 	"tgRenewalPlans":              "[{\"id\":\"20gb-30d\",\"name\":\"20 GB / 30 days\",\"gb\":20,\"days\":30,\"price\":\"240000\"},{\"id\":\"30gb-30d\",\"name\":\"30 GB / 30 days\",\"gb\":30,\"days\":30,\"price\":\"360000\"},{\"id\":\"40gb-30d\",\"name\":\"40 GB / 30 days\",\"gb\":40,\"days\":30,\"price\":\"480000\"},{\"id\":\"50gb-30d\",\"name\":\"50 GB / 30 days\",\"gb\":50,\"days\":30,\"price\":\"600000\"},{\"id\":\"unlimited-30d\",\"name\":\"Unlimited / 30 days\",\"gb\":0,\"days\":30,\"price\":\"600000\"}]",
+	"waEnable":                    "false",
+	"waAccessToken":               "",
+	"waPhoneNumberId":             "",
+	"waVerifyToken":               "",
+	"waAppSecret":                 "",
+	"waGraphVersion":              "v23.0",
+	"waExpiryReminderRuntime":     "@every 10m",
+	"waExpiryTemplate2Days":       "",
+	"waExpiryTemplate1Day":        "",
+	"waExpiryTemplateExpired":     "",
+	"waTemplateLanguage":           "en_US",
+	"waExpiryText2Days":            "Your account {email} expires in about {days} days. Expiry: {expiry}",
+	"waExpiryText1Day":             "Your account {email} expires in about {days} day. Expiry: {expiry}",
+	"waExpiryTextExpired":          "Your account {email} has expired. Expiry: {expiry}",
 	"twoFactorEnable":             "false",
 	"twoFactorToken":              "",
 	"systemdServiceName":          "stargate-ui",
@@ -195,7 +209,7 @@ func (s *SettingService) GetAllSetting() (*entity.AllSetting, error) {
 		// This keeps legitimate empty fields such as logo URL and payment notes intact.
 		if value == "" {
 			switch key {
-			case "panelBrandName", "loginTitle", "loginSubtitle", "tgExpiryReminderRuntime", "tgRenewalPlans":
+			case "panelBrandName", "loginTitle", "loginSubtitle", "tgExpiryReminderRuntime", "tgRenewalPlans", "waGraphVersion", "waExpiryReminderRuntime", "waTemplateLanguage", "waExpiryText2Days", "waExpiryText1Day", "waExpiryTextExpired":
 				if fallback, ok := defaultValueMap[key]; ok {
 					value = fallback
 				}
