@@ -32,8 +32,7 @@ func (c *WhatsAppController) verify(ctx *gin.Context) {
 }
 
 func (c *WhatsAppController) serviceSettings() (string, error) {
-	all, err := service.NewWhatsAppServiceSettings()
-	return all, err
+	return c.service.WebhookVerifyToken()
 }
 
 func (c *WhatsAppController) receive(ctx *gin.Context) {
