@@ -194,6 +194,15 @@
             min="0"
         ></a-input-number>
     </a-form-item>
+    <a-form-item v-if="client.email">
+        <template slot="label">
+            <a-tooltip>
+                <template slot="title">WhatsApp number in international format, for example +989121234567.</template>
+                WhatsApp
+            </a-tooltip>
+        </template>
+        <a-input v-model.trim="client.whatsappPhone" placeholder="+989121234567"></a-input>
+    </a-form-item>
     <a-form-item v-if="client.email" label='{{ i18n "comment" }}'>
         <a-input v-model.trim="client.comment"></a-input>
     </a-form-item>
