@@ -31,7 +31,9 @@ Este proyecto es una versión mejorada del panel **[3X-UI](https://github.com/MH
 - Incorporación de los **Encryption** **AES-256-GCM** y **AES-128-GCM** al protocolo **Shadowsocks**
 - Soporte para **XHTTP Object** en el **Inbound** y el **Outbound**
 - Script de instalación automática de **[WARP-CLI](https://github.com/Sir-MmD/warp-cli)** (la versión oficial de Cloudflare)
-- Núcleo [**Xray-core** parcheado](https://github.com/Sir-MmD/Xray-core) para solucionar el error «Unsupported Cipher» en el protocolo **Shadowsocks**
+- Núcleo [**Xray-core** parcheado](https://github.com/Sir-MmD/Xray-core) que corrige el error «Unsupported Cipher» de **Shadowsocks** y añade **AnyTLS**, **TUIC (v5)** y **NaiveProxy** como protocolos nativos, heredando la contabilidad de tráfico por cuenta, los límites de velocidad y dispositivos y la detección de conexiones activas sin necesitar un segundo núcleo
+- **SSL real para la IP del servidor**, incluso sin dominio; Let's Encrypt puede emitir un certificado cuyo nombre sea la propia dirección IP
+- Las renovaciones de certificados se aplican **sin reiniciar el panel**, evitando desconexiones durante la renovación
 - Empaquetado de todos los archivos (Geofile, Xray-core y los núcleos del Backend) dentro de un único archivo binario
 - Exportación de los enlaces de las cuentas en formato **TXT** y **PDF**
 - Posibilidad de **congelar (Freeze)** cuentas
@@ -44,6 +46,12 @@ Este proyecto es una versión mejorada del panel **[3X-UI](https://github.com/MH
     * Eliminación grupal de Inbounds
     * **Congelar/Descongelar** cuentas de forma grupal
 
+
+- AnyTLS
+- TUIC (v5)
+- NaiveProxy
+
+Además, se han añadido tres protocolos directamente al núcleo Xray-core parcheado, por lo que son atendidos por el propio núcleo en lugar de un daemon independiente y funcionan como **Inbound** y **Outbound**:
 
 ## Funciones adicionales de este fork
 
