@@ -235,6 +235,15 @@ type TelegramReminderState struct {
 	SentAt     int64  `json:"sentAt"`
 }
 
+type WhatsAppReminderState struct {
+	Id         int64  `json:"id" gorm:"primaryKey;autoIncrement"`
+	Email      string `json:"email" gorm:"index:idx_wa_reminder_unique,unique,priority:1"`
+	Phone      string `json:"phone" gorm:"index:idx_wa_reminder_unique,unique,priority:2"`
+	ExpiryTime int64  `json:"expiryTime" gorm:"index:idx_wa_reminder_unique,unique,priority:3"`
+	Event      string `json:"event" gorm:"index:idx_wa_reminder_unique,unique,priority:4"`
+	SentAt     int64  `json:"sentAt"`
+}
+
 type TelegramRenewalRequest struct {
 	Id               int64  `json:"id" gorm:"primaryKey;autoIncrement"`
 	Email            string `json:"email" gorm:"index"`
@@ -442,7 +451,8 @@ type Client struct {
 	TotalGB    int64  `json:"totalGB" form:"totalGB"`       // Total traffic limit in GB
 	ExpiryTime int64  `json:"expiryTime" form:"expiryTime"` // Expiration timestamp
 	Enable     bool   `json:"enable" form:"enable"`         // Whether the client is enabled
-	TgID       int64  `json:"tgId" form:"tgId"`             // Telegram user ID for notifications
+	TgID          int64  `json:"tgId" form:"tgId"`             // Telegram user ID for notifications
+	WhatsAppPhone string `json:"whatsappPhone" form:"whatsappPhone" gorm:"column:whatsapp_phone;index"` // WhatsApp number
 	SubID      string `json:"subId" form:"subId"`           // Subscription identifier
 	Comment    string `json:"comment" form:"comment"`       // Client comment
 	Reset      int    `json:"reset" form:"reset"`           // Reset period in days
@@ -691,7 +701,8 @@ type Account struct {
 	Enable  bool   `json:"enable"`
 	Reset   int    `json:"reset" gorm:"default:0"`
 	LimitIP int    `json:"limitIp" gorm:"column:limit_ip"`
-	TgID    int64  `json:"tgId" gorm:"column:tg_id"`
+	TgID          int64  `json:"tgId" gorm:"column:tg_id"`
+	WhatsAppPhone string `json:"whatsappPhone" gorm:"column:whatsapp_phone;index"`
 	Comment string `json:"comment"`
 
 	// Per-account OVERRIDES of the three limits an inbound sets for everyone on it.
