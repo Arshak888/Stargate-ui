@@ -31,7 +31,9 @@ Bu proje, **[3X-UI](https://github.com/MHSanaei/3x-ui)** panelinin (2.9.3 sürü
 - **Shadowsocks** protokolüne **AES-256-GCM** ve **AES-128-GCM** **Encryption** yöntemlerinin eklenmesi
 - **Inbound** ve **Outbound** içinde **XHTTP Object** desteği
 - **[WARP-CLI](https://github.com/Sir-MmD/warp-cli)** (Cloudflare'in resmi sürümü) için otomatik kurulum betiği
-- **Shadowsocks** protokolündeki «Unsupported Cipher» hatasını gidermek için [yamalanmış **Xray-core**](https://github.com/Sir-MmD/Xray-core) çekirdeği
+- [Yamalanmış **Xray-core**](https://github.com/Sir-MmD/Xray-core), **Shadowsocks** içindeki «Unsupported Cipher» hatasını düzeltir ve **AnyTLS**, **TUIC (v5)** ve **NaiveProxy** protokollerini native olarak ekler. Böylece ikinci bir çekirdeğe ihtiyaç olmadan hesap bazlı trafik muhasebesi, hız ve cihaz limitleri ve çevrimiçi bağlantı algılama özelliklerinden yararlanırlar
+- Alan adı olmadan da sunucu **IP adresi için gerçek SSL** desteği; Let's Encrypt, sertifika adı olarak doğrudan IP adresini içeren sertifika verebilir
+- Sertifika yenilemeleri **panel yeniden başlatılmadan** uygulanır; böylece sertifika yenilenirken kullanıcı bağlantıları kesilmez
 - Tüm dosyaların (Geofile, Xray-core ve Backend çekirdekleri) tek bir binary dosyası içinde paketlenmesi
 - Hesap bağlantılarının **TXT** ve **PDF** olarak dışa aktarılması
 - Hesapları **dondurma (Freeze)** özelliği
@@ -44,6 +46,12 @@ Bu proje, **[3X-UI](https://github.com/MHSanaei/3x-ui)** panelinin (2.9.3 sürü
     * Inbound'ları toplu silme
     * Hesapları toplu **dondurma/çözme (Freeze/Un-Freeze)**
 
+
+- AnyTLS
+- TUIC (v5)
+- NaiveProxy
+
+Ayrıca aşağıdaki üç protokol doğrudan yamalanmış Xray-core çekirdeğine eklenmiştir. Bu nedenle ayrı bir daemon yerine çekirdeğin kendisi tarafından sunulur ve **Inbound** ile **Outbound** olarak çalışabilir:
 
 ## Bu Fork'a Özel Ek Özellikler
 
