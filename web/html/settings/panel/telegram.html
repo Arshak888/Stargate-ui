@@ -97,6 +97,75 @@
             </template>
         </a-setting-list-item>
     </a-collapse-panel>
+    <a-collapse-panel key="4" header="WhatsApp Cloud API">
+        <a-setting-list-item paddings="small">
+            <template #title>Enable WhatsApp notifications</template>
+            <template #description>Official Meta WhatsApp Cloud API. Customers link their number by sending START followed by their account email.</template>
+            <template #control><a-switch v-model="allSetting.waEnable"></a-switch></template>
+        </a-setting-list-item>
+        <a-setting-list-item paddings="small">
+            <template #title>Access token</template>
+            <template #control><a-input-password v-model="allSetting.waAccessToken"></a-input-password></template>
+        </a-setting-list-item>
+        <a-setting-list-item paddings="small">
+            <template #title>Phone Number ID</template>
+            <template #control><a-input v-model="allSetting.waPhoneNumberId"></a-input></template>
+        </a-setting-list-item>
+        <a-setting-list-item paddings="small">
+            <template #title>Webhook verify token</template>
+            <template #description>Use the same value when configuring Meta webhook verification.</template>
+            <template #control><a-input v-model="allSetting.waVerifyToken"></a-input></template>
+        </a-setting-list-item>
+        <a-setting-list-item paddings="small">
+            <template #title>App Secret</template>
+            <template #description>Used to verify X-Hub-Signature-256 on incoming webhooks.</template>
+            <template #control><a-input-password v-model="allSetting.waAppSecret"></a-input-password></template>
+        </a-setting-list-item>
+        <a-setting-list-item paddings="small">
+            <template #title>Graph API version</template>
+            <template #control><a-input v-model="allSetting.waGraphVersion"></a-input></template>
+        </a-setting-list-item>
+        <a-setting-list-item paddings="small">
+            <template #title>Reminder schedule</template>
+            <template #description>Example: @every 10m</template>
+            <template #control><a-input v-model="allSetting.waExpiryReminderRuntime"></a-input></template>
+        </a-setting-list-item>
+        <a-setting-list-item paddings="small">
+            <template #title>2-day approved template name</template>
+            <template #description>Meta-approved template with one body variable, for example {{1}}.</template>
+            <template #control><a-input v-model="allSetting.waExpiryTemplate2Days"></a-input></template>
+        </a-setting-list-item>
+        <a-setting-list-item paddings="small">
+            <template #title>1-day approved template name</template>
+            <template #control><a-input v-model="allSetting.waExpiryTemplate1Day"></a-input></template>
+        </a-setting-list-item>
+        <a-setting-list-item paddings="small">
+            <template #title>Expired approved template name</template>
+            <template #control><a-input v-model="allSetting.waExpiryTemplateExpired"></a-input></template>
+        </a-setting-list-item>
+        <a-setting-list-item paddings="small">
+            <template #title>Template language</template>
+            <template #control><a-input v-model="allSetting.waTemplateLanguage"></a-input></template>
+        </a-setting-list-item>
+        <a-setting-list-item paddings="small">
+            <template #title>2-day custom message variable</template>
+            <template #description>Placeholders: {email}, {days}, {expiry}, {remaining_traffic}. This text is sent as the first template body variable.</template>
+            <template #control><a-textarea v-model="allSetting.waExpiryText2Days" :auto-size="{ minRows: 2, maxRows: 5 }"></a-textarea></template>
+        </a-setting-list-item>
+        <a-setting-list-item paddings="small">
+            <template #title>1-day custom message variable</template>
+            <template #control><a-textarea v-model="allSetting.waExpiryText1Day" :auto-size="{ minRows: 2, maxRows: 5 }"></a-textarea></template>
+        </a-setting-list-item>
+        <a-setting-list-item paddings="small">
+            <template #title>Expired custom message variable</template>
+            <template #control><a-textarea v-model="allSetting.waExpiryTextExpired" :auto-size="{ minRows: 2, maxRows: 5 }"></a-textarea></template>
+        </a-setting-list-item>
+        <a-setting-list-item paddings="small">
+            <template #title>Customer setup</template>
+            <template #description>Customer sends START email@example.com to your WhatsApp Business number. STOP unlinks the number.</template>
+            <template #control><a-tag color="blue">/whatsapp/webhook</a-tag></template>
+        </a-setting-list-item>
+    </a-collapse-panel>
     <a-collapse-panel key="3" header='{{ i18n "pages.settings.proxyAndServer" }}'>
         <a-setting-list-item paddings="small">
             <template #title>{{ i18n "pages.settings.telegramProxy"}}</template>
