@@ -594,6 +594,7 @@ func newAccountFromEntry(entry map[string]any) *model.Account {
 		Reset:             int(num("reset")),
 		LimitIP:           int(num("limitIp")),
 		TgID:              num("tgId"),
+		WhatsAppPhone:     str("whatsappPhone"),
 		Comment:           str("comment"),
 		SpeedLimitDown:    nullableInt("speedLimitDown"),
 		SpeedLimitUp:      nullableInt("speedLimitUp"),
